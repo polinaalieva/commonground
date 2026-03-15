@@ -56,7 +56,7 @@ function City() {
   return (
     <div>
       <Header />
-      <div style={{ paddingTop: '60px' }}>
+      <div style={{ paddingTop: '50px' }}>
         <Map city={city} config={config} />
       </div>
     </div>
