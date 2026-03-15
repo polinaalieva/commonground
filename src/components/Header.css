@@ -9,6 +9,7 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transform: translateZ(0);
+  will-change: transform;
 }
 
 .cg-header__inner {
