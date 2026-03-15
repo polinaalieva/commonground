@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import Header from '../components/Header'
 import Map from '../components/Map'
 import CityNotFound from '../components/CityNotFound'
 
@@ -30,6 +31,7 @@ function City() {
 
   return (
     <div>
+      <Header />
       <Map city={city} config={config} />
     </div>
   )
