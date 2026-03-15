@@ -6,19 +6,43 @@ import CityNotFound from '../components/CityNotFound'
 const CITY_CONFIGS = {
   london: {
     bbox: [[-0.55, 51.25], [0.35, 51.75]],
+    country: "gb",
     center: [-0.1276, 51.5072],
     zoom: 9
   },
-  berlin: {
-    bbox: [[13.09, 52.34], [13.76, 52.68]],
-    center: [13.4050, 52.5200],
-    zoom: 10
-  },
-  nyc: {
-    bbox: [[-74.30, 40.45], [-73.65, 40.95]],
-    center: [-74.0060, 40.7128],
-    zoom: 10
-  }
+  london_camberwell: {
+      bbox: [[-0.55, 51.25], [0.35, 51.75]],
+      country: "gb",
+      center: [-0.0875, 51.4735],
+      zoom: 14
+    },
+ newyork: {
+      bbox: [[-74.30, 40.45], [-73.65, 40.95]],
+      country: "us",
+      center: [-74.0060, 40.7128],
+      zoom: 10
+    },
+
+    sanfrancisco: {
+      bbox: [[-123.00, 37.55], [-122.30, 37.93]],
+      country: "us",
+      center: [-122.4194, 37.7749],
+      zoom: 11
+    },
+
+    moscow: {
+      bbox: [[36.80, 55.45], [38.20, 56.10]],
+      country: "ru",
+      center: [37.6176, 55.7558],
+      zoom: 10
+    },
+
+    bucharest: {
+      bbox: [[25.94, 44.34], [26.30, 44.54]],
+      country: "ro",
+      center: [26.1025, 44.4268],
+      zoom: 11
+    }
 }
 
 function City() {
@@ -32,7 +56,9 @@ function City() {
   return (
     <div>
       <Header />
-      <Map city={city} config={config} />
+      <div style={{ paddingTop: '60px' }}>
+        <Map city={city} config={config} />
+      </div>
     </div>
   )
 }
