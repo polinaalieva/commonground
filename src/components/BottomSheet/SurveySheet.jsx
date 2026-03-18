@@ -64,9 +64,10 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Prefer': 'return=minimal',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal',
+            'Content-Profile': 'public',
         },
         body: JSON.stringify({
           city: city || null,
