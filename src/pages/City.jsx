@@ -4,6 +4,12 @@ import Map from '../components/Map'
 import CityNotFound from '../components/CityNotFound'
 
 const CITY_CONFIGS = {
+  world: {
+      center: [12, 20],
+      zoom: 1.5,
+      country: null
+    },
+    
   london: {
     bbox: [[-0.55, 51.25], [0.35, 51.75]],
     country: "gb",

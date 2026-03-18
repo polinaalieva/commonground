@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import './Map.css'
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
+import SurveySheet from './BottomSheet/SurveySheet'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -47,13 +48,11 @@ function Map({ city, config }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
   const activePopup = useRef(null)
-  const tempMarker = useRef(null)
   const userMarker = useRef(null)
   const userCoords = useRef(null)
   const geoWatchId = useRef(null)
+  const centerPinRef = useRef(null)
   const [mode, setMode] = useState('view')
-  const [formOpen, setFormOpen] = useState(false)
-  const [formUrl, setFormUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const modeRef = useRef('view')
 
@@ -76,13 +75,13 @@ function Map({ city, config }) {
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
     const geocoder = new MapboxGeocoder({
-  accessToken: mapboxgl.accessToken,
-  mapboxgl: mapboxgl,
-  marker: false,
-  placeholder: 'Search address',
-  countries: config.country || 'gb'
-})
-map.current.addControl(geocoder, 'top-left')
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      marker: false,
+      placeholder: 'Search address',
+      countries: config.country || 'gb'
+    })
+    map.current.addControl(geocoder, 'top-left')
 
     map.current.on('load', () => {
       loadData()
@@ -156,7 +155,6 @@ map.current.addControl(geocoder, 'top-left')
         })
 
         map.current.on('mouseenter', 'cg-feedback-layer', () => {
-          if (isMobile()) return
           map.current.getCanvas().style.cursor = 'pointer'
         })
         map.current.on('mouseleave', 'cg-feedback-layer', () => {
@@ -166,13 +164,7 @@ map.current.addControl(geocoder, 'top-left')
         map.current.on('click', (e) => {
           const features = map.current.queryRenderedFeatures(e.point, { layers: ['cg-feedback-layer'] })
           if (features.length > 0) return
-          const { lng, lat } = e.lngLat
-          if (modeRef.current === 'view') {
-            if (isMobile()) return
-            enterSelect([lng, lat])
-          } else if (modeRef.current === 'select') {
-            moveTemp([lng, lat])
-          }
+          if (modeRef.current === 'select') return
         })
       }
     } catch (e) {
@@ -182,49 +174,48 @@ map.current.addControl(geocoder, 'top-left')
     }
   }
 
-  function enterSelect(coords) {
+  function enterSelect() {
     if (activePopup.current) { activePopup.current.remove(); activePopup.current = null }
     setModeSync('select')
-    if (!tempMarker.current) {
-      const el = document.createElement('div')
-      el.className = 'cg-temp-marker'
-      const inner = document.createElement('div')
-      inner.className = 'cg-temp-marker-inner'
-      el.appendChild(inner)
-      tempMarker.current = new mapboxgl.Marker({ element: el }).setLngLat(coords).addTo(map.current)
-    } else {
-      tempMarker.current.setLngLat(coords)
-      if (!tempMarker.current._map) tempMarker.current.addTo(map.current)
-    }
-    if (userMarker.current && userMarker.current._map) userMarker.current.remove()
-  }
-
-  function moveTemp(coords) {
-    if (!tempMarker.current) return
-    tempMarker.current.setLngLat(coords)
   }
 
   function exitSelect() {
     setModeSync('view')
-    if (tempMarker.current) { tempMarker.current.remove(); tempMarker.current = null }
+    enableMap()
     if (userCoords.current && userMarker.current) {
       userMarker.current.setLngLat(userCoords.current)
       if (!userMarker.current._map) userMarker.current.addTo(map.current)
     }
   }
 
-  function confirmSelect() {
-    if (!tempMarker.current) return
-    const lngLat = tempMarker.current.getLngLat()
-    const url = `https://commonground.fillout.com/placebelonging?City=${city}&Lat=${lngLat.lat.toFixed(6)}&Lng=${lngLat.lng.toFixed(6)}`
-    exitSelect()
-    setFormUrl(url)
-    setFormOpen(true)
+  function getCenter() {
+    if (centerPinRef.current && mapContainer.current) {
+      const mapRect = mapContainer.current.getBoundingClientRect()
+      const pinRect = centerPinRef.current.getBoundingClientRect()
+      const pinX = pinRect.left + pinRect.width / 2 - mapRect.left
+      const pinY = pinRect.top + pinRect.height / 2 - mapRect.top
+      const coords = map.current.unproject([pinX, pinY])
+      return { lat: coords.lat, lng: coords.lng }
+    }
+    const c = map.current.getCenter()
+    return { lat: c.lat, lng: c.lng }
   }
 
-  function closeForm() {
-    setFormOpen(false)
-    setTimeout(() => { setFormUrl(''); loadData(1) }, 280)
+  function onMapMoveEnd(callback) {
+    map.current.on('moveend', callback)
+    return () => map.current.off('moveend', callback)
+  }
+
+  function disableMap() {
+    map.current.dragPan.disable()
+    map.current.scrollZoom.disable()
+    map.current.touchZoomRotate.disable()
+  }
+
+  function enableMap() {
+    map.current.dragPan.enable()
+    map.current.scrollZoom.enable()
+    map.current.touchZoomRotate.enable()
   }
 
   function requestGeoAuto() {
@@ -241,7 +232,6 @@ map.current.addControl(geocoder, 'top-left')
     navigator.geolocation.getCurrentPosition(pos => {
       const { longitude: lng, latitude: lat } = pos.coords
       updateUserLocation(lng, lat, true)
-      if (modeRef.current === 'select') moveTemp([lng, lat])
     }, () => {}, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 })
   }
 
@@ -254,7 +244,6 @@ map.current.addControl(geocoder, 'top-left')
 
   function updateUserLocation(lng, lat, fly) {
     userCoords.current = [lng, lat]
-    if (modeRef.current === 'select') return
     if (!userMarker.current) {
       const el = document.createElement('div')
       el.className = 'cg-user-marker'
@@ -265,14 +254,20 @@ map.current.addControl(geocoder, 'top-left')
     if (fly) map.current.flyTo({ center: [lng, lat], zoom: Math.max(map.current.getZoom(), 15), essential: true })
   }
 
-  function onStartMobile() {
-    const coords = userCoords.current || [map.current.getCenter().lng, map.current.getCenter().lat]
-    enterSelect(coords)
+  function closeSurvey() {
+    exitSelect()
+    setTimeout(() => loadData(1), 300)
   }
 
   return (
     <div style={{ position: 'relative', height: 'calc(100svh - 50px)', overflow: 'hidden' }}>
       <div ref={mapContainer} style={{ width: '100%', height: 'calc(100svh - 50px)' }} />
+
+      {mode === 'select' && (
+        <div className="cg-center-pin" ref={centerPinRef}>
+          <div className="cg-center-pin-inner" />
+        </div>
+      )}
 
       <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
         <svg viewBox="0 0 12 12" aria-hidden="true">
@@ -280,59 +275,16 @@ map.current.addControl(geocoder, 'top-left')
         </svg>
       </button>
 
-      <div className="cg-panel-desktop">
-        {mode === 'view' ? (
-          <>
-            <div className="cg-map-panel-title">Click on map to leave your signal</div>
-            <div className="cg-map-panel-subtitle">or click on points to read other people's signals</div>
-            <div className="cg-map-actions">
-              <button className="cg-map-btn" onClick={onLocateClick}>⌖ My location</button>
-              <button className="cg-map-btn" onClick={() => loadData(1)} disabled={isLoading}>
-                {isLoading ? '⟳ Refreshing...' : '⟳ Refresh signals'}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="cg-map-panel-title">Select location</div>
-            <div className="cg-map-panel-subtitle">click on other place to choose other location</div>
-            <div className="cg-map-actions">
-              <button className="cg-map-btn" onClick={exitSelect}>Cancel</button>
-              <button className="cg-map-btn cg-map-btn-dark" onClick={confirmSelect}>Leave signal here</button>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="cg-mobile-bottom">
-        {mode === 'view' ? (
-          <>
-            <button className="cg-map-btn" onClick={() => loadData(1)} disabled={isLoading}>
-              {isLoading ? '⟳' : '⟳ Refresh'}
-            </button>
-            <button className="cg-map-btn cg-map-btn-dark" onClick={onStartMobile}>＋ Leave your signal</button>
-          </>
-        ) : (
-          <div className="cg-mobile-select-actions">
-            <button className="cg-map-btn" onClick={exitSelect}>‹ Cancel</button>
-            <button className="cg-map-btn cg-map-btn-dark" onClick={confirmSelect}>Leave signal here</button>
-          </div>
-        )}
-      </div>
-
-      <div className="cg-mobile-note">
-        {mode === 'view'
-          ? "leave your signal or tap on points to read other people's signals"
-          : 'tap on another place to move your signal'}
-      </div>
-
-      <div className={'cg-form-modal' + (formOpen ? ' is-open' : '')}>
-        <div className="cg-form-backdrop" onClick={closeForm} />
-        <div className="cg-form-shell">
-          <button className="cg-form-close" onClick={closeForm}>×</button>
-          <iframe className="cg-form-iframe" src={formOpen ? formUrl : 'about:blank'} allow="clipboard-write" />
-        </div>
-      </div>
+      <SurveySheet
+        city={city}
+        source={city}
+        getCenter={getCenter}
+        onStartSelect={enterSelect}
+        onMapMoveEnd={onMapMoveEnd}
+        onDisableMap={disableMap}
+        onEnableMap={enableMap}
+        onClose={closeSurvey}
+      />
     </div>
   )
 }

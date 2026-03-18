@@ -192,7 +192,7 @@
 
 /* =========================
    TEMP MARKER
-   ========================= */
+   
 
 .cg-temp-marker {
   width: 22px;
@@ -208,6 +208,39 @@
   border: 3px solid #fff;
   box-shadow: 0 0 0 2px rgba(17,17,17,0.15), 0 4px 10px rgba(0,0,0,0.18);
   animation: cg-marker-pulse 1.6s ease-in-out infinite;
+}
+  ========================= */
+
+/* CENTER PIN */
+.cg-center-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .cg-center-pin {
+    top: 23%;
+  }
+}
+
+.cg-center-pin-inner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #111;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  animation: cg-marker-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes cg-pin-pulse {
+  0% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.15); opacity: 0.75; }
+  100% { transform: scale(1); opacity: 0.95; }
 }
 
 /* =========================
@@ -250,6 +283,8 @@
   50% { transform: scale(1.15); opacity: 0.75; }
   100% { transform: scale(1); opacity: 0.95; }
 }
+
+
 
 /* =========================
    POPUPS
@@ -380,5 +415,23 @@
     width: 38px;
     height: 38px;
     font-size: 24px;
+  }
+
+    .mapboxgl-ctrl-geocoder {
+    min-width: unset !important;
+    width: 210px !important;
+    height: 30px !important;
+    font-size: 16px !important;
+  }
+  .mapboxgl-ctrl-geocoder input {
+    height: 12px !important;
+    font-size: 16px !important;
+    padding: 8px 12px 8px 36px !important;
+  }
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search {
+    top: 7px !important;
+    left: 8px !important;
+    width: 16px !important;
+    height: 16px !important;
   }
 }

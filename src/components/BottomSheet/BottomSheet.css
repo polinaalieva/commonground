@@ -1,0 +1,373 @@
+
+/* НИЖНЯЯ ШТОРКА */
+
+/* Мобила — полная ширина экрана */
+.bottom-sheet {
+  width: 100%;
+  border-radius: 16px 16px 0 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  gap: 50px;
+  padding: 16px 16px 32px;
+  background: rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Десктоп — фиксированная ширина */
+@media (min-width: 768px) {
+  .bottom-sheet {
+    width: 390px;
+    border-radius: 16px;
+    box-shadow: -1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    top: auto;
+    right: auto;
+  }
+}
+
+
+/* ХЕАДЕР */
+.sheet-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sheet-header__left,
+.sheet-header__right {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.sheet-header__center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-header__title {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #111;
+  line-height: 1;
+}
+
+.sheet-header__subtitle {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+.sheet-header__btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* КОНТЕНТ */
+.sheet-content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+}
+
+
+/* АДРЕС */
+.sheet-address {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.sheet-address__label {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #111;
+  line-height: 18px;
+}
+
+.sheet-address__field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: #f2f2f2;
+  border-radius: 5px;
+  width: 100%;
+  min-height: 45px;
+  
+  box-sizing: border-box;
+}
+
+.sheet-address__icon {
+  flex-shrink: 0;
+  width: 9pt;
+  color: #111;
+  opacity: 0.5;
+}
+
+.sheet-address__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 400;
+  color: #111;
+  outline: none;
+  padding: 0;
+}
+
+.sheet-address__input::placeholder {
+  color: rgba(17, 17, 17, 0.4);
+}
+
+
+/* СЛАЙДЕР */
+
+.sheet-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.sheet-slider__label {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #111;
+}
+
+/* Большая зона клика */
+.sheet-slider__hitarea {
+  position: relative;
+  padding: 12px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Трек из сегментов */
+.sheet-slider__track {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sheet-slider__segment {
+  flex: 1;
+  height: 100%;
+}
+
+/* Ручка */
+.sheet-slider__thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: left 0.08s ease;
+}
+
+.sheet-slider__labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -8px;
+}
+
+.sheet-slider__label-item {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: #111;
+  opacity: 0.5;
+}
+
+/* ТЕКСТОВЫЙ ВВОД */
+
+/* TEXTAREA */
+.sheet-textarea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.sheet-textarea__label {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #111;
+  line-height: 1;
+}
+
+.sheet-textarea__field {
+  background: #f2f2f2;
+  border-radius: 5px;
+  width: 100%;
+  min-height: 45px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.sheet-textarea__input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #111;
+  outline: none;
+  padding: 13px 0;
+  resize: none;
+  line-height: 1.4;
+  min-height: 45px;
+}
+
+
+.sheet-textarea__input::placeholder {
+  color: rgba(17, 17, 17, 0.5);
+}
+
+/* Disabled */
+.sheet-textarea--disabled .sheet-textarea__label {
+  opacity: 0.5;
+}
+
+.sheet-textarea--disabled .sheet-textarea__input::placeholder {
+  color: rgba(17, 17, 17, 0.2);
+}
+
+.sheet-textarea--disabled .sheet-textarea__input {
+  cursor: default;
+}
+
+
+/* ЗОНА КНОПОК */
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* КНОПКИ */
+
+.sheet-button {
+  width: 190px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.sheet-button--primary {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+.sheet-button--primary:hover {
+  opacity: 0.85;
+}
+
+.sheet-button--disabled {
+  background: rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+
+
+/* ДОРАБОТКИ ДЛЯ МОБИЛЫ */
+
+@media (max-width: 768px) {
+  .sheet-address__input,
+  .sheet-textarea__input {
+    font-size: 16px;
+  }
+}
+
+/* LANDING вариант */
+.bottom-sheet--landing {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.landing-sheet__text {
+   margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  color: #111;
+  text-align: center;
+  white-space: pre-line;
+  line-height: 21px;
+  width: 100%;
+}
+.landing-sheet__text--desktop {
+  display: none;
+}
+.bottom-sheet--landing .sheet-content {
+  gap: 15px;  /* мобила */
+}
+
+@media (min-width: 768px) {
+  .bottom-sheet--landing {
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: -1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+    border: none;
+}
+  .landing-sheet__text--mobile {
+    display: none;
+  }
+
+  .landing-sheet__text--desktop {
+    display: block;
+  }
+}
