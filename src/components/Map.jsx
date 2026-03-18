@@ -8,7 +8,7 @@ import SurveySheet from './BottomSheet/SurveySheet'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
-const WORKER_URL = 'https://commonground.polina-alieva-int.workers.dev/geojson'
+const WORKER_URL = import.meta.env.VITE_WORKER_URL
 
 function getFeatureRating(props) {
   const candidates = ['place_rate','rating','rate','score','value','mark','Rate','Rating']
