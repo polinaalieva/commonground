@@ -259,34 +259,34 @@ function Map({ city, config }) {
     setTimeout(() => loadData(1), 300)
   }
 
-  return (
-    <div style={{ position: 'relative', height: 'calc(100svh - 50px)', overflow: 'hidden' }}>
-      <div ref={mapContainer} style={{ width: '100%', height: 'calc(100svh - 50px)' }} />
+ return (
+  <div className="cg-map-outer">
+    <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
-      {mode === 'select' && (
-        <div className="cg-center-pin" ref={centerPinRef}>
-          <div className="cg-center-pin-inner" />
-        </div>
-      )}
+    {mode === 'select' && (
+      <div className="cg-center-pin" ref={centerPinRef}>
+        <div className="cg-center-pin-inner" />
+      </div>
+    )}
 
-      <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M6 1 L10.5 11 L6 8.8 L1.5 11 Z" fill="#111"/>
-        </svg>
-      </button>
+    <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
+      <svg viewBox="0 0 12 12" aria-hidden="true">
+        <path d="M6 1 L10.5 11 L6 8.8 L1.5 11 Z" fill="#111"/>
+      </svg>
+    </button>
 
-      <SurveySheet
-        city={city}
-        source={city}
-        getCenter={getCenter}
-        onStartSelect={enterSelect}
-        onMapMoveEnd={onMapMoveEnd}
-        onDisableMap={disableMap}
-        onEnableMap={enableMap}
-        onClose={closeSurvey}
-      />
-    </div>
-  )
+    <SurveySheet
+      city={city}
+      source={city}
+      getCenter={getCenter}
+      onStartSelect={enterSelect}
+      onMapMoveEnd={onMapMoveEnd}
+      onDisableMap={disableMap}
+      onEnableMap={enableMap}
+      onClose={closeSurvey}
+    />
+  </div>
+)
 }
 
 export default Map

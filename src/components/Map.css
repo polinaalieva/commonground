@@ -1,3 +1,25 @@
+
+.cg-city-map-wrapper {
+  padding-top: 50px;
+}
+
+@media (min-width: 769px) {
+  .cg-city-map-wrapper {
+    padding-top: 60px;
+  }
+}
+
+.cg-map-outer {
+  position: relative;
+  height: calc(100svh - 50px);
+  overflow: hidden;
+}
+
+@media (min-width: 769px) {
+  .cg-map-outer {
+    height: calc(100svh - 60px);
+  }
+}
 /* =========================
    MAPBOX CONTROLS
    ========================= */
