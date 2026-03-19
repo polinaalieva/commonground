@@ -364,6 +364,7 @@
   white-space: pre-line;
   line-height: 21px;
   width: 100%;
+  transform: translateY(20px);
 }
 .landing-sheet__text--desktop {
   display: none;

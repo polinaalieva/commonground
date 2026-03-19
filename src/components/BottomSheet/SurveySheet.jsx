@@ -101,15 +101,15 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
         <>
           <SheetContent>
             <p className="landing-sheet__text landing-sheet__text--mobile">
-              Explore signals on the map<br />or
+              See how people experience places
             </p>
             <p className="landing-sheet__text landing-sheet__text--desktop">
-              Explore signals on the map<br />or leave your signal
+              See how people experience places<br />or share your experience
             </p>
           </SheetContent>
           <SheetActions>
             <SheetButton onClick={handleStartSelect}>
-              Leave your signal
+              Share your experience
             </SheetButton>
           </SheetActions>
         </>
