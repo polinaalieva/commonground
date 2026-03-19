@@ -137,7 +137,7 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
       {step === 2 && (
         <>
           <SheetHeader
-            title="2 / 2  Leave your signal"
+            title="2 / 2 Share your experience"
             onBack={() => { onEnableMap(); setStep(1) }}
             onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
           />
