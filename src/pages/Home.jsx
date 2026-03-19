@@ -26,7 +26,6 @@ function Home() {
           <div className="cg-buttons-bleed">
             <div className="cg-buttons">
               <Link className="cg-btn" to="/london">London</Link>
-              <Link className="cg-btn" to="/bucharest">Bucharest</Link>
               <button className="cg-btn" onClick={() => setSuggestOpen(true)}>+ Suggest city</button>
             </div>
           </div>
