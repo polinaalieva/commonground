@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import './Home.css'
+import SuggestCityModal from '../components/BottomSheet/SuggestCityModal'
 
 function Home() {
-  const [formOpen, setFormOpen] = useState(false)
+  const [suggestOpen, setSuggestOpen] = useState(false)
 
   return (
     <div className="cg-landing">
@@ -13,7 +14,7 @@ function Home() {
         <div className="cg-landing__content">
 
           <h1 className="cg-title">
-          <span className="cg-title-accent">Common Ground</span> is a map of how people experience places
+            <span className="cg-title-accent">Common Ground</span> is a map of how people experience places
           </h1>
 
           <p className="cg-subtitle">
@@ -26,7 +27,7 @@ function Home() {
             <div className="cg-buttons">
               <Link className="cg-btn" to="/london">London</Link>
               <Link className="cg-btn" to="/bucharest">Bucharest</Link>
-              <button className="cg-btn" onClick={() => setFormOpen(true)}>+ Suggest your city</button>
+              <button className="cg-btn" onClick={() => setSuggestOpen(true)}>+ Suggest city</button>
             </div>
           </div>
 
@@ -46,14 +47,7 @@ function Home() {
         </div>
       </div>
 
-      {formOpen && (
-        <div className="cg-form-modal" style={{display:'flex'}} onClick={(e) => e.target.className === 'cg-form-modal' && setFormOpen(false)}>
-          <div className="cg-form-inner">
-            <button className="cg-form-close" onClick={() => setFormOpen(false)}>×</button>
-            <iframe src="https://form.fillout.com/t/meU3aCY5r8us" allow="fullscreen" />
-          </div>
-        </div>
-      )}
+      <SuggestCityModal isOpen={suggestOpen} onClose={() => setSuggestOpen(false)} />
 
     </div>
   )

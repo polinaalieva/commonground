@@ -1,0 +1,41 @@
+/* ======================
+   SUGGEST CITY MODAL
+   ====================== */
+
+.suggest-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+/* Белый прозрачный + блюр фон */
+.suggest-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Шторка поверх фона */
+.suggest-modal .bottom-sheet {
+  z-index: 1;
+}
+
+/* Десктоп: шторка позиционируется как на карте */
+@media (min-width: 768px) {
+  .suggest-modal .bottom-sheet {
+    box-shadow:
+      0 -4px 16px rgba(0, 0, 0, 0.08),
+      -1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Мобила: шторка снизу, с тенью сверху */
+@media (max-width: 767px) {
+  .suggest-modal .bottom-sheet {
+    box-shadow:
+      0 -6px 20px rgba(0, 0, 0, 0.1),
+      0 -1px 0 rgba(0, 0, 0, 0.06);
+  }
+}

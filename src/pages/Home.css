@@ -249,12 +249,17 @@
 }
 
 .cg-body{
-  display:none;
+  font-size:11px;
+  margin-top:60px;
+  opacity: 0.9;
+  
 }
+.cg-body p:first-child {
+    margin-bottom: 0;
+  }
 
 .cg-contact{
   font-size:11px;
-  line-height:1.24;
   transform:none;
   margin-top:auto;
 }
