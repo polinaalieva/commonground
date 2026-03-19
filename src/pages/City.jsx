@@ -4,7 +4,7 @@ import Map from '../components/Map'
 import CityNotFound from '../components/CityNotFound'
 
 const CITY_CONFIGS = {
-  world: {
+  map: {
     center: [12, 20],
     zoom: 1.5,
     country: null
