@@ -12,14 +12,14 @@ function Home() {
       <div className="cg-landing__inner">
         <div className="cg-landing__content">
 
-         <p className="cg-kicker">A map of how people experience places</p> 
-
           <h1 className="cg-title">
-            <span className="cg-title-accent">Common Ground</span> collects small signals people leave about places they know
+          <span className="cg-title-accent">Common Ground</span> is a map of how people experience places
           </h1>
 
           <p className="cg-subtitle">
-            Click on the map. Leave a short signal. See how it shapes the map.
+            Tap the map. Share your experience.
+            <br />
+            See how others feel about places around you.
           </p>
 
           <div className="cg-buttons-bleed">
@@ -32,8 +32,8 @@ function Home() {
 
           <div className="cg-body">
             <p>Cities collect vast amounts of data.</p>
-            <p>Yet people's lived experience of places often remains fragmented, delayed, and thus secondary.</p>
-            <p>Common Ground explores what happens when signals from people are continuously collected to form a layer of insight about the city.</p>
+            <p>Yet people's lived experience of places often remains fragmented, delayed, and treated as secondary.</p>
+            <p>Common Ground explores what happens when signals from people are continuously collected to form a living layer of insight about the city.</p>
           </div>
 
           <div className="cg-contact">

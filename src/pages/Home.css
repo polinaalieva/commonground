@@ -22,17 +22,8 @@
   align-items: flex-start;
 }
 
-.cg-kicker {
-  margin: 0 0 36px;
-  font-family: "Roboto Serif", Georgia, serif;
-  font-size: 32px;
-  line-height: 1.12;
-  font-weight: 500;
-  color: #111111;
-} 
-
 .cg-title {
-  margin: 0 0 36px;
+  margin: 100px 0 36px;
   font-family: "Roboto Serif", Georgia, serif;
   font-size: 32px;
   line-height: 1.12;
@@ -204,18 +195,11 @@
   min-height:calc(100svh - 99px);
 }
 
-.cg-kicker{
-  font-size:26px;
-  line-height:1.18;
-  font-weight:500;
-  margin-top:10px;
-  margin-bottom:24px;
-}
-
 .cg-title{
   font-size:26px;
   line-height:1.18;
   font-weight:500;
+  margin-top: 50px;
   margin-bottom:78px;
 }
 
@@ -248,9 +232,10 @@
   overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  padding:0 16px 2px;
+  padding: 0 16px 2px;
   margin:0;
 }
+
 
 .cg-buttons::-webkit-scrollbar{
   display:none;
