@@ -132,7 +132,7 @@ function SuggestCitySheet({ onClose }) {
             />
             <SheetTextarea
               label="Your contact"
-              placeholder="Leave your comfortable contact and share if you want to be connected when the city launches"
+              placeholder="Telegram, email, or anything comfortable"
               value={contact}
               onChange={e => setContact(e.target.value)}
             />

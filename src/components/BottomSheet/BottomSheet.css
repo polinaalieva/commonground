@@ -491,6 +491,13 @@
   opacity: 0.5;
 }
 
+@media (max-width: 768px) {
+  .sheet-dropdown__trigger,
+  .sheet-dropdown__value,
+  .sheet-dropdown__option {
+    font-size: 16px;
+  }
+}
 
 /* ---- SUGGEST CITY SHEET specific ---- */
 
