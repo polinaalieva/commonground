@@ -1,0 +1,166 @@
+/* ========================
+   MODAL SHEET
+   ======================== */
+
+/* Оверлей */
+.modal-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Само окно */
+.modal-sheet {
+  width: 100%;
+  max-width: 358px;
+  border-radius: 16px;
+  padding: 16px 16px 24px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ХЕДЕР */
+.msheet-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.msheet-header__left,
+.msheet-header__right {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.msheet-header__center {
+  flex: 1;
+  text-align: center;
+}
+
+.msheet-header__title {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #111;
+  line-height: 1;
+}
+
+.msheet-header__btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ТЕКСТ */
+.msheet-text {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #111;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* КНОПКИ */
+.msheet-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.msheet-button {
+  height: 40px;
+  flex: 1;
+  max-width: 160px;
+  border-radius: 5px;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  border: none;
+}
+
+/* Primary */
+.msheet-button--primary {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+.msheet-button--primary:hover {
+  opacity: 0.85;
+}
+
+.msheet-button--primary.msheet-button--disabled {
+  background: rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+
+/* Secondary */
+.msheet-button--secondary {
+  background: transparent;
+  color: #111;
+  border: 0.5px solid #B8BFCA;
+}
+
+.msheet-button--secondary:hover {
+  opacity: 0.7;
+}
+
+.msheet-button--secondary.msheet-button--disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (min-width: 768px) {
+  .modal-sheet-overlay {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 0 0 20px 20px;
+  }
+
+  .modal-sheet {
+    pointer-events: auto;
+    max-width: 390px;
+    border-radius: 16px;
+    box-shadow: -1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+  }
+}

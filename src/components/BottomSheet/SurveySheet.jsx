@@ -7,6 +7,8 @@ import SheetButton from './SheetButton'
 import SheetAddress from './SheetAddress'
 import SheetSlider from './SheetSlider'
 import SheetTextarea from './SheetTextarea'
+import FormAnswerConfirmMSheet from '../ModalSheet/FormAnswerConfirmMSheet'
+import '../ModalSheet/ModalSheet.css'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -19,6 +21,11 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
+
+  // --- для  ---
+  const [showNotePrompt, setShowNotePrompt] = useState(false)
+  const [notePromptShown, setNotePromptShown] = useState(false)
+  // -------------
 
   useEffect(() => {
     if (step !== 1) return
@@ -64,10 +71,10 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal',
-            'Content-Profile': 'public',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=minimal',
+          'Content-Profile': 'public',
         },
         body: JSON.stringify({
           city: city || null,
@@ -85,6 +92,7 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
       setAddress('')
       setSliderValue(null)
       setNote('')
+      setNotePromptShown(false) // сбрасываем флаг для следующей сессии
       onClose()
     } catch (e) {
       setError('Something went wrong. Try again.')
@@ -94,80 +102,107 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
     }
   }
 
+  // --- новое ---
+  const handleDoneClick = () => {
+    if (!note.trim() && !notePromptShown) {
+      setShowNotePrompt(true)
+      setNotePromptShown(true)
+      return
+    }
+    handleSubmit()
+  }
+  // -------------
+
   return (
-    <BottomSheet variant={step === 'landing' ? 'landing' : 'default'}>
+    <>
+      <BottomSheet variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt}>
 
-      {step === 'landing' && (
-        <>
-          <SheetContent>
-            <p className="landing-sheet__text landing-sheet__text--mobile">
-              See how people experience places
-            </p>
-            <p className="landing-sheet__text landing-sheet__text--desktop">
-              See how people experience places<br />or share your experience
-            </p>
-          </SheetContent>
-          <SheetActions>
-            <SheetButton onClick={handleStartSelect}>
-              Share your experience
-            </SheetButton>
-          </SheetActions>
-        </>
-      )}
+        {step === 'landing' && (
+          <>
+            <SheetContent>
+              <p className="landing-sheet__text landing-sheet__text--mobile">
+                See how people experience places
+              </p>
+              <p className="landing-sheet__text landing-sheet__text--desktop">
+                See how people experience places<br />or share your experience
+              </p>
+            </SheetContent>
+            <SheetActions>
+              <SheetButton onClick={handleStartSelect}>
+                Share your experience
+              </SheetButton>
+            </SheetActions>
+          </>
+        )}
 
-      {step === 1 && (
-        <>
-          <SheetHeader
-            title="1 / 2  Pick a place on the map"
-            subtitle="Drag the map to move the pin"
-            onBack={() => { onEnableMap(); onClose(); setStep('landing') }}
-            onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
-          />
-          <SheetContent>
-            <SheetAddress value={address} onChange={(e) => setAddress(e.target.value)} />
-          </SheetContent>
-          <SheetActions>
-            <SheetButton onClick={handleContinue}>
-              Continue
-            </SheetButton>
-          </SheetActions>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <SheetHeader
-            title="2 / 2 Share your experience"
-            onBack={() => { onEnableMap(); setStep(1) }}
-            onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
-          />
-          <SheetContent>
-            <SheetSlider
-              label="Does this place feel like yours? *"
-              value={sliderValue}
-              onChange={setSliderValue}
+        {step === 1 && (
+          <>
+            <SheetHeader
+              title="1 / 2  Pick a place on the map"
+              subtitle="Drag the map to move the pin"
+              onBack={() => { onEnableMap(); onClose(); setStep('landing') }}
+              onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
             />
-            <SheetTextarea
-              label="Add a note"
-              placeholder="What makes it feel this way?"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              disabled={sliderValue === null}
-            />
-            {error && <p style={{ color: 'red', fontSize: 13 }}>{error}</p>}
-          </SheetContent>
-          <SheetActions>
-            <SheetButton
-              onClick={handleSubmit}
-              disabled={sliderValue === null || isSubmitting}
-            >
-              {isSubmitting ? 'Sending...' : 'Done'}
-            </SheetButton>
-          </SheetActions>
-        </>
-      )}
+            <SheetContent>
+              <SheetAddress value={address} onChange={(e) => setAddress(e.target.value)} />
+            </SheetContent>
+            <SheetActions>
+              <SheetButton onClick={handleContinue}>
+                Continue
+              </SheetButton>
+            </SheetActions>
+          </>
+        )}
 
-    </BottomSheet>
+        {step === 2 && (
+          <>
+            <SheetHeader
+              title="2 / 2 Share your experience"
+              onBack={() => { onEnableMap(); setStep(1) }}
+              onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
+            />
+            <SheetContent>
+              <SheetSlider
+                label="Does this place feel like yours? *"
+                value={sliderValue}
+                onChange={setSliderValue}
+              />
+              <SheetTextarea
+                label="Add a note"
+                placeholder="What makes it feel this way?"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                disabled={sliderValue === null}
+              />
+              {error && <p style={{ color: 'red', fontSize: 13 }}>{error}</p>}
+            </SheetContent>
+            <SheetActions>
+              <SheetButton
+                onClick={handleDoneClick}
+                disabled={sliderValue === null || isSubmitting}
+              >
+                {isSubmitting ? 'Sharing...' : 'Share'}
+              </SheetButton>
+            </SheetActions>
+          </>
+        )}
+
+      </BottomSheet>
+
+      {showNotePrompt && (
+        <FormAnswerConfirmMSheet
+          onClose={() => setShowNotePrompt(false)}
+          onSkip={() => {
+            setShowNotePrompt(false)
+            handleSubmit()
+          }}
+          onAddNote={() => {
+            setShowNotePrompt(false)
+            // человек остаётся на шаге 2, просто закрываем модалку
+          }}
+        />
+      )}
+    </>
   )
 }
 

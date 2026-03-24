@@ -520,3 +520,10 @@
   text-align: center;
   line-height: 1.5;
 }
+
+/* Прятать форму на десктопе когда появляется модалка formanswerconfirmmsheet */
+@media (min-width: 768px) {
+  .bottom-sheet--hidden {
+    display: none;
+  }
+}
