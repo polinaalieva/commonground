@@ -1,0 +1,49 @@
+.qr-page {
+  height: 100svh;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.qr-page__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  height: calc(100svh - 50px);
+  margin-top: 50px;
+  padding: 54px 16px 54px 16px;
+}
+
+.qr-page__image {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100svh - 50px - 54px - 54px - 20px);
+  display: block;
+}
+
+.qr-page__link {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 50px;
+}
+
+@media (min-width: 768px) {
+  .qr-page__content {
+    min-height: calc(100vh - 60px); /* вычитаем высоту хедера */
+    margin-top: 60px; /* высота хедера на десктопе */
+    padding: 54px 65px 54px 65px;
+  }
+
+  .qr-page__image {
+    max-width: 440px;
+  }
+
+  .qr-page__link {
+    font-size: 12px;
+  }
+}
