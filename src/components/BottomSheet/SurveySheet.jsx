@@ -13,7 +13,7 @@ import '../ModalSheet/ModalSheet.css'
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose }) {
+function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose }) {
   const [step, setStep] = useState('landing')
   const [coords, setCoords] = useState(null)
   const [address, setAddress] = useState('')
@@ -21,11 +21,8 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
-
-  // --- для  ---
   const [showNotePrompt, setShowNotePrompt] = useState(false)
   const [notePromptShown, setNotePromptShown] = useState(false)
-  // -------------
 
   useEffect(() => {
     if (step !== 1) return
@@ -51,6 +48,19 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
     }
   }
 
+  // геокодинг города для Supabase
+  async function fetchCityName(lat, lng) {
+    try {
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=place&limit=1`
+      )
+      const data = await res.json()
+      return data.features?.[0]?.text || null
+    } catch {
+      return null
+    }
+  }
+
   function handleStartSelect() {
     onStartSelect()
     setStep(1)
@@ -67,6 +77,8 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
     setIsSubmitting(true)
     setError(null)
     try {
+      const cityName = await fetchCityName(coords.lat, coords.lng)
+
       const res = await fetch(`${SUPABASE_URL}/rest/v1/feedback_map`, {
         method: 'POST',
         headers: {
@@ -83,7 +95,9 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
           lng: coords.lng,
           place_rate: sliderValue,
           experience: note || null,
-          metric_type: 'belonging',
+          metric_type: variant,    // ← из пропсов, не хардкод
+          city_name: cityName,     // ← новое поле
+          lang: lang,              // ← новое поле
         }),
       })
       if (!res.ok) throw new Error(await res.text())
@@ -92,17 +106,16 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
       setAddress('')
       setSliderValue(null)
       setNote('')
-      setNotePromptShown(false) // сбрасываем флаг для следующей сессии
+      setNotePromptShown(false)
       onClose()
     } catch (e) {
-      setError('Something went wrong. Try again.')
+      setError(pageContent.error)  // ← из контента
       console.error(e)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // --- новое ---
   const handleDoneClick = () => {
     if (!note.trim() && !notePromptShown) {
       setShowNotePrompt(true)
@@ -111,7 +124,6 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
     }
     handleSubmit()
   }
-  // -------------
 
   return (
     <>
@@ -121,15 +133,15 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
           <>
             <SheetContent>
               <p className="landing-sheet__text landing-sheet__text--mobile">
-                See how people experience places
+                {pageContent.modal_text_mobile}
               </p>
               <p className="landing-sheet__text landing-sheet__text--desktop">
-                See how people experience places<br />or share your experience
+                {pageContent.modal_text_desktop}
               </p>
             </SheetContent>
             <SheetActions>
               <SheetButton onClick={handleStartSelect}>
-                Share your experience
+                {pageContent.button}
               </SheetButton>
             </SheetActions>
           </>
@@ -138,8 +150,8 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
         {step === 1 && (
           <>
             <SheetHeader
-              title="1 / 2  Pick a place on the map"
-              subtitle="Drag the map to move the pin"
+              title={pageContent.step1_title}
+              subtitle={pageContent.step1_subtitle}
               onBack={() => { onEnableMap(); onClose(); setStep('landing') }}
               onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
             />
@@ -148,7 +160,7 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
             </SheetContent>
             <SheetActions>
               <SheetButton onClick={handleContinue}>
-                Continue
+                {pageContent.btn_continue}
               </SheetButton>
             </SheetActions>
           </>
@@ -157,19 +169,20 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
         {step === 2 && (
           <>
             <SheetHeader
-              title="2 / 2 Share your experience"
+              title={pageContent.step2_title}
               onBack={() => { onEnableMap(); setStep(1) }}
               onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
             />
             <SheetContent>
               <SheetSlider
-                label="Does this place feel like yours? *"
+                label={pageContent.question}
                 value={sliderValue}
                 onChange={setSliderValue}
+                labels={pageContent.slider_labels}
               />
               <SheetTextarea
-                label="Add a note"
-                placeholder="What makes it feel this way?"
+                label={pageContent.note_label}
+                placeholder={pageContent.note_placeholder}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 disabled={sliderValue === null}
@@ -181,7 +194,7 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
                 onClick={handleDoneClick}
                 disabled={sliderValue === null || isSubmitting}
               >
-                {isSubmitting ? 'Sharing...' : 'Share'}
+                {isSubmitting ? pageContent.btn_sharing : pageContent.btn_share}
               </SheetButton>
             </SheetActions>
           </>
@@ -198,7 +211,6 @@ function SurveySheet({ city, source, getCenter, onStartSelect, onMapMoveEnd, onD
           }}
           onAddNote={() => {
             setShowNotePrompt(false)
-            // человек остаётся на шаге 2, просто закрываем модалку
           }}
         />
       )}

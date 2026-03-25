@@ -22,7 +22,7 @@ const getThumbColor = (value) => {
   return SNAP_COLORS[index]
 }
 
-function SheetSlider({ label, value, onChange }) {
+function SheetSlider({ label, value, onChange, labels }) {
   const trackRef = useRef(null)
 
   const snapValue = (raw) => {
@@ -103,9 +103,9 @@ function SheetSlider({ label, value, onChange }) {
       </div>
 
       <div className="sheet-slider__labels">
-        <span className="sheet-slider__label-item">not mine</span>
-        <span className="sheet-slider__label-item">mixed</span>
-        <span className="sheet-slider__label-item">feels like mine</span>
+  <span className="sheet-slider__label-item">{labels?.[0] ?? 'not mine'}</span>
+  <span className="sheet-slider__label-item">{labels?.[1] ?? 'mixed'}</span>
+  <span className="sheet-slider__label-item">{labels?.[2] ?? 'feels like mine'}</span>
       </div>
     </div>
   )

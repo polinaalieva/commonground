@@ -8,7 +8,9 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/ru" element={<Home />} />
       <Route path="/:city" element={<City />} />
+      <Route path="/ru/:city" element={<City />} />
       <Route path="/dev" element={<Dev />} />
       <Route path="/qr" element={<QRPage />} />
     </Routes>

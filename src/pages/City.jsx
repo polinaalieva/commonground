@@ -2,54 +2,14 @@ import { useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import Map from '../components/Map'
 import CityNotFound from '../components/CityNotFound'
-
-const CITY_CONFIGS = {
-  map: {
-    center: [12, 20],
-    zoom: 1.5,
-    country: null
-  },
-  london: {
-    bbox: [[-0.55, 51.25], [0.35, 51.75]],
-    country: "gb",
-    center: [-0.1276, 51.5072],
-    zoom: 9
-  },
-  london_camberwell: {
-    bbox: [[-0.55, 51.25], [0.35, 51.75]],
-    country: "gb",
-    center: [-0.0875, 51.4735],
-    zoom: 14
-  },
-  newyork: {
-    bbox: [[-74.30, 40.45], [-73.65, 40.95]],
-    country: "us",
-    center: [-74.0060, 40.7128],
-    zoom: 10
-  },
-  sanfrancisco: {
-    bbox: [[-123.00, 37.55], [-122.30, 37.93]],
-    country: "us",
-    center: [-122.4194, 37.7749],
-    zoom: 11
-  },
-  moscow: {
-    bbox: [[36.80, 55.45], [38.20, 56.10]],
-    country: "ru",
-    center: [37.6176, 55.7558],
-    zoom: 10
-  },
-  bucharest: {
-    bbox: [[25.94, 44.34], [26.30, 44.54]],
-    country: "ro",
-    center: [26.1025, 44.4268],
-    zoom: 11
-  }
-}
+import { CITY_CONFIGS } from '../config/cities'
+import { CONTENT } from '../config/content'     
+import { usePageParams } from '../hooks/usePageParams'  
 
 function City() {
-  const { city } = useParams()
+  const { city, lang, variant, source } = usePageParams()
   const config = CITY_CONFIGS[city]
+  const content = CONTENT.map[variant]?.[lang] ?? CONTENT.map['belonging']['en']
 
   if (!config) {
     return <CityNotFound />
@@ -59,7 +19,14 @@ function City() {
     <div>
       <Header />
       <div className="cg-city-map-wrapper">
-        <Map city={city} config={config} />
+        <Map 
+            city={city}
+            cityConfig={config}      //← из cities.js, настройки карты
+            pageContent={content}    // ← из content.js, тексты
+            variant={variant}        // ← из URL (?v=)
+            source={source}          // ← из URL (utm_source=)
+            lang={lang}              // ← из URL (/ru/)
+        />
       </div>
     </div>
   )

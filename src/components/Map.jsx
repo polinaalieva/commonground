@@ -26,14 +26,6 @@ function getFeatureComment(props) {
   return ''
 }
 
-function getRatingLabel(rating) {
-  const v = Number(rating)
-  if (v >= 1 && v <= 4) return 'Not my place'
-  if (v >= 5 && v <= 8) return 'Mixed feelings'
-  if (v >= 9 && v <= 10) return 'Feels like mine'
-  return 'No rating'
-}
-
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -44,7 +36,12 @@ function isMobile() {
   return window.innerWidth <= 768
 }
 
-function Map({ city, config }) {
+// ↑ getRatingLabel убрали отсюда — теперь она внутри компонента
+//   потому что ей нужен доступ к pageContent
+
+function Map({ city, cityConfig, pageContent, variant, source, lang }) {
+  // ↑ переименовали config → cityConfig, добавили pageContent, variant, source, lang
+
   const mapContainer = useRef(null)
   const map = useRef(null)
   const activePopup = useRef(null)
@@ -55,6 +52,15 @@ function Map({ city, config }) {
   const [mode, setMode] = useState('view')
   const [isLoading, setIsLoading] = useState(false)
   const modeRef = useRef('view')
+
+  // ↓ getRatingLabel теперь здесь — берёт лейблы из pageContent
+  function getRatingLabel(rating) {
+    const v = Number(rating)
+    if (v >= 1 && v <= 4) return pageContent.map_labels.low
+    if (v >= 5 && v <= 8) return pageContent.map_labels.mid
+    if (v >= 9 && v <= 10) return pageContent.map_labels.high
+    return ''
+  }
 
   function setModeSync(m) {
     modeRef.current = m
@@ -67,11 +73,11 @@ function Map({ city, config }) {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: config.center,
-      zoom: config.zoom
+      center: cityConfig.center,  // ← cityConfig
+      zoom: cityConfig.zoom        // ← cityConfig
     })
 
-    if (config.bbox) map.current.setMaxBounds(config.bbox)
+    if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)  // ← cityConfig
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
     const geocoder = new MapboxGeocoder({
@@ -79,7 +85,7 @@ function Map({ city, config }) {
       mapboxgl: mapboxgl,
       marker: false,
       placeholder: 'Search address',
-      countries: config.country || 'gb'
+      countries: cityConfig.country || 'gb'  // ← cityConfig
     })
     map.current.addControl(geocoder, 'top-left')
 
@@ -148,7 +154,7 @@ function Map({ city, config }) {
           activePopup.current = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, offset: 12 })
             .setLngLat(feature.geometry.coordinates.slice())
             .setHTML(
-              '<div class="cg-popup-value">' + (rating ? escapeHtml(getRatingLabel(rating)) : 'No rating') + '</div>' +
+              '<div class="cg-popup-value">' + (rating ? escapeHtml(getRatingLabel(rating)) : '') + '</div>' +
               '<div class="cg-popup-comment">' + (comment ? escapeHtml(comment) : '— no comment') + '</div>'
             )
             .addTo(map.current)
@@ -259,34 +265,37 @@ function Map({ city, config }) {
     setTimeout(() => loadData(1), 300)
   }
 
- return (
-  <div className="cg-map-outer">
-    <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+  return (
+    <div className="cg-map-outer">
+      <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
-    {mode === 'select' && (
-      <div className="cg-center-pin" ref={centerPinRef}>
-        <div className="cg-center-pin-inner" />
-      </div>
-    )}
+      {mode === 'select' && (
+        <div className="cg-center-pin" ref={centerPinRef}>
+          <div className="cg-center-pin-inner" />
+        </div>
+      )}
 
-    <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
-      <svg viewBox="0 0 12 12" aria-hidden="true">
-        <path d="M6 1 L10.5 11 L6 8.8 L1.5 11 Z" fill="#111"/>
-      </svg>
-    </button>
+      <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
+        <svg viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M6 1 L10.5 11 L6 8.8 L1.5 11 Z" fill="#111"/>
+        </svg>
+      </button>
 
-    <SurveySheet
-      city={city}
-      source={city}
-      getCenter={getCenter}
-      onStartSelect={enterSelect}
-      onMapMoveEnd={onMapMoveEnd}
-      onDisableMap={disableMap}
-      onEnableMap={enableMap}
-      onClose={closeSurvey}
-    />
-  </div>
-)
+      <SurveySheet
+        city={city}
+        source={source}          // ← раньше было source={city}, это была ошибка!
+        variant={variant}        // ← новое
+        lang={lang}              // ← новое
+        pageContent={pageContent} // ← новое
+        getCenter={getCenter}
+        onStartSelect={enterSelect}
+        onMapMoveEnd={onMapMoveEnd}
+        onDisableMap={disableMap}
+        onEnableMap={enableMap}
+        onClose={closeSurvey}
+      />
+    </div>
+  )
 }
 
 export default Map
