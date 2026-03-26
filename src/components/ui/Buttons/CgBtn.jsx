@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import './CgButton.css'
+import './CgBtn.css'
  
 function CgButton({ children, to, onClick, className = '' }) {
   if (to) {

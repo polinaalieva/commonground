@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import Header from '../../components/Header'
-import CgButton from '../../components/ui/Buttons/CgButton'
+import CgButton from '../../components/ui/Buttons/CgBtn'
 import './QRPage.css'
 
 import QR_en_map_living from '../../assets/QR_en_map_living_personal.svg'
