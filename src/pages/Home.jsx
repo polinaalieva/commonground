@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import Header from '../components/Header'
+import CgButton from '../components/ui/Buttons/Cgbutton'
 import './Home.css'
 import SuggestCityModal from '../components/BottomSheet/SuggestCityModal'
 import { CONTENT } from '../config/content'
@@ -30,12 +30,12 @@ function Home() {
 
           <div className="cg-buttons-bleed">
             <div className="cg-buttons">
-              <Link className="cg-btn" to={lang === 'ru' ? '/ru/london' : '/london'}>
+              <CgButton to={lang === 'ru' ? '/ru/london' : '/london'}>
                 {c.btn_city}
-              </Link>
-              <button className="cg-btn" onClick={() => setSuggestOpen(true)}>
+              </CgButton>
+              <CgButton onClick={() => setSuggestOpen(true)}>
                 {c.btn_suggest}
-              </button>
+              </CgButton>
             </div>
           </div>
 

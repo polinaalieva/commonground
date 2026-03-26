@@ -1,0 +1,41 @@
+.cg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.7);
+  background: transparent;
+  text-decoration: none;
+  font-family: "Roboto Serif", Georgia, serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #111111 !important;
+  white-space: nowrap;
+  transition: all .18s ease;
+  cursor: pointer;
+}
+
+.cg-btn:hover {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(
+    rgba(255,255,255,0.95),
+    rgba(255,255,255,0.95)) padding-box,
+    linear-gradient(
+      135deg,
+      rgba(49,208,170,0.8),
+      rgba(13,11,14,0.8),
+      rgba(237,75,158,0.8)
+    ) border-box;
+}
+
+@media (max-width: 640px) {
+  .cg-btn {
+    flex: 0 0 auto;
+    height: 42px;
+    font-size: 14px;
+    padding: 0 14px;
+  }
+}

@@ -9,6 +9,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/ru" element={<Home />} />
+      <Route path="/ru/qr" element={<QRPage />} />
       <Route path="/:city" element={<City />} />
       <Route path="/ru/:city" element={<City />} />
       <Route path="/dev" element={<Dev />} />
