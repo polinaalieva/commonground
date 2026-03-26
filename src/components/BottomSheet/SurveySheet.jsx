@@ -9,6 +9,7 @@ import SheetSlider from './SheetSlider'
 import SheetTextarea from './SheetTextarea'
 import FormAnswerConfirmMSheet from '../ModalSheet/FormAnswerConfirmMSheet'
 import '../ModalSheet/ModalSheet.css'
+import posthog from 'posthog-js'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -48,7 +49,6 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
     }
   }
 
-  // геокодинг города для Supabase
   async function fetchCityName(lat, lng) {
     try {
       const res = await fetch(
@@ -62,11 +62,13 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
   }
 
   function handleStartSelect() {
+    posthog.capture('survey_started', { city, variant, lang })
     onStartSelect()
     setStep(1)
   }
 
   function handleContinue() {
+    posthog.capture('survey_step2', { city, variant, lang })
     const c = getCenter()
     setCoords(c)
     onDisableMap()
@@ -95,12 +97,23 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
           lng: coords.lng,
           place_rate: sliderValue,
           experience: note || null,
-          metric_type: variant,    // ← из пропсов, не хардкод
-          city_name: cityName,     // ← новое поле
-          lang: lang,              // ← новое поле
+          metric_type: variant,
+          city_name: cityName,
+          lang: lang,
         }),
       })
       if (!res.ok) throw new Error(await res.text())
+
+      // ← событие отправки
+      posthog.capture('survey_submitted', {
+        city,
+        variant,
+        lang,
+        source,
+        place_rate: sliderValue,
+        has_note: !!note.trim(),
+      })
+
       setStep('landing')
       setCoords(null)
       setAddress('')
@@ -109,7 +122,7 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
       setNotePromptShown(false)
       onClose()
     } catch (e) {
-      setError(pageContent.error)  // ← из контента
+      setError(pageContent.error)
       console.error(e)
     } finally {
       setIsSubmitting(false)
@@ -118,6 +131,7 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
 
   const handleDoneClick = () => {
     if (!note.trim() && !notePromptShown) {
+      posthog.capture('survey_note_prompt_shown', { city, variant, lang })  // ← новое
       setShowNotePrompt(true)
       setNotePromptShown(true)
       return
@@ -206,10 +220,12 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
         <FormAnswerConfirmMSheet
           onClose={() => setShowNotePrompt(false)}
           onSkip={() => {
+            posthog.capture('survey_note_skipped', { city, variant, lang })  // ← новое
             setShowNotePrompt(false)
             handleSubmit()
           }}
           onAddNote={() => {
+            posthog.capture('survey_note_add_clicked', { city, variant, lang })  // ← новое
             setShowNotePrompt(false)
           }}
         />
