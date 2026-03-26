@@ -4,20 +4,23 @@ import MSheetText from './MSheetText'
 import MSheetActions from './MSheetActions'
 import MSheetButton from './MSheetButton'
 
-function FormAnswerConfirmMSheet({ onClose, onSkip, onAddNote }) {
+function FormAnswerConfirmMSheet({ onClose, onSkip, onAddNote, pageContent }) {
   return (
     <ModalSheet onOverlayClick={onClose}>
-      <MSheetHeader title="Add a quick note?" onClose={onClose} />
+      <MSheetHeader title={pageContent.confirm_title} onClose={onClose} />
       <MSheetText>
-        It helps others understand this place better
+        {pageContent.confirm_text}
       </MSheetText>
       <MSheetActions>
-        <MSheetButton type="secondary" onClick={onSkip} loadingText="Sharing...">Skip</MSheetButton>
-        <MSheetButton type="primary" onClick={onAddNote}>Add note</MSheetButton>
+        <MSheetButton type="secondary" onClick={onSkip} loadingText={pageContent.btn_sharing}>
+          {pageContent.btn_skip}
+        </MSheetButton>
+        <MSheetButton type="primary" onClick={onAddNote}>
+          {pageContent.btn_add_note}
+        </MSheetButton>
       </MSheetActions>
     </ModalSheet>
   )
 }
-
 
 export default FormAnswerConfirmMSheet

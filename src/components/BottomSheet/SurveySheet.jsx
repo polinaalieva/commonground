@@ -219,6 +219,7 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
       {showNotePrompt && (
         <FormAnswerConfirmMSheet
           onClose={() => setShowNotePrompt(false)}
+          pageContent={pageContent}
           onSkip={() => {
             posthog.capture('survey_note_skipped', { city, variant, lang })  // ← новое
             setShowNotePrompt(false)
