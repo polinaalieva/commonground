@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import Header from '../components/Header'
-import CgButton from '../components/ui/Buttons/Cgbutton'
+import CgButton from '../components/ui/Buttons/CgButton'
 import './Home.css'
 import SuggestCityModal from '../components/BottomSheet/SuggestCityModal'
 import { CONTENT } from '../config/content'
