@@ -1,0 +1,21 @@
+.cg-burger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+
+.cg-burger:hover {
+  background:none;
+}
+
+.cg-burger--open {
+  background:none;
+}

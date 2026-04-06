@@ -68,16 +68,31 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   }
 
   useEffect(() => {
-    if (map.current) return
+    // Если карта уже есть — просто перелетаем на новый город
+    if (map.current) {
+      map.current.setMaxBounds(null) // сначала снимаем ограничения
+      map.current.flyTo({
+        center: cityConfig.center,
+        zoom: cityConfig.zoom,
+        essential: true,
+        duration: 2500
+      })
+      // После анимации ставим новые bounds (если есть)
+      setTimeout(() => {
+        if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)
+        else map.current.setMaxBounds(null)
+      }, 2600)
+      return
+    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: cityConfig.center,  // ← cityConfig
-      zoom: cityConfig.zoom        // ← cityConfig
+      center: cityConfig.center,
+      zoom: cityConfig.zoom
     })
 
-    if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)  // ← cityConfig
+    if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
     const geocoder = new MapboxGeocoder({
@@ -85,7 +100,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       mapboxgl: mapboxgl,
       marker: false,
       placeholder: 'Search address',
-      countries: cityConfig.country || 'gb'  // ← cityConfig
+      countries: cityConfig.country || 'gb'
     })
     map.current.addControl(geocoder, 'top-left')
 
@@ -97,7 +112,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
     return () => {
       if (geoWatchId.current) navigator.geolocation.clearWatch(geoWatchId.current)
     }
-  }, [])
+  }, [cityConfig]) // ← было [], стало [cityConfig]
 
   async function loadData(retries = 2) {
     if (isLoading) return

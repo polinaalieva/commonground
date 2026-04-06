@@ -20,7 +20,7 @@ function City() {
 
   return (
     <div>
-      <Header />
+      <Header isMap />
       <div className="cg-city-map-wrapper">
         <Map 
             city={city}
