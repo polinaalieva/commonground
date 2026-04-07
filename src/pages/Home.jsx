@@ -40,16 +40,14 @@ function Home() {
           </div>
 
           <div className="cg-body">
-            <p>{c.body_1}</p>
-            <p>{c.body_2}</p>
+            <p>{c.body_1}<br />{c.body_2}</p>
             <p>{c.body_3}</p>
-          </div>
-
-          <div className="cg-contact">
-            {c.contact}{' '}
-            <a href="https://t.me/AlievaPolina" target="_blank">@AlievaPolina</a>
-            {' '}or email{' '}
-            <a href="mailto:polina.alieva@gmail.com">polina.alieva@gmail.com</a>
+            <p>
+              {c.contact}{' '}
+              <a href="https://t.me/AlievaPolina" target="_blank">@AlievaPolina</a>
+              {' '}{lang === 'ru' ? 'или на почту' : 'or email'}{' '}
+              <a href="mailto:polina.alieva@gmail.com">polina.alieva@gmail.com</a>
+            </p>
           </div>
 
         </div>
