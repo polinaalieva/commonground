@@ -19,7 +19,7 @@ function Home() {
         <div className="cg-landing__content">
 
           <h1 className="cg-title">
-            <span className="cg-title-accent">Common Ground</span> {c.title.replace('Common Ground', '').trim()}
+            <span className="cg-title-accent"> </span> {c.title.replace('Common Ground', '').trim()}
           </h1>
 
           <p className="cg-subtitle">

@@ -6,7 +6,7 @@ export const CONTENT = {
   home: {
     en: {
       subtitle_header: 'A map of how people experience places',
-      title: 'Common Ground is a map of how people experience places',
+      title: 'A map of how people experience places',
       subtitle: 'Tap the map. Share your experience.\nExplore places through people’s experiences.',
       btn_city: 'London',
       btn_suggest: '+ Suggest city',
@@ -17,7 +17,7 @@ export const CONTENT = {
     },
     ru: {
       subtitle_header: 'Изучай места через опыт людей',
-        title: 'Common Ground — карта мест через опыт людей',
+        title: 'Карта, собранная из опыта людей',
       subtitle: 'Открой карту. Поделись своим опытом.\nИзучай места через опыт других людей.',
       btn_city: 'Лондон',
       btn_suggest: '+ Предложить город',
