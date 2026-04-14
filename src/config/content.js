@@ -96,8 +96,12 @@ export const CONTENT = {
   // MAP PAGE - только здесь variant → lang
   // ===========================
   map: {
-    belonging: {
+    belonging: { //пофиксь текст about project (belonging)
       en: {
+        // about project (menu button)
+       about_text_1: 'Cities collect vast amounts of data. Yet people\'s lived experience of places often remains fragmented, delayed, and treated as secondary.',
+      about_text_2: 'Common Ground explores what happens when people\'s experiences are continuously collected and form a shared layer of understanding about the city.',
+
         // landing step
         modal_text_mobile: 'See how people experience places',
         modal_text_desktop: 'See how people experience places or share your experience',
@@ -134,6 +138,10 @@ export const CONTENT = {
         },
       },
       ru: {
+        // about project (menu button)
+       about_text_1: 'Города собирают много данных. Но личный опыт людей, связанный с местами, часто фиксируется поздно, остаётся фрагментарным и второстепенным.',
+        about_text_2: 'Common Ground исследует, что происходит, когда опыт людей собирается непрерывно и складывается в общий слой понимания города.',
+
         // landing step
         modal_text_mobile: 'Изучай места через опыт людей',
         modal_text_desktop: 'Изучай места через опыт людей или поделись своим опытом',
@@ -173,6 +181,10 @@ export const CONTENT = {
 
     living: {
       en: {
+        // about project (menu button)
+        about_text_1: `When choosing a neighbourhood, you usually rely on advice, articles, or scattered opinions. But there's no simple way to open a map and see what it's actually like to live in different parts of a city.`,
+        about_text_2: 'On this map, residents mark places and share their experience of living there.',
+
         // landing step
         modal_text_mobile: 'See what it\'s like to live in different places',
         modal_text_desktop: 'See what it\'s like to live in different places or share your experience',
@@ -209,9 +221,13 @@ export const CONTENT = {
         },
       },
       ru: {
+        // about project (menu button)
+        about_text_1: 'Выбирая место для жизни, обычно ориентируешься на советы, статьи или отдельные мнения. Но нет простого способа открыть карту и увидеть, как людям реально живётся в разных местах города.',
+        about_text_2: 'На этой карте жители отмечают места и делятся своим опытом жизни в них.',
+
         // landing step
-        modal_text_mobile: 'Посмотри на места через опыт людей',
-        modal_text_desktop: 'Посмотри на места через опыт людей или поделись своим',
+        modal_text_mobile: 'Изучай места через опыт людей',
+        modal_text_desktop: 'Изучай места через опыт людей или поделись своим',
         button: 'Поделиться опытом',
 
         // step 1

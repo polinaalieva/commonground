@@ -36,11 +36,8 @@ function isMobile() {
   return window.innerWidth <= 768
 }
 
-// ↑ getRatingLabel убрали отсюда — теперь она внутри компонента
-//   потому что ей нужен доступ к pageContent
 
 function Map({ city, cityConfig, pageContent, variant, source, lang }) {
-  // ↑ переименовали config → cityConfig, добавили pageContent, variant, source, lang
 
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -56,9 +53,9 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   // ↓ getRatingLabel теперь здесь — берёт лейблы из pageContent
   function getRatingLabel(rating) {
     const v = Number(rating)
-    if (v >= 1 && v <= 4) return pageContent.map_labels.low
-    if (v >= 5 && v <= 8) return pageContent.map_labels.mid
-    if (v >= 9 && v <= 10) return pageContent.map_labels.high
+    if (v >= 1 && v <= 3) return pageContent.map_labels.low
+    if (v >= 4 && v <= 7) return pageContent.map_labels.mid
+    if (v >= 8 && v <= 10) return pageContent.map_labels.high
     return ''
   }
 
@@ -77,7 +74,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
         essential: true,
         duration: 2500
       })
-      // После анимации ставим новые bounds (если есть)
+      // После анимации - новые bounds (если есть)
       setTimeout(() => {
         if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)
         else map.current.setMaxBounds(null)

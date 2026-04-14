@@ -32,7 +32,8 @@ export const CITY_CONFIGS = {
     bbox: [[36.80, 55.45], [38.20, 56.10]],
     country: "ru",
     center: [37.6176, 55.7558],
-    zoom: 10
+    zoom: 10,
+    hideCitySwitcher: true,
   },
   bucharest: {
     bbox: [[25.94, 44.34], [26.30, 44.54]],

@@ -5,6 +5,7 @@ import CgButton from '../components/ui/Buttons/CgBtn'
 import './Home.css'
 import SuggestCityModal from '../components/BottomSheet/SuggestCityModal'
 import { CONTENT } from '../config/content'
+import ContactBlock from '../components/ui/ContactBlock'
 
 function Home() {
   const [suggestOpen, setSuggestOpen] = useState(false)
@@ -42,12 +43,7 @@ function Home() {
           <div className="cg-body">
             <p>{c.body_1}<br />{c.body_2}</p>
             <p>{c.body_3}</p>
-            <p>
-              {c.contact}{' '}
-              <a href="https://t.me/AlievaPolina" target="_blank">@AlievaPolina</a>
-              {' '}{lang === 'ru' ? 'или на почту' : 'or email'}{' '}
-              <a href="mailto:polina.alieva@gmail.com">polina.alieva@gmail.com</a>
-            </p>
+           <ContactBlock lang={lang} />
           </div>
 
         </div>
