@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MapPin } from 'lucide-react'
 import './Wuf13PinCard.css'
 
 export function Wuf13PinCard({ pin, onDismiss }) {
@@ -6,7 +7,6 @@ export function Wuf13PinCard({ pin, onDismiss }) {
 
   useEffect(() => {
     if (!pin) return
-    // Small delay for enter animation
     const t = setTimeout(() => setVisible(true), 30)
     return () => clearTimeout(t)
   }, [pin])
@@ -23,14 +23,11 @@ export function Wuf13PinCard({ pin, onDismiss }) {
         </div>
       )}
       {pin.experience && (
-        <p className="wuf-card__comment">{pin.experience}</p>
+        <p className="wuf-card__comment">{pin.experience.length > 600 ? pin.experience.slice(0, 600) + '…' : pin.experience}</p>
       )}
       {location && (
         <div className="wuf-card__meta">
-          <span
-            className="wuf-card__dot"
-            style={{ background: pin.ratingColor }}
-          />
+          <MapPin size={14} color="rgba(17,17,17,0.5)" strokeWidth={1.5} />
           {location}
         </div>
       )}

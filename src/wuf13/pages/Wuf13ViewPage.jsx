@@ -22,10 +22,18 @@ const RATING_COLORS = {
 
 function clamp(x, min, max) { return Math.max(min, Math.min(max, x)) }
 
+function createPulseMarker(color) {
+  const el = document.createElement('div')
+  el.className = 'wuf-pulse'
+  el.style.setProperty('--pulse-color', color || '#4EBBA8')
+  return el
+}
+
 export default function Wuf13ViewPage() {
   const mapContainer = useRef(null)
   const map = useRef(null)
   const markersRef = useRef([])
+  const pulseMarkerRef = useRef(null)
 
   const { pins, stats, newPin } = useWuf13Pins()
 
@@ -109,8 +117,17 @@ export default function Wuf13ViewPage() {
     source.setData({ type: 'FeatureCollection', features })
   }, [pins])
 
+  // Remove pulse marker helper
+  const removePulseMarker = useCallback(() => {
+    if (pulseMarkerRef.current) {
+      pulseMarkerRef.current.remove()
+      pulseMarkerRef.current = null
+    }
+  }, [])
+
   // Autopilot — return to world view
   const returnToWorld = useCallback(() => {
+    removePulseMarker()
     setActivePin(null)
     activePinRef.current = null
     isProcessingRef.current = false
@@ -121,7 +138,7 @@ export default function Wuf13ViewPage() {
       duration: 2500,
       essential: true,
     })
-  }, [])
+  }, [removePulseMarker])
 
   // Autopilot — show a pin
   const showPin = useCallback((pin) => {
@@ -129,6 +146,13 @@ export default function Wuf13ViewPage() {
     activePinRef.current = pin
     setActivePin(pin)
     isProcessingRef.current = true
+
+    // Replace pulse marker
+    removePulseMarker()
+    const el = createPulseMarker(pin.ratingColor)
+    pulseMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([pin.lng, pin.lat])
+      .addTo(map.current)
 
     map.current.flyTo({
       center: [pin.lng, pin.lat],
@@ -147,7 +171,7 @@ export default function Wuf13ViewPage() {
         setTimeout(returnToWorld, RETURN_DELAY)
       }
     }, MIN_SHOW_MS)
-  }, [returnToWorld])
+  }, [returnToWorld, removePulseMarker])
 
   // Handle new pins from polling
   useEffect(() => {
@@ -163,8 +187,11 @@ export default function Wuf13ViewPage() {
 
   // Cleanup timers on unmount
   useEffect(() => {
-    return () => clearTimeout(showTimerRef.current)
-  }, [])
+    return () => {
+      clearTimeout(showTimerRef.current)
+      removePulseMarker()
+    }
+  }, [removePulseMarker])
 
   return (
     <div className="wuf-view">

@@ -21,3 +21,60 @@
 .wuf-view .mapboxgl-ctrl-bottom-right {
   display: none;
 }
+
+/* Brand — always top left, independent of dashboard */
+.wuf-view__brand {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 40;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+  pointer-events: none;
+}
+
+/* ======================
+   PULSE MARKER
+   ====================== */
+
+.wuf-pulse {
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+
+.wuf-pulse::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--pulse-color, #4EBBA8);
+  opacity: 0.9;
+}
+
+.wuf-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--pulse-color, #4EBBA8);
+  opacity: 0;
+  animation: wuf-pulse-ring 1.8s ease-out infinite;
+}
+
+@keyframes wuf-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
