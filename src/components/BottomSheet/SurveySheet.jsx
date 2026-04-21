@@ -61,6 +61,18 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
     }
   }
 
+  async function fetchCountryName(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=country&limit=1`
+    )
+    const data = await res.json()
+    return data.features?.[0]?.text || null
+  } catch {
+    return null
+  }
+}
+
   function handleStartSelect() {
     posthog.capture('survey_started', { city, variant, lang })
     onStartSelect()
@@ -79,7 +91,10 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
     setIsSubmitting(true)
     setError(null)
     try {
-      const cityName = await fetchCityName(coords.lat, coords.lng)
+      const [cityName, countryName] = await Promise.all([
+  fetchCityName(coords.lat, coords.lng),
+  fetchCountryName(coords.lat, coords.lng),
+])
 
       const res = await fetch(`${SUPABASE_URL}/rest/v1/feedback_map`, {
         method: 'POST',
@@ -91,6 +106,7 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
           'Content-Profile': 'public',
         },
         body: JSON.stringify({
+          country_name: countryName,
           city: city || null,
           source: source || null,
           lat: coords.lat,

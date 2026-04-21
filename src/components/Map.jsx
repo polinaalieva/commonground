@@ -36,7 +36,6 @@ function isMobile() {
   return window.innerWidth <= 768
 }
 
-
 function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
   const mapContainer = useRef(null)
@@ -50,7 +49,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [isLoading, setIsLoading] = useState(false)
   const modeRef = useRef('view')
 
-  // ↓ getRatingLabel теперь здесь — берёт лейблы из pageContent
   function getRatingLabel(rating) {
     const v = Number(rating)
     if (v >= 1 && v <= 3) return pageContent.map_labels.low
@@ -65,16 +63,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   }
 
   useEffect(() => {
-    // Если карта уже есть — просто перелетаем на новый город
     if (map.current) {
-      map.current.setMaxBounds(null) // сначала снимаем ограничения
+      map.current.setMaxBounds(null)
       map.current.flyTo({
         center: cityConfig.center,
         zoom: cityConfig.zoom,
         essential: true,
         duration: 2500
       })
-      // После анимации - новые bounds (если есть)
       setTimeout(() => {
         if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)
         else map.current.setMaxBounds(null)
@@ -103,19 +99,28 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
     map.current.on('load', () => {
       loadData()
-      requestGeoAuto()
+      // ← геолокация отдельно, не блокирует загрузку точек
+      setTimeout(() => requestGeoAuto(), 500)
     })
 
     return () => {
       if (geoWatchId.current) navigator.geolocation.clearWatch(geoWatchId.current)
     }
-  }, [cityConfig]) // ← было [], стало [cityConfig]
+  }, [cityConfig])
 
   async function loadData(retries = 2) {
-    if (isLoading) return
     setIsLoading(true)
     try {
-      const res = await fetch(WORKER_URL, { cache: 'no-store' })
+      // ← таймаут 10 сек — если воркер не отвечает (VPN, геоблок), не висим бесконечно
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+      const res = await fetch(WORKER_URL, {
+        cache: 'no-store',
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+
       const geojson = await res.json()
 
       geojson.features = geojson.features.map(f => ({
@@ -295,10 +300,10 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
       <SurveySheet
         city={city}
-        source={source}          // ← раньше было source={city}, это была ошибка!
-        variant={variant}        // ← новое
-        lang={lang}              // ← новое
-        pageContent={pageContent} // ← новое
+        source={source}
+        variant={variant}
+        lang={lang}
+        pageContent={pageContent}
         getCenter={getCenter}
         onStartSelect={enterSelect}
         onMapMoveEnd={onMapMoveEnd}

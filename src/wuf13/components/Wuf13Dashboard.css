@@ -1,0 +1,96 @@
+/* ======================
+   WUF13 DASHBOARD
+   Scales via clamp() — works on any screen from laptop to giant TV
+   ====================== */
+
+.wuf-dash {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1vw, 16px);
+}
+
+/* Vertical layout — left side */
+.wuf-dash--vertical {
+  top: clamp(16px, 2vw, 40px);
+  left: clamp(16px, 2vw, 40px);
+  width: clamp(200px, 18vw, 320px);
+}
+
+/* Horizontal layout — bottom row */
+.wuf-dash--horizontal {
+  bottom: clamp(16px, 2vw, 40px);
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+  width: auto;
+  gap: clamp(8px, 1.2vw, 20px);
+}
+
+/* Header */
+.wuf-dash__header {
+  padding-bottom: clamp(4px, 0.5vw, 8px);
+}
+
+.wuf-dash__brand {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(11px, 1vw, 16px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(17, 17, 17, 0.5);
+  text-transform: uppercase;
+}
+
+/* Cards container */
+.wuf-dash__cards {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vw, 14px);
+}
+
+.wuf-dash--horizontal .wuf-dash__cards {
+  flex-direction: row;
+  gap: clamp(8px, 1.2vw, 20px);
+}
+
+/* Individual card */
+.wuf-dash__card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: clamp(10px, 1.2vw, 18px);
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: clamp(12px, 1.4vw, 24px) clamp(14px, 1.6vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.3vw, 6px);
+  min-width: clamp(140px, 12vw, 220px);
+}
+
+.wuf-dash__card-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(11px, 0.9vw, 15px);
+  font-weight: 500;
+  color: rgba(17, 17, 17, 0.55);
+  line-height: 1.3;
+}
+
+.wuf-dash__card-value {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(28px, 3.5vw, 60px);
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.wuf-dash__card-delta {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(10px, 0.8vw, 13px);
+  font-weight: 400;
+  color: rgba(17, 17, 17, 0.45);
+  line-height: 1.3;
+}

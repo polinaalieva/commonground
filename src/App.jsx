@@ -1,3 +1,4 @@
+import Wuf13ViewPage from './wuf13/pages/Wuf13ViewPage'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import City from './pages/City.jsx'
@@ -14,6 +15,7 @@ function App() {
       <Route path="/ru/:city" element={<City />} />
       <Route path="/dev" element={<Dev />} />
       <Route path="/qr" element={<QRPage />} />
+      <Route path="/wuf13view" element={<Wuf13ViewPage />} />
     </Routes>
   )
 }

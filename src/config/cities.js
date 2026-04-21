@@ -4,6 +4,13 @@ export const CITY_CONFIGS = {
     zoom: 1.5,
     country: null
   },
+
+   wuf13: {          // world urban forum 13
+    center: [12, 20],
+    zoom: 1.5,
+    country: null,
+  },
+
   london: {
     bbox: [[-0.55, 51.25], [0.35, 51.75]],
     country: "gb",

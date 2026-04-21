@@ -1,0 +1,73 @@
+/* ======================
+   WUF13 PIN CARD
+   Shown on autopilot when zooming to a new pin
+   Positioned center-right to not cover the pin itself
+   ====================== */
+
+.wuf-card {
+  position: absolute;
+  top: 50%;
+  right: clamp(20px, 4vw, 80px);
+  transform: translateY(-50%) translateX(12px);
+  opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  z-index: 30;
+
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: clamp(14px, 1.5vw, 24px);
+  border: 1px solid rgba(17, 17, 17, 0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  padding: clamp(20px, 2.5vw, 48px);
+  max-width: clamp(260px, 28vw, 520px);
+  min-width: clamp(220px, 22vw, 400px);
+
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1vw, 16px);
+}
+
+.wuf-card--visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Rating label — bold, colored */
+.wuf-card__rating {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(14px, 1.4vw, 22px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* Comment text */
+.wuf-card__comment {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(13px, 1.3vw, 20px);
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(17, 17, 17, 0.85);
+  margin: 0;
+}
+
+/* Meta — country, city */
+.wuf-card__meta {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.6vw, 10px);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(11px, 0.9vw, 15px);
+  font-weight: 400;
+  color: rgba(17, 17, 17, 0.5);
+  margin-top: clamp(2px, 0.3vw, 6px);
+}
+
+.wuf-card__dot {
+  width: clamp(8px, 0.7vw, 12px);
+  height: clamp(8px, 0.7vw, 12px);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
