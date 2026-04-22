@@ -37,31 +37,31 @@ function Header({ isMap = false }) {
         {/* Common Ground — больше не ссылка */}
         <div className="cg-header__title">Common Ground</div>
 
-        {isMap ? (
-          <div className="cg-header__burger-wrap" ref={wrapRef}>
-            <BurgerButton isOpen={menuOpen} onClick={() => {
-              setAboutOpen(false)
-              setMenuOpen(v => !v)
-            }} />
+        {isMap && !pathname.includes('wuf13') ? (
+  <div className="cg-header__burger-wrap" ref={wrapRef}>
+    <BurgerButton isOpen={menuOpen} onClick={() => {
+      setAboutOpen(false)
+      setMenuOpen(v => !v)
+    }} />
 
-            {menuOpen && (
-              <MapMenu
-                onClose={() => setMenuOpen(false)}
-                onAboutOpen={() => setAboutOpen(true)}
-              />
-            )}
+    {menuOpen && (
+      <MapMenu
+        onClose={() => setMenuOpen(false)}
+        onAboutOpen={() => setAboutOpen(true)}
+      />
+    )}
 
-            {aboutOpen && (
-              <AboutModal
-                onClose={() => setAboutOpen(false)}
-                variant={variant}
-                lang={lang}
-              />
-            )}
-          </div>
-        ) : (
-          <LangSwitcher />
-        )}
+    {aboutOpen && (
+      <AboutModal
+        onClose={() => setAboutOpen(false)}
+        variant={variant}
+        lang={lang}
+      />
+    )}
+  </div>
+) : !pathname.includes('wuf13') ? (
+  <LangSwitcher />
+) : null}
 
       </div>
     </header>
