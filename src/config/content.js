@@ -33,7 +33,7 @@ export const CONTENT = {
   // ===========================
   suggest_city: {
     en: {
-      step1_title: '1 / 2  Suggest city',
+      step1_title: 'Suggest city',
       description: 'Common Ground is an ongoing project exploring how places feel to people. If there\'s a city you\'d like to see on the map, feel free to suggest it.',
       label_city: 'Suggest city',
       placeholder_city: 'Which city would you like to suggest?',
@@ -41,7 +41,7 @@ export const CONTENT = {
       placeholder_why: 'What makes this city interesting?',
       btn_continue: 'Continue',
 
-      step2_title: '2 / 2  Tell about yourself',
+      step2_title: 'Tell about yourself',
       label_relation: 'Do you live in this city?',
       placeholder_relation: 'Select option',
       label_contact: 'Your contact',
@@ -62,7 +62,7 @@ export const CONTENT = {
       error: 'Something went wrong. Try again.',
     },
     ru: {
-      step1_title: '1 / 2  Предложить город',
+      step1_title: 'Предложить город',
       description: 'Common Ground — это проект, который исследует, как люди ощущают места. Если хочешь увидеть свой город на карте — предложи его.',
       label_city: 'Город',
       placeholder_city: 'Какой город ты хочешь предложить?',
@@ -70,7 +70,7 @@ export const CONTENT = {
       placeholder_why: 'Что делает его интересным?',
       btn_continue: 'Продолжить',
 
-      step2_title: '2 / 2  Расскажи о себе',
+      step2_title: 'Расскажи о себе',
       label_relation: 'Ты живёшь в этом городе?',
       placeholder_relation: 'Выбери вариант',
       label_contact: 'Контакт',
@@ -108,12 +108,12 @@ export const CONTENT = {
         button: 'Share your experience',
 
         // step 1
-        step1_title: '1 / 2  Pick a place on the map',
+        step1_title: 'Pick a place on the map',
         step1_subtitle: 'Drag the map to move the pin',
         btn_continue: 'Continue',
 
         // step 2
-        step2_title: '2 / 2  Share your experience',
+        step2_title: 'Share your experience',
         question: 'Does this place feel like yours?',
         slider_labels: ['not mine', 'mixed', 'feels like mine'],
         note_label: 'Add a note',
@@ -148,12 +148,12 @@ export const CONTENT = {
         button: 'Поделиться опытом',
 
         // step 1
-        step1_title: '1 / 2  Выбери место на карте',
+        step1_title: 'Выбери место на карте',
         step1_subtitle: 'Перетащи карту, чтобы переместить пин',
         btn_continue: 'Продолжить',
 
         // step 2
-        step2_title: '2 / 2  Поделись своим опытом',
+        step2_title: 'Поделись своим опытом',
         question: 'Это место ощущается как своё?',
         slider_labels: ['не моё', 'неоднозначно', 'моё место'],
         note_label: 'Комментарий',
@@ -186,17 +186,17 @@ export const CONTENT = {
         about_text_2: 'On this map, residents mark places and share their experience of living there.',
 
         // landing step
-        modal_text_mobile: 'See what it\'s like to live in different places',
-        modal_text_desktop: 'See what it\'s like to live in different places or share your experience',
+        modal_text_mobile: 'What’s it like to live in this area?',
+        modal_text_desktop: 'What’s it like to live in this area?',
         button: 'Share your experience',
 
         // step 1
-        step1_title: '1 / 2  Pick a place on the map',
+        step1_title: 'Pick a place on the map',
         step1_subtitle: 'Drag the map to move the pin',
         btn_continue: 'Continue',
 
         // step 2
-        step2_title: '2 / 2  Share your experience',
+        step2_title: 'Share your experience',
         question: 'Does this place fit you as a place to live in?',
         slider_labels: ['doesn\'t fit', 'sometimes', 'fits me'],
         note_label: 'Add a note',
@@ -226,17 +226,17 @@ export const CONTENT = {
         about_text_2: 'На этой карте жители отмечают места и делятся своим опытом жизни в них.',
 
         // landing step
-        modal_text_mobile: 'Изучай места через опыт людей',
-        modal_text_desktop: 'Изучай места через опыт людей или поделись своим',
-        button: 'Поделиться опытом',
+        modal_text_mobile: 'Как тебе живется в этом месте?',
+        modal_text_desktop: 'Как тебе живется в этом месте?',
+        button: 'Поделись своим опытом',
 
         // step 1
-        step1_title: '1 / 2  Выбери место на карте',
+        step1_title: 'Выбери место на карте',
         step1_subtitle: 'Перетащи карту, чтобы переместить пин',
         btn_continue: 'Продолжить',
 
         // step 2
-        step2_title: '2 / 2 Поделись своим опытом',
+        step2_title: 'Поделись своим опытом',
         question: 'Подходит ли тебе это место для жизни?',
         slider_labels: ['не подходит', 'по-разному', 'подходит'],
         note_label: 'Комментарий',
