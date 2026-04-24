@@ -48,14 +48,18 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [mode, setMode] = useState('view')
   const [isLoading, setIsLoading] = useState(false)
   const modeRef = useRef('view')
+  const pageContentRef = useRef(pageContent)
+  useEffect(() => {
+  pageContentRef.current = pageContent
+  }, [pageContent])
 
   function getRatingLabel(rating) {
-    const v = Number(rating)
-    if (v >= 1 && v <= 3) return pageContent.map_labels.low
-    if (v >= 4 && v <= 7) return pageContent.map_labels.mid
-    if (v >= 8 && v <= 10) return pageContent.map_labels.high
-    return ''
-  }
+  const v = Number(rating)
+  if (v >= 1 && v <= 3) return pageContentRef.current.map_labels.low
+  if (v >= 4 && v <= 7) return pageContentRef.current.map_labels.mid
+  if (v >= 8 && v <= 10) return pageContentRef.current.map_labels.high
+  return ''
+}
 
   function setModeSync(m) {
     modeRef.current = m
