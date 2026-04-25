@@ -6,7 +6,7 @@ export function usePageParams() {
   const [searchParams] = useSearchParams()
 
   const lang = pathname.startsWith('/ru/') ? 'ru' : 'en'
-  const variant = searchParams.get('v') ?? 'belonging'
+  const variant = searchParams.get('v') ?? 'living'
   const source = searchParams.get('utm_source') ?? 'direct'
 
   return { city, lang, variant, source }
