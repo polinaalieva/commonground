@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef } from 'react'
 import BottomSheet from './BottomSheet'
 import SheetHeader from './SheetHeader'
 import SheetContent from './SheetContent'
@@ -14,7 +14,7 @@ import posthog from 'posthog-js'
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose }) {
+const SurveySheet = forwardRef(function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, pinSelected }, ref) {
   const [step, setStep] = useState('landing')
   const [coords, setCoords] = useState(null)
   const [address, setAddress] = useState('')
@@ -62,16 +62,16 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
   }
 
   async function fetchCountryName(lat, lng) {
-  try {
-    const res = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=country&limit=1`
-    )
-    const data = await res.json()
-    return data.features?.[0]?.text || null
-  } catch {
-    return null
+    try {
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=country&limit=1`
+      )
+      const data = await res.json()
+      return data.features?.[0]?.text || null
+    } catch {
+      return null
+    }
   }
-}
 
   function handleStartSelect() {
     posthog.capture('survey_started', { city, variant, lang })
@@ -92,9 +92,9 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
     setError(null)
     try {
       const [cityName, countryName] = await Promise.all([
-  fetchCityName(coords.lat, coords.lng),
-  fetchCountryName(coords.lat, coords.lng),
-])
+        fetchCityName(coords.lat, coords.lng),
+        fetchCountryName(coords.lat, coords.lng),
+      ])
 
       const res = await fetch(`${SUPABASE_URL}/rest/v1/feedback_map`, {
         method: 'POST',
@@ -120,7 +120,6 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
       })
       if (!res.ok) throw new Error(await res.text())
 
-      // ← событие отправки
       posthog.capture('survey_submitted', {
         city,
         variant,
@@ -147,7 +146,7 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
 
   const handleDoneClick = () => {
     if (!note.trim() && !notePromptShown) {
-      posthog.capture('survey_note_prompt_shown', { city, variant, lang })  // ← новое
+      posthog.capture('survey_note_prompt_shown', { city, variant, lang })
       setShowNotePrompt(true)
       setNotePromptShown(true)
       return
@@ -157,18 +156,20 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
 
   return (
     <>
-      <BottomSheet variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt}>
+      <BottomSheet ref={ref} variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt}>
 
         {step === 'landing' && (
           <>
             <SheetContent>
-              <p className="landing-sheet__text landing-sheet__text--mobile">
-                {pageContent.modal_text_mobile}
-              </p>
-              <p className="landing-sheet__text landing-sheet__text--desktop">
-                {pageContent.modal_text_desktop}
-              </p>
-            </SheetContent>
+  {!pinSelected && (
+    <p className="landing-sheet__text landing-sheet__text--mobile">
+      {pageContent.modal_text_mobile}
+    </p>
+  )}
+  <p className="landing-sheet__text landing-sheet__text--desktop">
+    {pageContent.modal_text_desktop}
+  </p>
+</SheetContent>
             <SheetActions>
               <SheetButton onClick={handleStartSelect}>
                 {pageContent.button}
@@ -237,18 +238,18 @@ function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onSt
           onClose={() => setShowNotePrompt(false)}
           pageContent={pageContent}
           onSkip={() => {
-            posthog.capture('survey_note_skipped', { city, variant, lang })  // ← новое
+            posthog.capture('survey_note_skipped', { city, variant, lang })
             setShowNotePrompt(false)
             handleSubmit()
           }}
           onAddNote={() => {
-            posthog.capture('survey_note_add_clicked', { city, variant, lang })  // ← новое
+            posthog.capture('survey_note_add_clicked', { city, variant, lang })
             setShowNotePrompt(false)
           }}
         />
       )}
     </>
   )
-}
+})
 
 export default SurveySheet

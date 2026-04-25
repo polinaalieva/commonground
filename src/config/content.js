@@ -96,7 +96,7 @@ export const CONTENT = {
   // MAP PAGE - только здесь variant → lang
   // ===========================
   map: {
-    belonging: { //пофиксь текст about project (belonging)
+    belonging: { 
       en: {
         // about project (menu button)
        about_text_1: 'Cities collect vast amounts of data. Yet people\'s lived experience of places often remains fragmented, delayed, and treated as secondary.',

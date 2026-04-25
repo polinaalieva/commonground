@@ -5,10 +5,17 @@ import './Map.css'
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 import SurveySheet from './BottomSheet/SurveySheet'
+import { FeedbackCard } from './FeedbackCard/FeedbackCard'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
 const WORKER_URL = import.meta.env.VITE_WORKER_URL
+
+const RATING_COLORS = {
+  1: '#ED4B9E', 2: '#DF5BA6', 3: '#C46DB4',
+  4: '#A47EC0', 5: '#8490C8', 6: '#64A0C8',
+  7: '#44B0BE', 8: '#34C4B4', 9: '#31CEAC', 10: '#31D0AA',
+}
 
 function getFeatureRating(props) {
   const candidates = ['place_rate','rating','rate','score','value','mark','Rate','Rating']
@@ -40,26 +47,36 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
   const mapContainer = useRef(null)
   const map = useRef(null)
-  const activePopup = useRef(null)
   const userMarker = useRef(null)
   const userCoords = useRef(null)
   const geoWatchId = useRef(null)
   const centerPinRef = useRef(null)
+  const surveySheetRef = useRef(null)
+  const selectedFeatureId = useRef(null)
+
   const [mode, setMode] = useState('view')
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedPin, setSelectedPin] = useState(null)
+
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
   useEffect(() => {
-  pageContentRef.current = pageContent
+    pageContentRef.current = pageContent
   }, [pageContent])
 
   function getRatingLabel(rating) {
-  const v = Number(rating)
-  if (v >= 1 && v <= 3) return pageContentRef.current.map_labels.low
-  if (v >= 4 && v <= 7) return pageContentRef.current.map_labels.mid
-  if (v >= 8 && v <= 10) return pageContentRef.current.map_labels.high
-  return ''
-}
+    const v = Number(rating)
+    if (v >= 1 && v <= 3) return pageContentRef.current.map_labels.low
+    if (v >= 4 && v <= 7) return pageContentRef.current.map_labels.mid
+    if (v >= 8 && v <= 10) return pageContentRef.current.map_labels.high
+    return ''
+  }
+
+  function getRatingColor(rating) {
+    const v = Number(rating)
+    if (!v || v < 1 || v > 10) return '#9ca3af'
+    return RATING_COLORS[Math.round(v)] || '#9ca3af'
+  }
 
   function setModeSync(m) {
     modeRef.current = m
@@ -103,7 +120,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
     map.current.on('load', () => {
       loadData()
-      // ← геолокация отдельно, не блокирует загрузку точек
       setTimeout(() => requestGeoAuto(), 500)
     })
 
@@ -115,7 +131,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   async function loadData(retries = 2) {
     setIsLoading(true)
     try {
-      // ← таймаут 10 сек — если воркер не отвечает (VPN, геоблок), не висим бесконечно
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
@@ -135,50 +150,105 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
         }
       }))
 
-      const source = map.current.getSource('cg-feedback')
-      if (source) {
-        source.setData(geojson)
+      const mapSource = map.current.getSource('cg-feedback')
+      if (mapSource) {
+        mapSource.setData(geojson)
       } else {
-        map.current.addSource('cg-feedback', { type: 'geojson', data: geojson })
+        map.current.addSource('cg-feedback', {
+          type: 'geojson',
+          data: geojson,
+          promoteId: 'id', // нужно для setFeatureState (highlight)
+        })
+
         map.current.addLayer({
           id: 'cg-feedback-layer',
           type: 'circle',
           source: 'cg-feedback',
           paint: {
-            'circle-radius': 7,
-            'circle-opacity': ['case', ['==', ['get', 'has_comment'], true], 0.70, 0.30],
-            'circle-color': [
-              'to-color',
-              ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-                ['case',
-                  ['==', ['var', 'c'], ''], '#9ca3af',
-                  ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-                  ['concat', '#', ['var', 'c']]
-                ]
-              ], '#9ca3af'
+            // radius: крупнее при selected
+            'circle-radius': [
+              'case', ['boolean', ['feature-state', 'selected'], false],
+              9,
+              7
             ],
-            'circle-stroke-color': 'rgba(0,0,0,0.25)',
-            'circle-stroke-width': 1,
-            'circle-stroke-opacity': ['case', ['==', ['get', 'has_comment'], true], 0.9, 0]
+            'circle-opacity': ['case', ['==', ['get', 'has_comment'], true], 0.70, 0.30],
+            // color: белый при selected, иначе цвет рейтинга
+            'circle-color': [
+              'case', ['boolean', ['feature-state', 'selected'], false],
+              '#ffffff',
+              [
+                'to-color',
+                ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+                  ['case',
+                    ['==', ['var', 'c'], ''], '#9ca3af',
+                    ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+                    ['concat', '#', ['var', 'c']]
+                  ]
+                ], '#9ca3af'
+              ]
+            ],
+            // stroke: цвет рейтинга при selected, иначе стандарт
+            'circle-stroke-color': [
+              'case', ['boolean', ['feature-state', 'selected'], false],
+              [
+                'to-color',
+                ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+                  ['case',
+                    ['==', ['var', 'c'], ''], '#9ca3af',
+                    ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+                    ['concat', '#', ['var', 'c']]
+                  ]
+                ], '#9ca3af'
+              ],
+              'rgba(0,0,0,0.25)'
+            ],
+            'circle-stroke-width': [
+              'case', ['boolean', ['feature-state', 'selected'], false], 2.5, 1
+            ],
+            'circle-stroke-opacity': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false], 1,
+              ['case', ['==', ['get', 'has_comment'], true], 0.9, 0]
+            ]
           }
         })
 
+        // клик по точке → открыть FeedbackCard
         map.current.on('click', 'cg-feedback-layer', (e) => {
           if (modeRef.current !== 'view') return
           e.originalEvent.stopPropagation()
           const feature = e.features[0]
           if (!feature) return
+
           const props = feature.properties || {}
+          console.log('feature props:', props)
           const rating = getFeatureRating(props)
-          const comment = getFeatureComment(props)
-          if (activePopup.current) activePopup.current.remove()
-          activePopup.current = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, offset: 12 })
-            .setLngLat(feature.geometry.coordinates.slice())
-            .setHTML(
-              '<div class="cg-popup-value">' + (rating ? escapeHtml(getRatingLabel(rating)) : '') + '</div>' +
-              '<div class="cg-popup-comment">' + (comment ? escapeHtml(comment) : '— no comment') + '</div>'
+          const color = getRatingColor(rating)
+
+          // снять highlight с предыдущей точки
+          if (selectedFeatureId.current !== null) {
+            map.current.setFeatureState(
+              { source: 'cg-feedback', id: selectedFeatureId.current },
+              { selected: false }
             )
-            .addTo(map.current)
+          }
+
+          // поставить highlight на новую
+          if (feature.id !== undefined) {
+            map.current.setFeatureState(
+              { source: 'cg-feedback', id: feature.id },
+              { selected: true }
+            )
+            selectedFeatureId.current = feature.id
+          }
+
+          setSelectedPin({
+            id: feature.id,
+            ratingLabel: rating ? getRatingLabel(rating) : null,
+            ratingColor: color,
+            experience: getFeatureComment(props) || null,
+            created_at: props.created_time || null,
+          })
         })
 
         map.current.on('mouseenter', 'cg-feedback-layer', () => {
@@ -188,10 +258,12 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           map.current.getCanvas().style.cursor = ''
         })
 
+        // клик по пустой карте → закрыть карточку
         map.current.on('click', (e) => {
           const features = map.current.queryRenderedFeatures(e.point, { layers: ['cg-feedback-layer'] })
           if (features.length > 0) return
           if (modeRef.current === 'select') return
+          dismissSelectedPin()
         })
       }
     } catch (e) {
@@ -201,8 +273,19 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
     }
   }
 
+  function dismissSelectedPin() {
+    if (selectedFeatureId.current !== null && map.current) {
+      map.current.setFeatureState(
+        { source: 'cg-feedback', id: selectedFeatureId.current },
+        { selected: false }
+      )
+      selectedFeatureId.current = null
+    }
+    setSelectedPin(null)
+  }
+
   function enterSelect() {
-    if (activePopup.current) { activePopup.current.remove(); activePopup.current = null }
+    dismissSelectedPin()
     setModeSync('select')
   }
 
@@ -302,7 +385,15 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
         </svg>
       </button>
 
+      <FeedbackCard
+        pin={selectedPin}
+        surveySheetRef={surveySheetRef}
+        onDismiss={dismissSelectedPin}
+      />
+
       <SurveySheet
+        pinSelected={!!selectedPin}
+        ref={surveySheetRef}
         city={city}
         source={source}
         variant={variant}

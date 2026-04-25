@@ -15,6 +15,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  z-index: 31;
 }
 
 /* Десктоп — фиксированная ширина */
