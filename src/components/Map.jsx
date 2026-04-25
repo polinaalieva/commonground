@@ -53,8 +53,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const userCoords = useRef(null)
   const geoWatchId = useRef(null)
   const centerPinRef = useRef(null)
-  const surveySheetRef = useRef(null)   // для startSelect() — тултип
-  const bottomSheetRef = useRef(null)   // DOM-элемент BottomSheet — для FeedbackCard
+  const surveySheetRef = useRef(null)
+  const bottomSheetRef = useRef(null)
   const selectedFeatureId = useRef(null)
   const dataLoadedRef = useRef(false)
   const emptyTooltipShownRef = useRef(false)
@@ -91,17 +91,12 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
   useEffect(() => {
     if (map.current) {
-      map.current.setMaxBounds(null)
       map.current.flyTo({
         center: cityConfig.center,
         zoom: cityConfig.zoom,
         essential: true,
         duration: 2500
       })
-      setTimeout(() => {
-        if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)
-        else map.current.setMaxBounds(null)
-      }, 2600)
       return
     }
 
@@ -112,7 +107,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       zoom: cityConfig.zoom
     })
 
-    if (cityConfig.bbox) map.current.setMaxBounds(cityConfig.bbox)
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
     const geocoder = new MapboxGeocoder({
@@ -126,7 +120,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
     map.current.on('load', () => {
       loadData()
-      setTimeout(() => requestGeoAuto(), 500)
+      if (city === 'map') setTimeout(() => requestGeoAuto(), 500)
     })
 
     return () => {
