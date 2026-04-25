@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import BottomSheet from './BottomSheet'
 import SheetHeader from './SheetHeader'
 import SheetContent from './SheetContent'
@@ -14,7 +14,10 @@ import posthog from 'posthog-js'
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const SurveySheet = forwardRef(function SurveySheet({ city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, pinSelected }, ref) {
+const SurveySheet = forwardRef(function SurveySheet(
+  { city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, pinSelected, bottomSheetRef },
+  ref
+) {
   const [step, setStep] = useState('landing')
   const [coords, setCoords] = useState(null)
   const [address, setAddress] = useState('')
@@ -24,6 +27,13 @@ const SurveySheet = forwardRef(function SurveySheet({ city, source, variant, lan
   const [error, setError] = useState(null)
   const [showNotePrompt, setShowNotePrompt] = useState(false)
   const [notePromptShown, setNotePromptShown] = useState(false)
+
+  // ref пробрасывает только startSelect — DOM идёт через bottomSheetRef
+  useImperativeHandle(ref, () => ({
+    startSelect() {
+      handleStartSelect()
+    }
+  }))
 
   useEffect(() => {
     if (step !== 1) return
@@ -156,20 +166,20 @@ const SurveySheet = forwardRef(function SurveySheet({ city, source, variant, lan
 
   return (
     <>
-      <BottomSheet ref={ref} variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt}>
+      <BottomSheet ref={bottomSheetRef} variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt}>
 
         {step === 'landing' && (
           <>
             <SheetContent>
-  {!pinSelected && (
-    <p className="landing-sheet__text landing-sheet__text--mobile">
-      {pageContent.modal_text_mobile}
-    </p>
-  )}
-  <p className="landing-sheet__text landing-sheet__text--desktop">
-    {pageContent.modal_text_desktop}
-  </p>
-</SheetContent>
+              {!pinSelected && (
+                <p className="landing-sheet__text landing-sheet__text--mobile">
+                  {pageContent.modal_text_mobile}
+                </p>
+              )}
+              <p className="landing-sheet__text landing-sheet__text--desktop">
+                {pageContent.modal_text_desktop}
+              </p>
+            </SheetContent>
             <SheetActions>
               <SheetButton onClick={handleStartSelect}>
                 {pageContent.button}

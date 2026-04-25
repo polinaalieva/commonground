@@ -136,6 +136,11 @@ export const CONTENT = {
           mid: 'Mixed feelings',
           low: 'Not my place',
         },
+
+        empty_zone_tooltip: {
+        text: "Nobody's written about this place yet",
+        cta: 'Be the first',
+        },
       },
       ru: {
         // about project (menu button)
@@ -175,6 +180,11 @@ export const CONTENT = {
           high: 'Моё место',
           mid: 'Неоднозначно',
           low: 'Не моё место',
+        },
+
+        empty_zone_tooltip: {
+        text: 'Здесь пока никто не писал',
+        cta: 'Напиши первым',
         },
       },
     },
@@ -219,6 +229,10 @@ export const CONTENT = {
           mid: 'Sometimes fits',
           low: 'Doesn\'t fit me',
         },
+        empty_zone_tooltip: {
+        text: "Nobody's written about this place yet",
+        cta: 'Be the first',
+        },
       },
       ru: {
         // about project (menu button)
@@ -226,8 +240,8 @@ export const CONTENT = {
         about_text_2: 'На этой карте жители отмечают места и делятся своим опытом жизни в них.',
 
         // landing step
-        modal_text_mobile: 'Как тебе живется в этом месте?',
-        modal_text_desktop: 'Как тебе живется в этом месте?',
+        modal_text_mobile: 'Как тебе живется в этом районе?',
+        modal_text_desktop: 'Как тебе живется в этом районе?',
         button: 'Поделись своим опытом',
 
         // step 1
@@ -258,6 +272,11 @@ export const CONTENT = {
           high: 'Мне подходит',
           mid: 'Иногда подходит',
           low: 'Мне не подходит',
+        },
+
+        empty_zone_tooltip: {
+        text: 'Здесь пока никто не писал',
+        cta: 'Напиши первым',
         },
       },
     },

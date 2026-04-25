@@ -6,6 +6,8 @@ import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 import SurveySheet from './BottomSheet/SurveySheet'
 import { FeedbackCard } from './FeedbackCard/FeedbackCard'
+import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
+import './EmptyZoneTooltip/EmptyZoneTooltip.css'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -51,12 +53,16 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const userCoords = useRef(null)
   const geoWatchId = useRef(null)
   const centerPinRef = useRef(null)
-  const surveySheetRef = useRef(null)
+  const surveySheetRef = useRef(null)   // для startSelect() — тултип
+  const bottomSheetRef = useRef(null)   // DOM-элемент BottomSheet — для FeedbackCard
   const selectedFeatureId = useRef(null)
+  const dataLoadedRef = useRef(false)
+  const emptyTooltipShownRef = useRef(false)
 
   const [mode, setMode] = useState('view')
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPin, setSelectedPin] = useState(null)
+  const [showEmptyTooltip, setShowEmptyTooltip] = useState(false)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -128,6 +134,57 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
     }
   }, [cityConfig])
 
+  // ── Empty zone tooltip ──
+  useEffect(() => {
+    if (!map.current) return
+
+    const EMPTY_ZOOM_MIN = 15
+    const EMPTY_RADIUS_PX = 120
+
+    function checkEmptyZone() {
+      if (!dataLoadedRef.current) return
+      if (modeRef.current !== 'view') {
+        setShowEmptyTooltip(false)
+        return
+      }
+
+      const zoom = map.current.getZoom()
+      if (zoom < EMPTY_ZOOM_MIN) {
+        setShowEmptyTooltip(false)
+        return
+      }
+
+      const canvas = map.current.getCanvas()
+      const cx = canvas.offsetWidth / 2
+      const cy = canvas.offsetHeight / 2
+
+      const features = map.current.queryRenderedFeatures(
+        [
+          [cx - EMPTY_RADIUS_PX, cy - EMPTY_RADIUS_PX],
+          [cx + EMPTY_RADIUS_PX, cy + EMPTY_RADIUS_PX],
+        ],
+        { layers: ['cg-feedback-layer'] }
+      )
+
+      if (features.length === 0 && !emptyTooltipShownRef.current) {
+        emptyTooltipShownRef.current = true
+        setShowEmptyTooltip(true)
+      } else if (features.length > 0) {
+        setShowEmptyTooltip(false)
+      }
+    }
+
+    map.current.on('moveend', checkEmptyZone)
+    map.current.on('zoomend', checkEmptyZone)
+
+    return () => {
+      if (map.current) {
+        map.current.off('moveend', checkEmptyZone)
+        map.current.off('zoomend', checkEmptyZone)
+      }
+    }
+  }, [])
+
   async function loadData(retries = 2) {
     setIsLoading(true)
     try {
@@ -157,7 +214,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
         map.current.addSource('cg-feedback', {
           type: 'geojson',
           data: geojson,
-          promoteId: 'id', // нужно для setFeatureState (highlight)
+          promoteId: 'id',
         })
 
         map.current.addLayer({
@@ -165,14 +222,12 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           type: 'circle',
           source: 'cg-feedback',
           paint: {
-            // radius: крупнее при selected
             'circle-radius': [
               'case', ['boolean', ['feature-state', 'selected'], false],
               9,
               7
             ],
             'circle-opacity': ['case', ['==', ['get', 'has_comment'], true], 0.70, 0.30],
-            // color: белый при selected, иначе цвет рейтинга
             'circle-color': [
               'case', ['boolean', ['feature-state', 'selected'], false],
               '#ffffff',
@@ -187,7 +242,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
                 ], '#9ca3af'
               ]
             ],
-            // stroke: цвет рейтинга при selected, иначе стандарт
             'circle-stroke-color': [
               'case', ['boolean', ['feature-state', 'selected'], false],
               [
@@ -213,7 +267,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           }
         })
 
-        // клик по точке → открыть FeedbackCard
+        dataLoadedRef.current = true
+
         map.current.on('click', 'cg-feedback-layer', (e) => {
           if (modeRef.current !== 'view') return
           e.originalEvent.stopPropagation()
@@ -221,11 +276,9 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           if (!feature) return
 
           const props = feature.properties || {}
-          console.log('feature props:', props)
           const rating = getFeatureRating(props)
           const color = getRatingColor(rating)
 
-          // снять highlight с предыдущей точки
           if (selectedFeatureId.current !== null) {
             map.current.setFeatureState(
               { source: 'cg-feedback', id: selectedFeatureId.current },
@@ -233,7 +286,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
             )
           }
 
-          // поставить highlight на новую
           if (feature.id !== undefined) {
             map.current.setFeatureState(
               { source: 'cg-feedback', id: feature.id },
@@ -258,12 +310,12 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           map.current.getCanvas().style.cursor = ''
         })
 
-        // клик по пустой карте → закрыть карточку
         map.current.on('click', (e) => {
           const features = map.current.queryRenderedFeatures(e.point, { layers: ['cg-feedback-layer'] })
           if (features.length > 0) return
           if (modeRef.current === 'select') return
           dismissSelectedPin()
+          setShowEmptyTooltip(false)
         })
       }
     } catch (e) {
@@ -285,6 +337,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   }
 
   function enterSelect() {
+    setShowEmptyTooltip(false)
     dismissSelectedPin()
     setModeSync('select')
   }
@@ -295,6 +348,13 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
     if (userCoords.current && userMarker.current) {
       userMarker.current.setLngLat(userCoords.current)
       if (!userMarker.current._map) userMarker.current.addTo(map.current)
+    }
+  }
+
+  function handleEmptyTooltipClick() {
+    setShowEmptyTooltip(false)
+    if (surveySheetRef.current) {
+      surveySheetRef.current.startSelect()
     }
   }
 
@@ -379,6 +439,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
         </div>
       )}
 
+      {showEmptyTooltip && mode === 'view' && (
+        <EmptyZoneTooltip
+          text={pageContent.empty_zone_tooltip.text}
+          cta={pageContent.empty_zone_tooltip.cta}
+          onClick={handleEmptyTooltipClick}
+        />
+      )}
+
       <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
         <svg viewBox="0 0 12 12" aria-hidden="true">
           <path d="M6 1 L10.5 11 L6 8.8 L1.5 11 Z" fill="#111"/>
@@ -387,13 +455,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
       <FeedbackCard
         pin={selectedPin}
-        surveySheetRef={surveySheetRef}
+        surveySheetRef={bottomSheetRef}
         onDismiss={dismissSelectedPin}
       />
 
       <SurveySheet
         pinSelected={!!selectedPin}
         ref={surveySheetRef}
+        bottomSheetRef={bottomSheetRef}
         city={city}
         source={source}
         variant={variant}

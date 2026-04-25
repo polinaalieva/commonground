@@ -29,6 +29,7 @@
     left: 20px;
     top: auto;
     right: auto;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -378,8 +379,8 @@
 
 @media (min-width: 768px) {
   .bottom-sheet--landing {
-    background: rgba(255, 255, 255, 0.7);
-    box-shadow: -1px 2px 2px 0 rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
     border: none;
 }
   .landing-sheet__text--mobile {
