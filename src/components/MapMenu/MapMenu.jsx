@@ -20,7 +20,7 @@ function MapMenu({ onClose, onAboutOpen }) {
   const currentCity = pathParts || 'london'
 
   const cityConfig = CITY_CONFIGS[currentCity] ?? {}
-  const hideCitySwitcher = !!cityConfig.hideCitySwitcher
+  const hideCitySwitcher = true
 
   function goToCity(cityKey) {
     const base = isRu ? '/ru' : ''
