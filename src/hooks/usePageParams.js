@@ -5,9 +5,10 @@ export function usePageParams() {
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
 
-  const lang = pathname.startsWith('/ru/') ? 'ru' : 'en'
+  const lang = pathname.startsWith('/ru/') || pathname === '/ru' ? 'ru' : 'en'
+  const resolvedCity = city ?? 'map'   // ← если нет параметра (на /), используем 'map'
   const variant = searchParams.get('v') ?? 'living'
   const source = searchParams.get('utm_source') ?? 'direct'
 
-  return { city, lang, variant, source }
+  return { city: resolvedCity, lang, variant, source }
 }
