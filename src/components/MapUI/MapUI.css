@@ -1,0 +1,20 @@
+
+/* ========================
+   MAP UI — мастер-контейнер
+   ======================== */
+
+.map-ui {
+  position: absolute;
+  top: 32px;
+  right: 16px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.map-ui > * {
+  pointer-events: auto;
+}

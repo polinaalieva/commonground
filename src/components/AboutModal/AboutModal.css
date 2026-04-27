@@ -1,3 +1,5 @@
+/* src/components/AboutModal/AboutModal.css */
+
 .about-modal {
   position: absolute;
   top: calc(100% + 8px);
@@ -54,16 +56,15 @@
   padding-top: 14pt;
 }
 
+/* На мобиле — как у MapMenu: отступы 16px, скругление всех углов */
 @media (max-width: 768px) {
   .about-modal {
     position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    width: 100%;
-    border-radius: 0 0 12px 12px;
-    border-left: none;
-    border-right: none;
-    border-top: none;
+    top: 76px; /* под кнопкой меню (32px отступ + 36px кнопка + 8px зазор) */
+    left: 16px;
+    right: 16px;
+    width: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
   }
 }

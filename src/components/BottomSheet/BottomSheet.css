@@ -325,6 +325,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.15s ease;
+  backdrop-filter: blur(4px);
 }
 
 .sheet-button--primary {

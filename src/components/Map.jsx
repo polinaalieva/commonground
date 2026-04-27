@@ -1,13 +1,14 @@
+// src/components/Map.jsx
+
 import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './Map.css'
-import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
-import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 import SurveySheet from './BottomSheet/SurveySheet'
 import { FeedbackCard } from './FeedbackCard/FeedbackCard'
 import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
 import './EmptyZoneTooltip/EmptyZoneTooltip.css'
+import MapUI from './MapUI/MapUI'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -106,17 +107,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       center: cityConfig.center,
       zoom: cityConfig.zoom
     })
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
-
-    const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
-      mapboxgl: mapboxgl,
-      marker: false,
-      placeholder: 'Search address',
-      countries: cityConfig.country || 'gb'
-    })
-    map.current.addControl(geocoder, 'top-left')
 
     map.current.on('load', () => {
       loadData()
@@ -391,12 +381,9 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
     }, () => {}, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 })
   }
 
-  function onLocateClick() {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { longitude: lng, latitude: lat } = pos.coords
-      updateUserLocation(lng, lat, true)
-    }, () => {}, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 })
+  // ← теперь принимает lng, lat от MapControls
+  function onLocate(lng, lat) {
+    updateUserLocation(lng, lat, true)
   }
 
   function startGeoWatch() {
@@ -441,11 +428,13 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
         />
       )}
 
-      <button className="cg-map-tool-btn" onClick={onLocateClick} aria-label="My location">
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M6 1 L10.5 11 L6 8.8 L1.5 11 Z" fill="#111"/>
-        </svg>
-      </button>
+      <MapUI
+        onZoomIn={() => map.current?.zoomIn()}
+        onZoomOut={() => map.current?.zoomOut()}
+        onLocate={onLocate}
+        variant={variant}
+        lang={lang}
+      />
 
       <FeedbackCard
         pin={selectedPin}
