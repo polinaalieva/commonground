@@ -20,7 +20,7 @@ function MapMenu({ onClose, onAboutOpen }) {
   const currentCity = pathParts || 'london'
 
   const cityConfig = CITY_CONFIGS[currentCity] ?? {}
-  const hideCitySwitcher = true
+  const hideCitySwitcher = true // --- IGNORE --- убрали свитчер городов, так как сейчас отображается только Лондон
 
   function goToCity(cityKey) {
     const base = isRu ? '/ru' : ''

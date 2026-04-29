@@ -12,12 +12,40 @@ import MapUI from './MapUI/MapUI'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
-const WORKER_URL = import.meta.env.VITE_WORKER_URL
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const RATING_COLORS = {
-  1: '#ED4B9E', 2: '#DF5BA6', 3: '#C46DB4',
-  4: '#A47EC0', 5: '#8490C8', 6: '#64A0C8',
-  7: '#44B0BE', 8: '#34C4B4', 9: '#31CEAC', 10: '#31D0AA',
+  1: '#ED4B9E', 2: '#CF60A0', 3: '#BF6AA0', 4: '#AC78A2',
+  5: '#9986A3', 6: '#8593A4', 7: '#74A2A6', 8: '#5EAFA7',
+  9: '#4EBBA8', 10: '#31D0AA',
+}
+
+function clamp(x, min, max) {
+  return Math.max(min, Math.min(max, x))
+}
+
+function toGeoJSON(records) {
+  const features = records
+    .filter(r => r.lat && r.lng)
+    .map(r => {
+      const rating = r.place_rate ? clamp(Math.round(r.place_rate), 1, 10) : null
+      return {
+        type: 'Feature',
+        id: r.id,
+        geometry: { type: 'Point', coordinates: [r.lng, r.lat] },
+        properties: {
+          city: r.city ?? null,
+          source: r.source ?? null,
+          place_rate: rating,
+          experience: r.experience ?? null,
+          created_time: r.created_at ?? null,
+          metric_type: r.metric_type ?? null,
+          rating_color: rating ? RATING_COLORS[rating] : null,
+        },
+      }
+    })
+  return { type: 'FeatureCollection', features }
 }
 
 function getFeatureRating(props) {
@@ -175,13 +203,20 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      const res = await fetch(WORKER_URL, {
-        cache: 'no-store',
-        signal: controller.signal
-      })
-      clearTimeout(timeoutId)
+      let apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,metric_type&order=created_at.desc&limit=1000`
 
-      const geojson = await res.json()
+const res = await fetch(apiUrl, {
+  headers: {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`,
+  },
+  cache: 'no-store',
+  signal: controller.signal,
+})
+clearTimeout(timeoutId)
+
+const records = await res.json()
+const geojson = toGeoJSON(records)
 
       geojson.features = geojson.features.map(f => ({
         ...f,
