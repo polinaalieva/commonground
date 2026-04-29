@@ -13,6 +13,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/roboto-serif": "^5.2.8",
     "@mapbox/mapbox-gl-geocoder": "^5.1.2",
+    "h3-js": "^4.4.0",
     "lucide-react": "^0.577.0",
     "mapbox-gl": "^3.20.0",
     "posthog-js": "^1.363.6",

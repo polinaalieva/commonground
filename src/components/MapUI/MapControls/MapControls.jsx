@@ -1,13 +1,13 @@
 // src/components/MapUI/MapControls/MapControls.jsx
 
 import { useState, useRef, useEffect } from 'react'
-import { Menu, Plus, Minus, Locate } from 'lucide-react'
+import { Menu, Plus, Minus, Navigation2, Grid } from 'lucide-react'
 import MapButton from './MapButton'
 import MapMenu from '../../MapMenu/MapMenu'
 import AboutModal from '../../AboutModal/AboutModal'
 import './MapControls.css'
 
-function MapControls({ onZoomIn, onZoomOut, onLocate, variant, lang }) {
+function MapControls({ onZoomIn, onZoomOut, onLocate, onToggleHex, hexMode, variant, lang }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [locateError, setLocateError] = useState(false)
@@ -48,7 +48,9 @@ function MapControls({ onZoomIn, onZoomOut, onLocate, variant, lang }) {
   }
 
   return (
+    
     <div className="map-controls">
+      
 
       {/* Меню */}
       <div className="map-controls__menu-wrap" ref={menuWrapRef}>
@@ -75,7 +77,7 @@ function MapControls({ onZoomIn, onZoomOut, onLocate, variant, lang }) {
         )}
       </div>
 
-      <div className="map-controls__gap map-controls__gap--lg" />
+      <div className="map-controls__gap map-controls__gap--lg" style={{ marginBottom: '36px' }} />
 
       <MapButton
         icon={<Plus size={18} strokeWidth={1.8} />}
@@ -95,11 +97,22 @@ function MapControls({ onZoomIn, onZoomOut, onLocate, variant, lang }) {
 
       {/* My Location */}
       <MapButton
-        icon={<Locate size={18} strokeWidth={1.8} />}
-        onClick={handleLocateClick}
-        ariaLabel="My location"
-        error={locateError}
-      />
+  icon={<Navigation2 size={16} strokeWidth={1.8} />}
+  onClick={handleLocateClick}
+  ariaLabel="My location"
+  error={locateError}
+/>
+
+      <div className="map-controls__gap map-controls__gap--lg" />
+
+      <div style={{ marginTop: '36px' }}>
+  <MapButton
+    icon={<Grid size={18} strokeWidth={1.8} />}
+    onClick={onToggleHex}
+    ariaLabel="Toggle hex layer"
+    active={hexMode}
+  />
+</div>
 
     </div>
   )

@@ -1,0 +1,108 @@
+.hc-card {
+  position: fixed;
+  z-index: 30;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid rgba(17, 17, 17, 0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hc-card--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (min-width: 769px) {
+  .hc-card {
+    left: 20px;
+    bottom: var(--hc-bottom, 20px);
+    width: 390px;
+    max-height: calc(100svh - 60px - var(--hc-bottom, 20px) - 16px);
+    padding: 16px;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease, bottom 0.3s ease;
+  }
+  .hc-card--visible { transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .hc-card {
+    left: 0; right: 0; bottom: 0;
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-height: 60svh;
+    padding: 16px 16px 100px;
+    gap: 10px;
+    transform: translateY(100%);
+  }
+  .hc-card--visible { transform: translateY(0); }
+}
+
+.hc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hc-rating {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .hc-rating { font-size: 16px; }
+}
+
+.hc-comment-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hc-comment-wrap::-webkit-scrollbar { display: none; }
+
+.hc-comment {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  color: rgba(17, 17, 17, 0.85);
+  margin: 0 0 1em 0;
+  line-height: 24px;
+  font-size: 17px;
+}
+
+.hc-comment:last-child { margin-bottom: 0; }
+
+@media (max-width: 768px) {
+  .hc-comment { font-size: 15px; line-height: 22px; }
+}
+
+.hc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  color: rgba(17, 17, 17, 0.5);
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .hc-meta { font-size: 11px; }
+}

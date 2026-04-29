@@ -191,7 +191,7 @@ export const CONTENT = {
       en: {
         // about project (menu button)
         about_text_1: `When choosing a neighbourhood, you usually rely on advice, articles, or scattered opinions. But there's no simple way to open a map and see what it's actually like to live in different parts of a city.`,
-        about_text_2: 'On this map, residents mark places and share their experience of living there.',
+        about_text_2: 'On this map, people mark places and share their experience of living there.',
 
         // landing step
         modal_text_mobile: 'What’s it like to live in this area?',

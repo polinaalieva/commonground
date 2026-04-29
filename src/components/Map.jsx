@@ -6,9 +6,11 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import './Map.css'
 import SurveySheet from './BottomSheet/SurveySheet'
 import { FeedbackCard } from './FeedbackCard/FeedbackCard'
+import { HexCard } from './HexCard/HexCard'
 import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
 import './EmptyZoneTooltip/EmptyZoneTooltip.css'
 import MapUI from './MapUI/MapUI'
+import { latLngToCell, cellToBoundary } from 'h3-js'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -16,9 +18,9 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const RATING_COLORS = {
-  1: '#ED4B9E', 2: '#CF60A0', 3: '#BF6AA0', 4: '#AC78A2',
-  5: '#9986A3', 6: '#8593A4', 7: '#74A2A6', 8: '#5EAFA7',
-  9: '#4EBBA8', 10: '#31D0AA',
+  1: '#ED4B9E', 2: '#DF5BA6', 3: '#C46DB4',
+  4: '#A47EC0', 5: '#8490C8', 6: '#64A0C8',
+  7: '#44B0BE', 8: '#34C4B4', 9: '#31CEAC', 10: '#31D0AA',
 }
 
 function clamp(x, min, max) {
@@ -49,7 +51,7 @@ function toGeoJSON(records) {
 }
 
 function getFeatureRating(props) {
-  const candidates = ['place_rate','rating','rate','score','value','mark','Rate','Rating']
+  const candidates = ['place_rate', 'rating', 'rate', 'score', 'value', 'mark', 'Rate', 'Rating']
   for (const k of candidates) {
     if (props[k] !== undefined && props[k] !== null && String(props[k]).trim() !== '') return props[k]
   }
@@ -57,17 +59,11 @@ function getFeatureRating(props) {
 }
 
 function getFeatureComment(props) {
-  const candidates = ['experience','comment','text','message','feedback','notes','description','Comment','Feedback']
+  const candidates = ['experience', 'comment', 'text', 'message', 'feedback', 'notes', 'description', 'Comment', 'Feedback']
   for (const k of candidates) {
     if (props[k] !== undefined && props[k] !== null && String(props[k]).trim() !== '') return props[k]
   }
   return ''
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;')
 }
 
 function isMobile() {
@@ -87,11 +83,24 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const selectedFeatureId = useRef(null)
   const dataLoadedRef = useRef(false)
   const emptyTooltipShownRef = useRef(false)
+  const allPointsRef = useRef([])
+  const hexModeRef = useRef(false)
+
+  function getHexResolution() {
+  const zoom = map.current?.getZoom() ?? 10
+  if (zoom < 7.5) return 6
+  if (zoom < 9) return 7
+  if (zoom < 11) return 7
+  if (zoom < 13) return 8
+  return 9
+}
 
   const [mode, setMode] = useState('view')
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPin, setSelectedPin] = useState(null)
   const [showEmptyTooltip, setShowEmptyTooltip] = useState(false)
+  const [hexMode, setHexMode] = useState(false)
+  const [selectedHex, setSelectedHex] = useState(null)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -203,20 +212,21 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      let apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,metric_type&order=created_at.desc&limit=1000`
+      const apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,metric_type&order=created_at.desc&limit=1000`
 
-const res = await fetch(apiUrl, {
-  headers: {
-    apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`,
-  },
-  cache: 'no-store',
-  signal: controller.signal,
-})
-clearTimeout(timeoutId)
+      const res = await fetch(apiUrl, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
 
-const records = await res.json()
-const geojson = toGeoJSON(records)
+      const records = await res.json()
+      allPointsRef.current = records
+      const geojson = toGeoJSON(records)
 
       geojson.features = geojson.features.map(f => ({
         ...f,
@@ -242,9 +252,7 @@ const geojson = toGeoJSON(records)
           source: 'cg-feedback',
           paint: {
             'circle-radius': [
-              'case', ['boolean', ['feature-state', 'selected'], false],
-              9,
-              7
+              'case', ['boolean', ['feature-state', 'selected'], false], 9, 7
             ],
             'circle-opacity': ['case', ['==', ['get', 'has_comment'], true], 0.70, 0.30],
             'circle-color': [
@@ -285,6 +293,8 @@ const geojson = toGeoJSON(records)
             ]
           }
         })
+
+        
 
         dataLoadedRef.current = true
 
@@ -341,6 +351,125 @@ const geojson = toGeoJSON(records)
       if (retries > 0) setTimeout(() => loadData(retries - 1), 900)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // ── Hex layer ──
+
+  function buildHexData(points) {
+    const hexMap = {}
+    points.forEach(r => {
+      if (!r.lat || !r.lng || !r.place_rate) return
+      const cell = latLngToCell(r.lat, r.lng, getHexResolution())
+      if (!hexMap[cell]) hexMap[cell] = { ratings: [], comments: [] }
+      hexMap[cell].ratings.push(r.place_rate)
+      if (r.experience) hexMap[cell].comments.push(r.experience)
+    })
+
+    const features = Object.entries(hexMap).map(([cell, data]) => {
+      const avg = data.ratings.reduce((a, b) => a + b, 0) / data.ratings.length
+      const count = data.ratings.length
+      const opacity = Math.min(0.1 + (count / 20) * 0.9, 1.0)
+      const colorRating = Math.round(clamp(avg, 1, 10))
+      const boundary = cellToBoundary(cell)
+      return {
+        type: 'Feature',
+        properties: {
+          cell,
+          avgRating: avg,
+          count,
+          opacity,
+          fillColor: RATING_COLORS[colorRating],
+          comments: JSON.stringify(data.comments),
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[...boundary.map(([lat, lng]) => [lng, lat]), [boundary[0][1], boundary[0][0]]]],
+        },
+      }
+    })
+
+    return { type: 'FeatureCollection', features }
+  }
+
+function showHexLayer() {
+  const hexData = buildHexData(allPointsRef.current)
+
+  if (map.current.getSource('cg-hex')) {
+    map.current.getSource('cg-hex').setData(hexData)
+    map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'visible')
+    return
+  }
+
+  map.current.addSource('cg-hex', { type: 'geojson', data: hexData })
+
+  map.current.addLayer({
+    id: 'cg-hex-layer',
+    type: 'fill',
+    source: 'cg-hex',
+    paint: {
+      'fill-color': ['get', 'fillColor'],
+      'fill-opacity': ['get', 'opacity'],
+    },
+  })
+
+  map.current.addLayer({
+    id: 'cg-hex-selected-layer',
+    type: 'line',
+    source: 'cg-hex',
+    paint: {
+      'line-color': ['get', 'fillColor'],
+      'line-width': 2.5,
+      'line-opacity': 0.7,
+    },
+    filter: ['==', ['get', 'cell'], ''],
+  })
+
+  map.current.on('zoomend', () => {
+    if (!hexModeRef.current) return
+    const updated = buildHexData(allPointsRef.current)
+    map.current.getSource('cg-hex')?.setData(updated)
+  })
+
+  map.current.on('click', 'cg-hex-layer', (e) => {
+    if (modeRef.current !== 'view') return
+    e.originalEvent.stopPropagation()
+    const props = e.features[0]?.properties
+    if (!props) return
+    map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], props.cell])
+    setSelectedHex({
+      avgRating: props.avgRating,
+      count: props.count,
+      comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
+    })
+  })
+
+  map.current.on('mouseenter', 'cg-hex-layer', () => {
+    map.current.getCanvas().style.cursor = 'pointer'
+  })
+  map.current.on('mouseleave', 'cg-hex-layer', () => {
+    map.current.getCanvas().style.cursor = ''
+  })
+}
+  function toggleHex() {
+    const next = !hexModeRef.current
+    hexModeRef.current = next
+    setHexMode(next)
+    setSelectedHex(null)
+
+    if (next) {
+      if (map.current.getLayer('cg-feedback-layer')) {
+        map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
+      }
+      dismissSelectedPin()
+      showHexLayer()
+    } else {
+      if (map.current.getLayer('cg-feedback-layer')) {
+        map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'visible')
+      }
+      if (map.current.getLayer('cg-hex-layer')) {
+        map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'none')
+      }
     }
   }
 
@@ -416,7 +545,6 @@ const geojson = toGeoJSON(records)
     }, () => {}, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 })
   }
 
-  // ← теперь принимает lng, lat от MapControls
   function onLocate(lng, lat) {
     updateUserLocation(lng, lat, true)
   }
@@ -467,6 +595,8 @@ const geojson = toGeoJSON(records)
         onZoomIn={() => map.current?.zoomIn()}
         onZoomOut={() => map.current?.zoomOut()}
         onLocate={onLocate}
+        onToggleHex={toggleHex}
+        hexMode={hexMode}
         variant={variant}
         lang={lang}
       />
@@ -475,6 +605,17 @@ const geojson = toGeoJSON(records)
         pin={selectedPin}
         surveySheetRef={bottomSheetRef}
         onDismiss={dismissSelectedPin}
+      />
+
+      <HexCard
+        hex={selectedHex}
+        surveySheetRef={bottomSheetRef}
+        onDismiss={() => {
+          setSelectedHex(null)
+          if (map.current?.getLayer('cg-hex-selected-layer')) {
+            map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
+          }
+        }}
       />
 
       <SurveySheet
