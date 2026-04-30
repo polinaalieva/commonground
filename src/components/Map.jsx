@@ -18,9 +18,9 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const RATING_COLORS = {
-  1: '#ED4B9E', 2: '#DF5BA6', 3: '#C46DB4',
-  4: '#A47EC0', 5: '#8490C8', 6: '#64A0C8',
-  7: '#44B0BE', 8: '#34C4B4', 9: '#31CEAC', 10: '#31D0AA',
+    1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
+  5: "#9986A3", 6: "#8593A4", 7: "#74A2A6", 8: "#5EAFA7",
+  9: "#4EBBA8", 10: "#31D0AA",
 }
 
 function clamp(x, min, max) {
@@ -32,18 +32,28 @@ function toGeoJSON(records) {
     .filter(r => r.lat && r.lng)
     .map(r => {
       const rating = r.place_rate ? clamp(Math.round(r.place_rate), 1, 10) : null
+      const experience = r.experience ?? null
+      const dateStr = r.original_date || r.created_at
+      const d = dateStr ? new Date(dateStr) : null
+      const oneYearAgo = new Date()
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+
       return {
         type: 'Feature',
         id: r.id,
         geometry: { type: 'Point', coordinates: [r.lng, r.lat] },
         properties: {
+          id: r.id,
           city: r.city ?? null,
           source: r.source ?? null,
           place_rate: rating,
-          experience: r.experience ?? null,
+          experience,
           created_time: r.created_at ?? null,
+          original_date: r.original_date ?? null,
           metric_type: r.metric_type ?? null,
           rating_color: rating ? RATING_COLORS[rating] : null,
+          has_comment: (experience && String(experience).trim()) ? 1 : 0,
+          is_old: (d && !isNaN(d) && d < oneYearAgo) ? 1 : 0,
         },
       }
     })
@@ -212,7 +222,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      const apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,metric_type&order=created_at.desc&limit=1000`
+      const apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&order=created_at.desc&limit=1000`
 
       const res = await fetch(apiUrl, {
         headers: {
@@ -225,16 +235,11 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       clearTimeout(timeoutId)
 
       const records = await res.json()
+      console.log('sample record:', records[0])
       allPointsRef.current = records
       const geojson = toGeoJSON(records)
+      console.log('sample feature props:', geojson.features[0]?.properties)
 
-      geojson.features = geojson.features.map(f => ({
-        ...f,
-        properties: {
-          ...f.properties,
-          has_comment: !!String(getFeatureComment(f.properties) || '').trim()
-        }
-      }))
 
       const mapSource = map.current.getSource('cg-feedback')
       if (mapSource) {
@@ -251,47 +256,47 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           type: 'circle',
           source: 'cg-feedback',
           paint: {
-            'circle-radius': [
-              'case', ['boolean', ['feature-state', 'selected'], false], 9, 7
-            ],
-            'circle-opacity': ['case', ['==', ['get', 'has_comment'], true], 0.70, 0.30],
-            'circle-color': [
-              'case', ['boolean', ['feature-state', 'selected'], false],
-              '#ffffff',
-              [
-                'to-color',
-                ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-                  ['case',
-                    ['==', ['var', 'c'], ''], '#9ca3af',
-                    ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-                    ['concat', '#', ['var', 'c']]
-                  ]
-                ], '#9ca3af'
-              ]
-            ],
-            'circle-stroke-color': [
-              'case', ['boolean', ['feature-state', 'selected'], false],
-              [
-                'to-color',
-                ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-                  ['case',
-                    ['==', ['var', 'c'], ''], '#9ca3af',
-                    ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-                    ['concat', '#', ['var', 'c']]
-                  ]
-                ], '#9ca3af'
-              ],
-              'rgba(0,0,0,0.25)'
-            ],
-            'circle-stroke-width': [
-              'case', ['boolean', ['feature-state', 'selected'], false], 2.5, 1
-            ],
-            'circle-stroke-opacity': [
-              'case',
-              ['boolean', ['feature-state', 'selected'], false], 1,
-              ['case', ['==', ['get', 'has_comment'], true], 0.9, 0]
-            ]
-          }
+  'circle-radius': [
+  'case', ['boolean', ['feature-state', 'selected'], false], 10,
+  ['case', ['==', ['get', 'has_comment'], 1], 7, 4]
+],
+  'circle-color': [
+    'to-color',
+    ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+      ['case',
+        ['==', ['var', 'c'], ''], '#9ca3af',
+        ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+        ['concat', '#', ['var', 'c']]
+      ]
+    ], '#9ca3af'
+  ],
+  'circle-opacity': [
+  'case', ['boolean', ['feature-state', 'selected'], false], 1,
+  ['case', ['==', ['get', 'is_old'], 1], 0.25,
+    ['case', ['==', ['get', 'has_comment'], 1], 0.70, 0.20]
+  ]
+],
+  'circle-stroke-color': [
+    'case', ['boolean', ['feature-state', 'selected'], false], '#ffffff',
+    ['to-color',
+      ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+        ['case',
+          ['==', ['var', 'c'], ''], '#9ca3af',
+          ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+          ['concat', '#', ['var', 'c']]
+        ]
+      ], '#9ca3af'
+    ]
+  ],
+  'circle-stroke-width': [
+  'case', ['boolean', ['feature-state', 'selected'], false], 3,
+  ['case', ['==', ['get', 'has_comment'], 1], 0, 2.5]
+],
+  'circle-stroke-opacity': [
+    'case', ['boolean', ['feature-state', 'selected'], false], 1,
+    ['case', ['==', ['get', 'is_old'], 1], 0.35, 0.6]
+  ],
+}
         })
 
         
@@ -309,19 +314,19 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           const color = getRatingColor(rating)
 
           if (selectedFeatureId.current !== null) {
-            map.current.setFeatureState(
-              { source: 'cg-feedback', id: selectedFeatureId.current },
-              { selected: false }
-            )
-          }
+  map.current.setFeatureState(
+    { source: 'cg-feedback', id: selectedFeatureId.current },
+    { selected: false }
+  )
+}
 
-          if (feature.id !== undefined) {
-            map.current.setFeatureState(
-              { source: 'cg-feedback', id: feature.id },
-              { selected: true }
-            )
-            selectedFeatureId.current = feature.id
-          }
+if (feature.properties.id !== undefined) {
+  map.current.setFeatureState(
+    { source: 'cg-feedback', id: feature.properties.id },
+    { selected: true }
+  )
+  selectedFeatureId.current = feature.properties.id
+}
 
           setSelectedPin({
             id: feature.id,
@@ -329,6 +334,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
             ratingColor: color,
             experience: getFeatureComment(props) || null,
             created_at: props.created_time || null,
+            original_date: props.original_date || null,
+            source: props.source || null,
           })
         })
 
@@ -363,7 +370,16 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const cell = latLngToCell(r.lat, r.lng, getHexResolution())
       if (!hexMap[cell]) hexMap[cell] = { ratings: [], comments: [] }
       hexMap[cell].ratings.push(r.place_rate)
-      if (r.experience) hexMap[cell].comments.push(r.experience)
+      if (r.experience) hexMap[cell].comments.push({
+        text: r.experience,
+        date: r.original_date || r.created_at || null,
+        source: r.source || null,
+      })
+      hexMap[cell].comments.sort((a, b) => {
+  const da = new Date(a.date || 0)
+  const db = new Date(b.date || 0)
+  return db - da
+})
     })
 
     const features = Object.entries(hexMap).map(([cell, data]) => {
@@ -464,13 +480,16 @@ function showHexLayer() {
       dismissSelectedPin()
       showHexLayer()
     } else {
-      if (map.current.getLayer('cg-feedback-layer')) {
-        map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'visible')
-      }
-      if (map.current.getLayer('cg-hex-layer')) {
-        map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'none')
-      }
-    }
+  if (map.current.getLayer('cg-hex-selected-layer')) {
+    map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
+  }
+  if (map.current.getLayer('cg-feedback-layer')) {
+    map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'visible')
+  }
+  if (map.current.getLayer('cg-hex-layer')) {
+    map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'none')
+  }
+}
   }
 
   function dismissSelectedPin() {
@@ -485,10 +504,14 @@ function showHexLayer() {
   }
 
   function enterSelect() {
-    setShowEmptyTooltip(false)
-    dismissSelectedPin()
-    setModeSync('select')
+  setShowEmptyTooltip(false)
+  dismissSelectedPin()
+  setModeSync('select')
+  setSelectedHex(null)
+  if (map.current?.getLayer('cg-hex-selected-layer')) {
+    map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
   }
+}
 
   function exitSelect() {
     setModeSync('view')
@@ -619,7 +642,7 @@ function showHexLayer() {
       />
 
       <SurveySheet
-        pinSelected={!!selectedPin}
+        pinSelected={!!selectedPin || !!selectedHex}
         ref={surveySheetRef}
         bottomSheetRef={bottomSheetRef}
         city={city}

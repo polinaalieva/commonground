@@ -1,3 +1,7 @@
+/* =============================================
+   HEX CARD
+   ============================================= */
+
 .hc-card {
   position: fixed;
   z-index: 30;
@@ -21,6 +25,7 @@
   transform: translateY(0);
 }
 
+/* ---- DESKTOP ---- */
 @media (min-width: 769px) {
   .hc-card {
     left: 20px;
@@ -34,6 +39,7 @@
   .hc-card--visible { transform: translateY(0); }
 }
 
+/* ---- MOBILE ---- */
 @media (max-width: 768px) {
   .hc-card {
     left: 0; right: 0; bottom: 0;
@@ -47,6 +53,10 @@
   .hc-card--visible { transform: translateY(0); }
 }
 
+/* =============================================
+   HEADER
+   ============================================= */
+
 .hc-header {
   display: flex;
   align-items: flex-start;
@@ -57,14 +67,18 @@
 .hc-rating {
   font-family: Inter, system-ui, sans-serif;
   font-weight: 700;
+  font-size: 18px;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  font-size: 18px;
 }
 
 @media (max-width: 768px) {
   .hc-rating { font-size: 16px; }
 }
+
+/* =============================================
+   COMMENTS
+   ============================================= */
 
 .hc-comment-wrap {
   flex: 1 1 auto;
@@ -72,37 +86,56 @@
   scrollbar-width: none;
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
 .hc-comment-wrap::-webkit-scrollbar { display: none; }
 
+.hc-comment-block {
+  margin-bottom: 12px;
+}
+
+.hc-comment-block:last-child {
+  margin-bottom: 0;
+}
+
 .hc-comment {
   font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
   font-weight: 400;
+  line-height: 22px;
   color: rgba(17, 17, 17, 0.85);
-  margin: 0 0 1em 0;
-  line-height: 24px;
-  font-size: 17px;
+  margin: 0;
 }
-
-.hc-comment:last-child { margin-bottom: 0; }
 
 @media (max-width: 768px) {
-  .hc-comment { font-size: 15px; line-height: 22px; }
+  .hc-comment { font-size: 15px; }
 }
 
+/* =============================================
+   META (per comment + card footer)
+   ============================================= */
+
+.hc-comment-meta,
 .hc-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
   font-weight: 400;
   color: rgba(17, 17, 17, 0.5);
+}
+
+.hc-comment-meta {
+  margin-top: 2px;
+}
+
+.hc-meta {
   flex-shrink: 0;
-  font-size: 13px;
+  gap: 8px;
 }
 
 @media (max-width: 768px) {
+  .hc-comment-meta,
   .hc-meta { font-size: 11px; }
 }

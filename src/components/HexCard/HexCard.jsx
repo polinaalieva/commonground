@@ -2,12 +2,37 @@ import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import './HexCard.css'
 
+function formatDate(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (isNaN(d)) return null
+  return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '-')
+}
+
+const SOCIAL_PREFIXES = {
+  reddit: 'Reddit',
+  telegram: 'Telegram',
+  facebook: 'Facebook',
+  vkontakte: 'VKontakte',
+  discord: 'Discord',
+}
+
+function getSourceLabel(source) {
+  if (!source) return null
+  const lower = source.toLowerCase()
+  for (const [prefix, label] of Object.entries(SOCIAL_PREFIXES)) {
+    if (lower.startsWith(prefix)) return label
+  }
+  return null
+}
+
 function getHexLabel(avgRating) {
   if (!avgRating) return null
   const v = Number(avgRating)
   if (v >= 1 && v < 4) return "Doesn't fit people"
   if (v >= 4 && v < 7) return "Sometimes fits people"
-  if (v >= 7 && v <= 10) return "Fits people"
+  if (v >= 7 && v < 8) return "Mostly fits people"
+  if (v >= 8 && v <= 10) return "Fits people"
   return null
 }
 
@@ -80,19 +105,32 @@ export function HexCard({ hex, surveySheetRef, onDismiss }) {
 
       {/* COMMENTS */}
       {comments.length > 0 && (
-        <div className="hc-comment-wrap">
-          {comments.map((c, i) => (
-            <p key={i} className="hc-comment">{c}</p>
-          ))}
+  <div className="hc-comment-wrap">
+    {comments.map((c, i) => {
+      const date = formatDate(c.date)
+      const sourceLabel = getSourceLabel(c.source)
+      return (
+        <div key={i} className="hc-comment-block">
+          <p className="hc-comment">{c.text}</p>
+          {(date || sourceLabel) && (
+            <div className="hc-comment-meta">
+              {date && <span>{date}</span>}
+              {date && sourceLabel && <span>·</span>}
+              {sourceLabel && <span>via {sourceLabel}</span>}
+            </div>
+          )}
         </div>
-      )}
+      )
+    })}
+  </div>
+)}
 
       {/* META */}
-      <div className="hc-meta">
-  <span>{Number(hex.count)} {Number(hex.count) === 1 ? 'feedback' : 'feedbacks'}</span>
-  <span>·</span>
-  <span>avg {Math.round(Number(hex.avgRating) * 10) / 10}/10</span>
-</div>
+      <div className="hc-meta" style={{ justifyContent: 'flex-end' }}>
+        <span>{Number(hex.count)} {Number(hex.count) === 1 ? 'feedback' : 'feedbacks'}</span>
+        <span>·</span>
+        <span>avg {Math.round(Number(hex.avgRating) * 10) / 10}/10</span>
+      </div>
     </div>
   )
 }

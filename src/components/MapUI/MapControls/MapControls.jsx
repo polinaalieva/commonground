@@ -105,7 +105,7 @@ function MapControls({ onZoomIn, onZoomOut, onLocate, onToggleHex, hexMode, vari
 
       <div className="map-controls__gap map-controls__gap--lg" />
 
-      <div style={{ marginTop: '36px' }}>
+      <div style={{ marginTop: '56px' }}>
   <MapButton
     icon={<Grid size={18} strokeWidth={1.8} />}
     onClick={onToggleHex}

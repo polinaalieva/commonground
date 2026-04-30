@@ -1,12 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import { Info, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import './FeedbackCard.css'
 
 function formatDate(iso) {
   if (!iso) return null
   const d = new Date(iso)
   if (isNaN(d)) return null
-  return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '/')
+  return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '-')
+}
+
+const SOCIAL_PREFIXES = {
+  reddit: 'Reddit',
+  telegram: 'Telegram',
+  facebook: 'Facebook',
+  vkontakte: 'VKontakte',
+  discord: 'Discord',
+}
+
+function getSourceLabel(source) {
+  if (!source) return null
+  const lower = source.toLowerCase()
+  for (const [prefix, label] of Object.entries(SOCIAL_PREFIXES)) {
+    if (lower.startsWith(prefix)) return label
+  }
+  return null
 }
 
 export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
@@ -14,14 +31,12 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
 
-  // slide-in animation
   useEffect(() => {
     if (!pin) { setVisible(false); return }
     const t = setTimeout(() => setVisible(true), 30)
     return () => clearTimeout(t)
   }, [pin?.id ?? pin])
 
-  // measure SurveySheet height to position card above it (desktop)
   useEffect(() => {
     if (!surveySheetRef?.current) return
     const measure = () => {
@@ -36,7 +51,8 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
 
   if (!pin) return null
 
-  const date = formatDate(pin.created_at)
+  const date = formatDate(pin.original_date || pin.created_at)
+  const sourceLabel = getSourceLabel(pin.source)
 
   return (
     <div
@@ -47,7 +63,6 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
       aria-modal="false"
       aria-label="Feedback details"
     >
-      {/* HEADER */}
       <div className="fc-header">
         {pin.ratingLabel && (
           <span className="fc-rating" style={{ color: pin.ratingColor }}>
@@ -59,18 +74,17 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
         </button>
       </div>
 
-      {/* COMMENT */}
       {pin.experience && (
         <div className="fc-comment-wrap">
           <p className="fc-comment">{pin.experience}</p>
         </div>
       )}
 
-      {/* META */}
-      {date && (
+      {(date || sourceLabel) && (
         <div className="fc-meta">
-          <Info size={14} strokeWidth={1.5} color="rgba(17,17,17,0.5)" />
-          <span>{date}</span>
+          {date && <span>{date}</span>}
+          {date && sourceLabel && <span>·</span>}
+          {sourceLabel && <span>via {sourceLabel}</span>}
         </div>
       )}
     </div>
