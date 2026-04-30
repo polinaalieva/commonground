@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, ChevronDown } from 'lucide-react'
 import './HexCard.css'
 
 function formatDate(iso) {
@@ -44,6 +44,20 @@ function getHexColor(avgRating) {
   }
   const v = Math.round(Number(avgRating))
   return RATING_COLORS[v] || '#9ca3af'
+}
+
+function CommentBlock({ comment }) {
+  const date = formatDate(comment.date)
+  const source = getSourceLabel(comment.source)
+  const authorLabel = source ? `via ${source}` : 'Local Contributor'
+
+  return (
+    <div className="hc-comment-block">
+      <p className="hc-comment-author">{authorLabel}</p>
+      {date && <p className="hc-comment-date">{date}</p>}
+      <p className="hc-comment">{comment.text}</p>
+    </div>
+  )
 }
 
 export function HexCard({ hex, surveySheetRef, onDismiss }) {
@@ -106,22 +120,13 @@ export function HexCard({ hex, surveySheetRef, onDismiss }) {
       {/* COMMENTS */}
       {comments.length > 0 && (
   <div className="hc-comment-wrap">
-    {comments.map((c, i) => {
-      const date = formatDate(c.date)
-      const sourceLabel = getSourceLabel(c.source)
-      return (
-        <div key={i} className="hc-comment-block">
-          <p className="hc-comment">{c.text}</p>
-          {(date || sourceLabel) && (
-            <div className="hc-comment-meta">
-              {date && <span>{date}</span>}
-              {date && sourceLabel && <span>·</span>}
-              {sourceLabel && <span>via {sourceLabel}</span>}
-            </div>
-          )}
-        </div>
-      )
-    })}
+    {comments.map((c, i) => <CommentBlock key={i} comment={c} />)}
+  </div>
+)}
+
+{comments.length > 0 && (
+  <div className="hc-chevron">
+    <ChevronDown size={17} color="rgba(17,17,17,0.9)" />
   </div>
 )}
 

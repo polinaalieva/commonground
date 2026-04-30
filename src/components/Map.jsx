@@ -11,6 +11,7 @@ import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
 import './EmptyZoneTooltip/EmptyZoneTooltip.css'
 import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
+import { Hexagon } from 'lucide-react'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -111,6 +112,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [showEmptyTooltip, setShowEmptyTooltip] = useState(false)
   const [hexMode, setHexMode] = useState(false)
   const [selectedHex, setSelectedHex] = useState(null)
+  const [showHexTooltip, setShowHexTooltip] = useState(false)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -473,8 +475,14 @@ function showHexLayer() {
     setHexMode(next)
     setSelectedHex(null)
 
+    if (!localStorage.getItem('hexTipSeen')) {
+  setShowHexTooltip(true)
+setTimeout(() => setShowHexTooltip(false), 3000)
+}
     if (next) {
-      if (map.current.getLayer('cg-feedback-layer')) {
+    setShowHexTooltip(true)
+  setTimeout(() => setShowHexTooltip(false), 3000)
+  if (map.current.getLayer('cg-feedback-layer')) {
         map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
       }
       dismissSelectedPin()
@@ -613,6 +621,14 @@ function showHexLayer() {
           onClick={handleEmptyTooltipClick}
         />
       )}
+
+      {showHexTooltip && (
+  <EmptyZoneTooltip
+    text={<>Tap any <Hexagon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> to see area feedback</>}
+    cta=""
+    onClick={() => setShowHexTooltip(false)}
+  />
+)}
 
       <MapUI
         onZoomIn={() => map.current?.zoomIn()}
