@@ -11,6 +11,13 @@ export const CITY_CONFIGS = {
     country: null,
   },
 
+  berlin: {
+  bbox: [[13.09, 52.34], [13.76, 52.68]],
+  country: "de",
+  center: [13.4050, 52.5200],
+  zoom: 10
+},
+
   london: {
     bbox: [[-0.55, 51.25], [0.35, 51.75]],
     country: "gb",
