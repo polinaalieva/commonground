@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, ChevronDown } from 'lucide-react'
 import './HexCard.css'
+import { getSourceLabel } from '../../config/sources'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -9,22 +10,6 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '-')
 }
 
-const SOCIAL_PREFIXES = {
-  reddit: 'Reddit',
-  telegram: 'Telegram',
-  facebook: 'Facebook',
-  vkontakte: 'VKontakte',
-  discord: 'Discord',
-}
-
-function getSourceLabel(source) {
-  if (!source) return null
-  const lower = source.toLowerCase()
-  for (const [prefix, label] of Object.entries(SOCIAL_PREFIXES)) {
-    if (lower.startsWith(prefix)) return label
-  }
-  return null
-}
 
 function getHexLabel(avgRating) {
   if (!avgRating) return null

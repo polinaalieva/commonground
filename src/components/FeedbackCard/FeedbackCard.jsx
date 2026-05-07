@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import './FeedbackCard.css'
+import { FC_Voting } from './FC_Voting'
+import { getSourceLabel } from '../../config/sources'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -9,30 +11,16 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '-')
 }
 
-const SOCIAL_PREFIXES = {
-  reddit: 'Reddit',
-  telegram: 'Telegram',
-  facebook: 'Facebook',
-  vkontakte: 'VKontakte',
-  discord: 'Discord',
-}
-
-function getSourceLabel(source) {
-  if (!source) return null
-  const lower = source.toLowerCase()
-  for (const [prefix, label] of Object.entries(SOCIAL_PREFIXES)) {
-    if (lower.startsWith(prefix)) return label
-  }
-  return null
-}
 
 export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
   const cardRef = useRef(null)
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
+  const [voted, setVoted] = useState(false)
 
   useEffect(() => {
     if (!pin) { setVisible(false); return }
+    setVoted(false)
     const t = setTimeout(() => setVisible(true), 30)
     return () => clearTimeout(t)
   }, [pin?.id ?? pin])
@@ -53,6 +41,7 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
 
   const date = formatDate(pin.original_date || pin.created_at)
   const sourceLabel = getSourceLabel(pin.source)
+  const authorLabel = sourceLabel ? `via ${sourceLabel}` : 'Local Contributor'
 
   return (
     <div
@@ -62,6 +51,8 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
       role="dialog"
       aria-modal="false"
       aria-label="Feedback details"
+      onTouchStart={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
     >
       <div className="fc-header">
         {pin.ratingLabel && (
@@ -80,13 +71,16 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
         </div>
       )}
 
-      {(date || sourceLabel) && (
-        <div className="fc-meta">
-          {date && <span>{date}</span>}
-          {date && sourceLabel && <span>·</span>}
-          {sourceLabel && <span>via {sourceLabel}</span>}
-        </div>
-      )}
+      <div className="fc-meta">
+        {date && <span>{date}</span>}
+        {date && <span>·</span>}
+        <span>{authorLabel}</span>
+      </div>
+
+      <FC_Voting
+        feedbackId={pin.id}
+        onVoted={() => setVoted(true)}
+      />
     </div>
   )
 }
