@@ -1,3 +1,4 @@
+export const DEFAULT_CITY = 'london'
 export const CITY_CONFIGS = {
   map: {
     center: [12, 20],

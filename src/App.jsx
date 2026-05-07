@@ -30,6 +30,7 @@ function App() {
       <Route path="/dev" element={<Dev />} />
       <Route path="/wuf13view" element={<Wuf13ViewPage />} />
     </Routes>
+    
   )
 }
 

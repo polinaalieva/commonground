@@ -1,8 +1,8 @@
 // src/pages/City.jsx
 
 import Map from '../components/Map'
-import CityNotFound from '../components/CityNotFound'
 import { CITY_CONFIGS } from '../config/cities'
+import { Navigate } from 'react-router-dom'
 import { CONTENT } from '../config/content'
 import { usePageParams } from '../hooks/usePageParams'
 import posthog from 'posthog-js'
@@ -15,7 +15,7 @@ function City() {
   posthog.capture('city_opened', { city, variant, lang, source })
 
   if (!config) {
-    return <CityNotFound />
+    return <Navigate to="/map" replace />
   }
 
   return (
