@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Sparkles, Forward } from 'lucide-react'
-
-const ENABLE_SUMMARY = false
 import './HexCard.css'
 import { getSourceLabel } from '../../config/sources'
 import { shareHex } from '../../utils/share'
 import { useToast } from '../Toast/useToast'
 import { Toast } from '../Toast/Toast'
 import { useOverflow } from '../../hooks/useOverflow'
+import { RatingChart } from './RatingChart'
+
+const ENABLE_SUMMARY = true
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 function formatDate(iso) {
   if (!iso) return null
@@ -54,8 +58,9 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
   const cardRef = useRef(null)
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
-  const [summary, setSummary] = useState(null)
+  const [summaryData, setSummaryData] = useState(null)
   const [generating, setGenerating] = useState(false)
+  const [summaryFailed, setSummaryFailed] = useState(false)
 
   const { showToast, toastProps } = useToast()
   const commentRef = useOverflow()
@@ -63,8 +68,9 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
 
   useEffect(() => {
     if (!hex) { setVisible(false); return }
-    setSummary(null)
+    setSummaryData(null)
     setGenerating(false)
+    setSummaryFailed(false)
     const t = setTimeout(() => setVisible(true), 30)
     return () => clearTimeout(t)
   }, [hex])
@@ -89,14 +95,28 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
   const ctaLabel = count < 2 ? 'Too few feedbacks' : null
   const comments = (hex.comments || []).filter(Boolean)
   const showActions = ENABLE_SUMMARY && comments.length >= 3
+  const showSummaryView = summaryData || summaryFailed
 
-  function generateSummary() {
+  async function generateSummary() {
     setGenerating(true)
-    setTimeout(() => {
-      const stub = comments.slice(0, 2).map(c => c.text).filter(Boolean).join(' ')
-      setSummary(stub || '—')
+    await new Promise(r => setTimeout(r, 2000))
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/hex_summaries?cell=eq.${hex.cell}&select=*`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      )
+      const data = await res.json()
+      const existing = Array.isArray(data) ? data[0] || null : null
+      if (existing) {
+        setSummaryData(existing)
+      } else {
+        setSummaryFailed(true)
+      }
+    } catch {
+      setSummaryFailed(true)
+    } finally {
       setGenerating(false)
-    }, 1500)
+    }
   }
 
   async function handleShare() {
@@ -127,9 +147,43 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
       </div>
 
       {/* SUMMARY or COMMENTS */}
-      {summary ? (
+      {showSummaryView ? (
         <div ref={summaryRef} className="hc-summary-wrap">
-          <p className="hc-summary-text">{summary}</p>
+          {summaryFailed ? (
+            <p className="hc-summary-unavailable">Summary will be available soon</p>
+          ) : (
+            <>
+              {summaryData.neighborhood && (
+                <p className="hc-summary-neighborhood">{summaryData.neighborhood}</p>
+              )}
+              <RatingChart ratings={hex.ratings || []} />
+              <p className="hc-summary-text">{summaryData.summary}</p>
+              {summaryData.pros?.length > 0 && (
+                <div className="hc-pros">
+                  {summaryData.pros.map((p, i) => (
+                    <div key={i} className="hc-pro-item">
+                      <span className="hc-check">✓</span>{p}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {summaryData.cons?.length > 0 && (
+                <div className="hc-cons">
+                  {summaryData.cons.map((c, i) => (
+                    <div key={i} className="hc-con-item">
+                      <span className="hc-cross">✗</span>{c}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {summaryData.vibe && (
+                <p className="hc-vibe">{summaryData.vibe}</p>
+              )}
+              {summaryData.local_lore && (
+                <p className="hc-local-lore">"{summaryData.local_lore}"</p>
+              )}
+            </>
+          )}
         </div>
       ) : (
         comments.length > 0 && (
@@ -148,12 +202,9 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
 
       {/* ACTIONS */}
       {showActions && (
-        summary && !generating ? (
+        showSummaryView ? (
           <div className="hc-card-actions">
-            <button
-              className="btn-secondary"
-              onClick={onAddExperience}
-            >
+            <button className="btn-secondary" onClick={onAddExperience}>
               + Add your experience
             </button>
             <button className="btn-primary" onClick={handleShare}>

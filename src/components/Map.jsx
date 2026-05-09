@@ -397,6 +397,7 @@ if (feature.properties.id !== undefined) {
             avgRating: props.avgRating,
             count: props.count,
             comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
+            ratings: typeof props.ratings === 'string' ? JSON.parse(props.ratings) : (props.ratings || []),
           })
 
           const boundary = cellToBoundary(hexCellId)
@@ -483,6 +484,7 @@ if (feature.properties.id !== undefined) {
           opacity,
           fillColor: RATING_COLORS[colorRating],
           comments: JSON.stringify(data.comments),
+          ratings: JSON.stringify(data.ratings),
         },
         geometry: {
           type: 'Polygon',
@@ -544,6 +546,7 @@ function showHexLayer() {
       avgRating: props.avgRating,
       count: props.count,
       comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
+      ratings: typeof props.ratings === 'string' ? JSON.parse(props.ratings) : (props.ratings || []),
     })
     const boundary = cellToBoundary(props.cell)
     const centerLat = boundary.reduce((sum, p) => sum + p[0], 0) / boundary.length
