@@ -24,6 +24,6 @@ export function sharePoint(pointId) {
 
 export function shareHex(cellId, zoom) {
   const text = 'Check out what people say about this area'
-  const url = `https://commonground.page/map?hex=${cellId}&z=${Math.round(zoom)}`
+  const url = `https://commonground.page/map?hex=${cellId}&z=${Math.round(zoom)}&utm_source=hex_share`
   return doShare({ text, url })
 }

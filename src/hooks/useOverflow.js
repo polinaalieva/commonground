@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 
 export function useOverflow() {
-  const ref = useRef(null)
+  const cleanupRef = useRef(null)
 
-  useEffect(() => {
-    const el = ref.current
+  const ref = useCallback((el) => {
+    cleanupRef.current?.()
+    cleanupRef.current = null
+
     if (!el) return
 
     const check = () => {
@@ -12,9 +14,17 @@ export function useOverflow() {
     }
 
     check()
+
     const ro = new ResizeObserver(check)
     ro.observe(el)
-    return () => ro.disconnect()
+
+    const mo = new MutationObserver(check)
+    mo.observe(el, { childList: true, subtree: true, characterData: true })
+
+    cleanupRef.current = () => {
+      ro.disconnect()
+      mo.disconnect()
+    }
   }, [])
 
   return ref

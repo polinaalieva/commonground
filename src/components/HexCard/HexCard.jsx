@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ChevronDown } from 'lucide-react'
+import { X, Sparkles, Forward } from 'lucide-react'
+
+const ENABLE_SUMMARY = false
 import './HexCard.css'
 import { getSourceLabel } from '../../config/sources'
+import { shareHex } from '../../utils/share'
+import { useToast } from '../Toast/useToast'
+import { Toast } from '../Toast/Toast'
+import { useOverflow } from '../../hooks/useOverflow'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -9,7 +15,6 @@ function formatDate(iso) {
   if (isNaN(d)) return null
   return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' }).replace('/', '-')
 }
-
 
 function getHexLabel(avgRating) {
   if (!avgRating) return null
@@ -45,13 +50,21 @@ function CommentBlock({ comment }) {
   )
 }
 
-export function HexCard({ hex, surveySheetRef, onDismiss }) {
+export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZoom }) {
   const cardRef = useRef(null)
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
+  const [summary, setSummary] = useState(null)
+  const [generating, setGenerating] = useState(false)
+
+  const { showToast, toastProps } = useToast()
+  const commentRef = useOverflow()
+  const summaryRef = useOverflow()
 
   useEffect(() => {
     if (!hex) { setVisible(false); return }
+    setSummary(null)
+    setGenerating(false)
     const t = setTimeout(() => setVisible(true), 30)
     return () => clearTimeout(t)
   }, [hex])
@@ -73,8 +86,23 @@ export function HexCard({ hex, surveySheetRef, onDismiss }) {
   const count = Number(hex.count)
   const label = count >= 2 ? getHexLabel(hex.avgRating) : null
   const color = getHexColor(hex.avgRating)
-  const ctaLabel = count < 2 ? "Too few feedbacks" : null
+  const ctaLabel = count < 2 ? 'Too few feedbacks' : null
   const comments = (hex.comments || []).filter(Boolean)
+  const showActions = ENABLE_SUMMARY && comments.length >= 3
+
+  function generateSummary() {
+    setGenerating(true)
+    setTimeout(() => {
+      const stub = comments.slice(0, 2).map(c => c.text).filter(Boolean).join(' ')
+      setSummary(stub || '—')
+      setGenerating(false)
+    }, 1500)
+  }
+
+  async function handleShare() {
+    const result = await shareHex(hex.cell, getZoom?.() ?? 10)
+    if (result) showToast(result)
+  }
 
   return (
     <div
@@ -88,39 +116,63 @@ export function HexCard({ hex, surveySheetRef, onDismiss }) {
       {/* HEADER */}
       <div className="hc-header">
         {label && (
-          <span className="hc-rating" style={{ color }}>
-            {label}
-          </span>
+          <span className="hc-rating" style={{ color }}>{label}</span>
         )}
         {ctaLabel && (
-          <span className="hc-rating" style={{ color: 'rgba(17,17,17,0.5)' }}>
-            {ctaLabel}
-          </span>
+          <span className="hc-rating" style={{ color: 'rgba(17,17,17,0.5)' }}>{ctaLabel}</span>
         )}
         <button className="sheet-header__btn" onClick={onDismiss} aria-label="Close">
           <X size={14} />
         </button>
       </div>
 
-      {/* COMMENTS */}
-      {comments.length > 0 && (
-  <div className="hc-comment-wrap">
-    {comments.map((c, i) => <CommentBlock key={i} comment={c} />)}
-  </div>
-)}
-
-{comments.length > 0 && (
-  <div className="hc-chevron">
-    <ChevronDown size={17} color="rgba(17,17,17,0.9)" />
-  </div>
-)}
+      {/* SUMMARY or COMMENTS */}
+      {summary ? (
+        <div ref={summaryRef} className="hc-summary-wrap">
+          <p className="hc-summary-text">{summary}</p>
+        </div>
+      ) : (
+        comments.length > 0 && (
+          <div ref={commentRef} className="hc-comment-wrap">
+            {comments.map((c, i) => <CommentBlock key={i} comment={c} />)}
+          </div>
+        )
+      )}
 
       {/* META */}
       <div className="hc-meta" style={{ justifyContent: 'flex-end' }}>
-        <span>{Number(hex.count)} {Number(hex.count) === 1 ? 'feedback' : 'feedbacks'}</span>
+        <span>{count} {count === 1 ? 'feedback' : 'feedbacks'}</span>
         <span>·</span>
         <span>avg {Math.round(Number(hex.avgRating) * 10) / 10}/10</span>
       </div>
+
+      {/* ACTIONS */}
+      {showActions && (
+        summary && !generating ? (
+          <div className="hc-card-actions">
+            <button
+              className="btn-secondary"
+              onClick={onAddExperience}
+            >
+              + Add your experience
+            </button>
+            <button className="btn-primary" onClick={handleShare}>
+              Share <Forward size={16} />
+            </button>
+          </div>
+        ) : generating ? (
+          <button key="gen" className="hc-generate-btn" disabled>
+            <span>Generating...</span>
+          </button>
+        ) : (
+          <button key="idle" className="hc-generate-btn" onClick={generateSummary}>
+            <span>Generate summary</span>
+            <Sparkles size={15} />
+          </button>
+        )
+      )}
+
+      <Toast {...toastProps} />
     </div>
   )
 }

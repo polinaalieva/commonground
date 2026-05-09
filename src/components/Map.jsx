@@ -176,6 +176,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
 
     function checkEmptyZone() {
       if (!dataLoadedRef.current) return
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.has('point') || urlParams.has('hex')) return
       if (modeRef.current !== 'view') {
         setShowEmptyTooltip(false)
         return
@@ -339,6 +341,10 @@ if (feature.properties.id !== undefined) {
             original_date: props.original_date || null,
             source: props.source || null,
           })
+          const pinPadding = window.innerWidth <= 430
+            ? { bottom: Math.round(window.innerHeight * 0.55) }
+            : { left: 430 }
+          map.current.flyTo({ center: e.lngLat, essential: true, padding: pinPadding })
         })
 
         map.current.on('mouseenter', 'cg-feedback-layer', () => {
@@ -357,8 +363,53 @@ if (feature.properties.id !== undefined) {
         })
       }
 
-      // deep link: ?point=ID
+      // deep links
       const params = new URLSearchParams(window.location.search)
+
+      // ?hex=cellId&z=zoom
+      const hexCellId = params.get('hex')
+      const hexZoom = params.get('z')
+      if (hexCellId) {
+        const z = hexZoom ? clamp(Number(hexZoom), 7, 16) : 12
+        map.current.jumpTo({ zoom: z })
+
+        const hexGeoJSON = buildHexData(records)
+        const feature = hexGeoJSON.features.find(f => f.properties.cell === hexCellId)
+
+        if (feature) {
+          const props = feature.properties
+
+          hexModeRef.current = true
+          setHexMode(true)
+          if (map.current.getLayer('cg-feedback-layer')) {
+            map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
+          }
+          showHexLayer()
+
+          map.current.once('idle', () => {
+            try {
+              map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], hexCellId])
+            } catch {}
+          })
+
+          setSelectedHex({
+            cell: props.cell,
+            avgRating: props.avgRating,
+            count: props.count,
+            comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
+          })
+
+          const boundary = cellToBoundary(hexCellId)
+          const centerLat = boundary.reduce((sum, p) => sum + p[0], 0) / boundary.length
+          const centerLng = boundary.reduce((sum, p) => sum + p[1], 0) / boundary.length
+          const hexPadding = window.innerWidth <= 430
+            ? { bottom: Math.round(window.innerHeight * 0.55) }
+            : { left: 430 }
+          map.current.flyTo({ center: [centerLng, centerLat], zoom: z, essential: true, padding: hexPadding })
+        }
+      }
+
+      // ?point=ID
       const pointId = params.get('point')
       if (pointId) {
         const record = records.find(r => String(r.id) === String(pointId))
@@ -373,7 +424,10 @@ if (feature.properties.id !== undefined) {
             original_date: record.original_date || null,
             source: record.source || null,
           })
-          map.current.flyTo({ center: [record.lng, record.lat], zoom: 15, essential: true })
+          const pinPadding = window.innerWidth <= 430
+            ? { bottom: Math.round(window.innerHeight * 0.55) }
+            : { left: 430 }
+          map.current.flyTo({ center: [record.lng, record.lat], zoom: 15, essential: true, padding: pinPadding })
           map.current.once('idle', () => {
             try {
               map.current.setFeatureState(
@@ -486,10 +540,18 @@ function showHexLayer() {
     if (!props) return
     map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], props.cell])
     setSelectedHex({
+      cell: props.cell,
       avgRating: props.avgRating,
       count: props.count,
       comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
     })
+    const boundary = cellToBoundary(props.cell)
+    const centerLat = boundary.reduce((sum, p) => sum + p[0], 0) / boundary.length
+    const centerLng = boundary.reduce((sum, p) => sum + p[1], 0) / boundary.length
+    const hexPadding = window.innerWidth <= 430
+      ? { bottom: Math.round(window.innerHeight * 0.55) }
+      : { left: 430 }
+    map.current.flyTo({ center: [centerLng, centerLat], essential: true, padding: hexPadding })
   })
 
   map.current.on('mouseenter', 'cg-hex-layer', () => {
@@ -679,6 +741,8 @@ setTimeout(() => setShowHexTooltip(false), 3000)
       <HexCard
         hex={selectedHex}
         surveySheetRef={bottomSheetRef}
+        onAddExperience={() => surveySheetRef.current?.startSelect()}
+        getZoom={() => map.current?.getZoom() ?? 10}
         onDismiss={() => {
           setSelectedHex(null)
           if (map.current?.getLayer('cg-hex-selected-layer')) {
