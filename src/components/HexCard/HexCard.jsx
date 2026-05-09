@@ -7,6 +7,7 @@ import { useToast } from '../Toast/useToast'
 import { Toast } from '../Toast/Toast'
 import { useOverflow } from '../../hooks/useOverflow'
 import { RatingChart } from './RatingChart'
+import { getResolution } from 'h3-js'
 
 const ENABLE_SUMMARY = true
 
@@ -94,7 +95,8 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
   const color = getHexColor(hex.avgRating)
   const ctaLabel = count < 2 ? 'Too few feedbacks' : null
   const comments = (hex.comments || []).filter(Boolean)
-  const showActions = ENABLE_SUMMARY && comments.length >= 3
+  const hexResolution = hex.cell ? getResolution(hex.cell) : null
+  const showActions = ENABLE_SUMMARY && comments.length >= 3 && hexResolution > 6
   const showSummaryView = summaryData || summaryFailed
 
   async function generateSummary() {
