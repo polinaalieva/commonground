@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronUp, ChevronDown } from 'lucide-react'
+import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import './FC_Voting.css'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -119,7 +119,7 @@ export function FC_Voting({ feedbackId, onVoted }) {
           aria-label="Vote up"
           disabled={loading}
         >
-          <ChevronUp size={18} />
+          <ThumbsUp size={16} />
         </button>
         <button
           className={`fcv-btn fcv-btn--down ${myVote === 'down' ? 'fcv-btn--active' : ''}`}
@@ -127,7 +127,7 @@ export function FC_Voting({ feedbackId, onVoted }) {
           aria-label="Vote down"
           disabled={loading}
         >
-          <ChevronDown size={18} />
+          <ThumbsDown size={16} />
         </button>
       </div>
       {!loading && myVote !== null && (
