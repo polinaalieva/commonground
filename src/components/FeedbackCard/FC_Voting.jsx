@@ -130,10 +130,12 @@ export function FC_Voting({ feedbackId, onVoted }) {
           <ChevronDown size={18} />
         </button>
       </div>
-      <div className="fcv-stats">
-        <span className="fcv-net">{net > 0 ? `+${net}` : net}</span>
-        <span className="fcv-total">{total} votes</span>
-      </div>
+      {!loading && myVote !== null && (
+        <div className="fcv-stats">
+          <span className="fcv-net">{net > 0 ? `+${net}` : net}</span>
+          <span className="fcv-total">{total} votes</span>
+        </div>
+      )}
     </div>
   )
 }

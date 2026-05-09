@@ -18,7 +18,7 @@ async function doShare({ text, url }) {
 
 export function sharePoint(pointId) {
   const text = 'Check out what people say about this area'
-  const url = `https://commonground.page/map?point=${pointId}`
+  const url = `https://commonground.page/map?point=${pointId}&utm_source=feedback_share`
   return doShare({ text, url })
 }
 
