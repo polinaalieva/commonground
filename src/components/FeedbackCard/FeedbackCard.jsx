@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Forward } from 'lucide-react'
 import './FeedbackCard.css'
 import { FC_Voting } from './FC_Voting'
 import { getSourceLabel } from '../../config/sources'
+import { sharePoint } from '../../utils/share'
+import { useToast } from '../Toast/useToast'
+import { Toast } from '../Toast/Toast'
+import { useOverflow } from '../../hooks/useOverflow'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -17,6 +21,9 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
   const [voted, setVoted] = useState(false)
+
+  const { showToast, toastProps } = useToast()
+  const commentRef = useOverflow()
 
   useEffect(() => {
     if (!pin) { setVisible(false); return }
@@ -43,6 +50,11 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
   const sourceLabel = getSourceLabel(pin.source)
   const authorLabel = sourceLabel ? `via ${sourceLabel}` : 'Local Contributor'
 
+  async function handleShare() {
+    const result = await sharePoint(pin.id)
+    if (result) showToast(result)
+  }
+
   return (
     <div
       ref={cardRef}
@@ -66,7 +78,7 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
       </div>
 
       {pin.experience && (
-        <div className="fc-comment-wrap">
+        <div ref={commentRef} className="fc-comment-wrap">
           <p className="fc-comment">{pin.experience}</p>
         </div>
       )}
@@ -81,6 +93,15 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
         feedbackId={pin.id}
         onVoted={() => setVoted(true)}
       />
+
+      <div className="card-actions">
+        <button className="btn-primary" onClick={handleShare} aria-label="Share">
+          Share
+          <Forward size={16} />
+        </button>
+      </div>
+
+      <Toast {...toastProps} />
     </div>
   )
 }

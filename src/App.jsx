@@ -12,9 +12,9 @@ function App() {
       <Route path="/" element={<City />} />
       <Route path="/ru" element={<City />} />
 
-      {/* /map → редирект на / */}
-      <Route path="/map" element={<Navigate to="/" replace />} />
-      <Route path="/ru/map" element={<Navigate to="/ru" replace />} />
+      {/* /map → рендерим напрямую чтобы не стрипать query params (deep links) */}
+      <Route path="/map" element={<City />} />
+      <Route path="/ru/map" element={<City />} />
 
       {/* Лендинг переехал на /about */}
       <Route path="/about" element={<Home />} />

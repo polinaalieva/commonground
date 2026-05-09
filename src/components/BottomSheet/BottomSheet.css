@@ -537,9 +537,7 @@
   }
 }
 
-/* Прятать landing-шторку на мобиле когда открыта точка */
-@media (max-width: 768px) {
-  .bottom-sheet--pin-hidden {
-    display: none;
-  }
+/* Прятать landing-шторку когда открыта точка (мобайл и десктоп) */
+.bottom-sheet--pin-hidden {
+  display: none;
 }

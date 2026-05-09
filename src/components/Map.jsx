@@ -356,6 +356,36 @@ if (feature.properties.id !== undefined) {
           setShowEmptyTooltip(false)
         })
       }
+
+      // deep link: ?point=ID
+      const params = new URLSearchParams(window.location.search)
+      const pointId = params.get('point')
+      if (pointId) {
+        const record = records.find(r => String(r.id) === String(pointId))
+        if (record) {
+          const rating = record.place_rate ? clamp(Math.round(record.place_rate), 1, 10) : null
+          setSelectedPin({
+            id: record.id,
+            ratingLabel: rating ? getRatingLabel(rating) : null,
+            ratingColor: getRatingColor(rating),
+            experience: record.experience || null,
+            created_at: record.created_at || null,
+            original_date: record.original_date || null,
+            source: record.source || null,
+          })
+          map.current.flyTo({ center: [record.lng, record.lat], zoom: 15, essential: true })
+          map.current.once('idle', () => {
+            try {
+              map.current.setFeatureState(
+                { source: 'cg-feedback', id: record.id },
+                { selected: true }
+              )
+              selectedFeatureId.current = record.id
+            } catch {}
+          })
+        }
+      }
+
     } catch (e) {
       if (retries > 0) setTimeout(() => loadData(retries - 1), 900)
     } finally {

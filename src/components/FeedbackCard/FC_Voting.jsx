@@ -112,10 +112,6 @@ export function FC_Voting({ feedbackId, onVoted }) {
 
   return (
     <div className="fcv-wrap">
-      <div className="fcv-stats">
-        <span className="fcv-net">{net > 0 ? `+${net}` : net}</span>
-        <span className="fcv-total">{total} votes</span>
-      </div>
       <div className="fcv-buttons">
         <button
           className={`fcv-btn fcv-btn--up ${myVote === 'up' ? 'fcv-btn--active' : ''}`}
@@ -133,6 +129,10 @@ export function FC_Voting({ feedbackId, onVoted }) {
         >
           <ChevronDown size={18} />
         </button>
+      </div>
+      <div className="fcv-stats">
+        <span className="fcv-net">{net > 0 ? `+${net}` : net}</span>
+        <span className="fcv-total">{total} votes</span>
       </div>
     </div>
   )
