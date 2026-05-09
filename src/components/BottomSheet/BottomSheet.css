@@ -378,18 +378,6 @@
   gap: 15px;  /* мобила */
 }
 
-@media (max-width: 768px) {
-  .bottom-sheet--landing {
-    gap: 0;
-    padding: 0 16px 32px;
-    pointer-events: none;
-  }
-
-  .bottom-sheet--landing .sheet-actions {
-    pointer-events: auto;
-  }
-}
-
 @media (min-width: 768px) {
   .bottom-sheet--landing {
     background: rgba(255, 255, 255, 0.9);
@@ -545,6 +533,13 @@
 /* Прятать форму на десктопе когда появляется модалка formanswerconfirmmsheet */
 @media (min-width: 768px) {
   .bottom-sheet--hidden {
+    display: none;
+  }
+}
+
+/* Прятать landing-шторку на мобиле когда открыта точка */
+@media (max-width: 768px) {
+  .bottom-sheet--pin-hidden {
     display: none;
   }
 }

@@ -166,7 +166,7 @@ const SurveySheet = forwardRef(function SurveySheet(
 
   return (
     <>
-      <BottomSheet ref={bottomSheetRef} variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt}>
+      <BottomSheet ref={bottomSheetRef} variant={step === 'landing' ? 'landing' : 'default'} hidden={showNotePrompt} pinHidden={pinSelected && step === 'landing'}>
 
         {step === 'landing' && (
           <>
