@@ -341,10 +341,6 @@ if (feature.properties.id !== undefined) {
             original_date: props.original_date || null,
             source: props.source || null,
           })
-          const pinPadding = window.innerWidth <= 430
-            ? { bottom: Math.round(window.innerHeight * 0.55) }
-            : { left: 430 }
-          map.current.flyTo({ center: e.lngLat, essential: true, padding: pinPadding })
         })
 
         map.current.on('mouseenter', 'cg-feedback-layer', () => {
@@ -548,13 +544,6 @@ function showHexLayer() {
       comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
       ratings: typeof props.ratings === 'string' ? JSON.parse(props.ratings) : (props.ratings || []),
     })
-    const boundary = cellToBoundary(props.cell)
-    const centerLat = boundary.reduce((sum, p) => sum + p[0], 0) / boundary.length
-    const centerLng = boundary.reduce((sum, p) => sum + p[1], 0) / boundary.length
-    const hexPadding = window.innerWidth <= 430
-      ? { bottom: Math.round(window.innerHeight * 0.55) }
-      : { left: 430 }
-    map.current.flyTo({ center: [centerLng, centerLat], essential: true, padding: hexPadding })
   })
 
   map.current.on('mouseenter', 'cg-hex-layer', () => {
