@@ -226,7 +226,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      const apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&order=created_at.desc&limit=1000`
+      const apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)&order=created_at.desc&limit=1000`
 
       const res = await fetch(apiUrl, {
         headers: {
