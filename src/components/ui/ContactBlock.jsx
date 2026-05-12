@@ -12,7 +12,7 @@ function ContactBlock({ lang, inter = false }) {
         @AlievaPolina
       </a>
       {' '}{isRu ? 'или на почту' : 'or email'}{' '}
-      <a href="mailto:polina.alieva@gmail.com">polina.alieva@gmail.com</a>
+      <a href="mailto:polina@commonground.page">polina@commonground.page</a>
     </p>
   )
 }
