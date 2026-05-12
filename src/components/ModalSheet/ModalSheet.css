@@ -98,31 +98,40 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 32px;
   width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .msheet-button {
   height: 40px;
   flex: 1;
-  max-width: 160px;
-  border-radius: 5px;
-  font-family: Inter, Arial, sans-serif;
+  border-radius: 12px;
+  font-family: Inter, system-ui, sans-serif;
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   cursor: pointer;
   transition: opacity 0.15s ease;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
 }
 
 /* Primary */
 .msheet-button--primary {
-  background: rgba(0, 0, 0, 0.7);
+  background: #111;
   color: #fff;
 }
 
 .msheet-button--primary:hover {
   opacity: 0.85;
+}
+
+.msheet-button--primary:active {
+  opacity: 0.7;
 }
 
 .msheet-button--primary.msheet-button--disabled {
@@ -132,9 +141,9 @@
 
 /* Secondary */
 .msheet-button--secondary {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.95);
   color: #111;
-  border: 0.5px solid #B8BFCA;
+  border: 1px solid rgba(17, 17, 17, 0.1);
 }
 
 .msheet-button--secondary:hover {
