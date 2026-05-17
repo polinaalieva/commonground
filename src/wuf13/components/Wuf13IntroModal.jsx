@@ -26,7 +26,7 @@ function Wuf13IntroModal() {
             WUF13 brings together people from cities across the world.
           </p>
           <p className="wuf13-intro__text">
-            Pick a place you know, where you live, or where you're from, and share what it's actually like to live there.
+            Pick a place you know and share what it's like to live there.
           </p>
           <p className="wuf13-intro__text">
             Your experience will appear on the map alongside others from this forum.
