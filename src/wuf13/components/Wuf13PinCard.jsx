@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin, X } from 'lucide-react'
 import './Wuf13PinCard.css'
 
 export function Wuf13PinCard({ pin, onDismiss }) {
@@ -17,6 +17,11 @@ export function Wuf13PinCard({ pin, onDismiss }) {
 
   return (
     <div className={`wuf-card ${visible ? 'wuf-card--visible' : ''}`}>
+      {onDismiss && (
+        <button className="wuf-card__close" onClick={onDismiss} aria-label="Close">
+          <X size={14} />
+        </button>
+      )}
       {pin.ratingLabel && (
         <div className="wuf-card__rating" style={{ color: pin.ratingColor }}>
           {pin.ratingLabel}

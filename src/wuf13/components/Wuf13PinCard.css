@@ -30,6 +30,28 @@
 .wuf-card--visible {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
+  pointer-events: auto;
+}
+
+.wuf-card__close {
+  position: absolute;
+  top: clamp(10px, 1vw, 16px);
+  right: clamp(10px, 1vw, 16px);
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: rgba(17, 17, 17, 0.5);
+  transition: color 0.15s ease;
+}
+
+.wuf-card__close:hover {
+  color: #111;
 }
 
 /* Rating label — bold, colored */

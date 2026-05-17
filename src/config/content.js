@@ -12,7 +12,7 @@ export const CONTENT = {
       body_1: 'Cities collect vast amounts of data.',
       body_2: "Yet people’s lived experience of places often remains fragmented, delayed, and treated as secondary.",
       body_3: 'Common Ground explores what happens when people’s experiences are continuously collected and form a shared layer of understanding about the city.',
-      contact: `If you'd like to share feedback about the project, feel free to message me on Telegram`,
+      contact: `If you'd like to share feedback about the project, feel free to reach out on`,
     },
     ru: {
       subtitle_header: 'Изучай места через опыт людей',
@@ -22,7 +22,7 @@ export const CONTENT = {
       body_1: 'Города собирают много данных.',
       body_2: 'Но личный опыт людей, связанный с местами, часто фиксируется поздно, остаётся фрагментарным и второстепенным.',
       body_3: 'Common Ground исследует, что происходит, когда опыт людей собирается непрерывно и складывается в общий слой понимания города.',
-      contact: 'Если хочешь поделиться фидбеком о проекте, напиши мне в Telegram',
+      contact: 'Если хочешь поделиться фидбеком о проекте, напиши мне на',
     },
   },
 
@@ -101,9 +101,9 @@ export const CONTENT = {
       about_text_2: 'Common Ground explores what happens when people\'s experiences are continuously collected and form a shared layer of understanding about the city.',
 
         // landing step
-        modal_text_mobile: 'See how people experience places',
-        modal_text_desktop: 'See how people experience places or share your experience',
-        button: 'Share your experience',
+        modal_text_mobile: 'Choose a place and share your experience',
+        modal_text_desktop: 'Choose a place and share your experience',
+        button: 'Start',
 
         // step 1
         step1_title: 'Pick a place on the map',
@@ -146,9 +146,9 @@ export const CONTENT = {
         about_text_2: 'Common Ground исследует, что происходит, когда опыт людей собирается непрерывно и складывается в общий слой понимания города.',
 
         // landing step
-        modal_text_mobile: 'Изучай места через опыт людей',
-        modal_text_desktop: 'Изучай места через опыт людей или поделись своим опытом',
-        button: 'Поделиться опытом',
+        modal_text_mobile: 'Выбери место и поделись своим опытом',
+        modal_text_desktop: 'Выбери место и поделись своим опытом',
+        button: 'Начать',
 
         // step 1
         step1_title: 'Выбери место на карте',
@@ -194,9 +194,9 @@ export const CONTENT = {
         about_text_2: 'On this map, people mark places and share their experience of living there.',
 
         // landing step
-        modal_text_mobile: 'What’s it like to live in this area?',
-        modal_text_desktop: 'What’s it like to live in this area?',
-        button: 'Share your experience',
+        modal_text_mobile: 'Choose a place and share your experience',
+        modal_text_desktop: 'Choose a place and share your experience',
+        button: 'Start',
 
         // step 1
         step1_title: 'Pick a place on the map',
@@ -238,9 +238,9 @@ export const CONTENT = {
         about_text_2: 'На этой карте жители отмечают районы и делятся своим опытом жизни в них.',
 
         // landing step
-        modal_text_mobile: 'Как тебе живется в этом районе?',
-        modal_text_desktop: 'Как тебе живется в этом районе?',
-        button: 'Поделись своим опытом',
+        modal_text_mobile: 'Выбери место и поделись своим опытом',
+        modal_text_desktop: 'Выбери место и поделись своим опытом',
+        button: 'Начать',
 
         // step 1
         step1_title: 'Выбери место на карте',

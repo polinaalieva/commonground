@@ -5,9 +5,12 @@ import { Menu, Plus, Minus, Navigation2, Grid } from 'lucide-react'
 import MapButton from './MapButton'
 import MapMenu from '../../MapMenu/MapMenu'
 import AboutModal from '../../AboutModal/AboutModal'
+import Wuf13MapMenu from '../../../wuf13/components/Wuf13MapMenu'
+import Wuf13AboutModal from '../../../wuf13/components/Wuf13AboutModal'
 import './MapControls.css'
 
-function MapControls({ onZoomIn, onZoomOut, onLocate, onToggleHex, hexMode, variant, lang }) {
+function MapControls({ onZoomIn, onZoomOut, onLocate, onToggleHex, hexMode, variant, lang, city, pinFilter, onPinFilterChange }) {
+  const isWuf13 = city === 'wuf13'
   const [menuOpen, setMenuOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [locateError, setLocateError] = useState(false)
@@ -61,14 +64,30 @@ function MapControls({ onZoomIn, onZoomOut, onLocate, onToggleHex, hexMode, vari
           active={menuOpen}
         />
 
-        {menuOpen && (
+        {menuOpen && isWuf13 && (
+          <Wuf13MapMenu
+            onClose={() => setMenuOpen(false)}
+            onAboutOpen={() => { setMenuOpen(false); setAboutOpen(true) }}
+            pinFilter={pinFilter}
+            onPinFilterChange={(f) => { onPinFilterChange(f); setMenuOpen(false) }}
+          />
+        )}
+
+        {menuOpen && !isWuf13 && (
           <MapMenu
             onClose={() => setMenuOpen(false)}
             onAboutOpen={() => { setMenuOpen(false); setAboutOpen(true) }}
           />
         )}
 
-        {aboutOpen && (
+        {aboutOpen && isWuf13 && (
+          <Wuf13AboutModal
+            onClose={() => setAboutOpen(false)}
+            lang={lang}
+          />
+        )}
+
+        {aboutOpen && !isWuf13 && (
           <AboutModal
             onClose={() => setAboutOpen(false)}
             variant={variant}

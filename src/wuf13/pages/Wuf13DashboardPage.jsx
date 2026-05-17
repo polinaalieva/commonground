@@ -10,17 +10,7 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
 const WORLD_CENTER = [12, 20]
 const WORLD_ZOOM = 1.5
-const PIN_ZOOM = 5
-const MIN_SHOW_MS = 5000   // minimum time to show a pin card
-const RETURN_DELAY = 1500  // after card closes, wait before zoom-out
-
-const RATING_COLORS = {
-  1: '#ED4B9E', 2: '#CF60A0', 3: '#BF6AA0', 4: '#AC78A2',
-  5: '#9986A3', 6: '#8593A4', 7: '#74A2A6', 8: '#5EAFA7',
-  9: '#4EBBA8', 10: '#31D0AA',
-}
-
-function clamp(x, min, max) { return Math.max(min, Math.min(max, x)) }
+const AUTO_DISMISS_MS = 4000
 
 function createPulseMarker(color) {
   const el = document.createElement('div')
@@ -29,23 +19,18 @@ function createPulseMarker(color) {
   return el
 }
 
-export default function Wuf13ViewPage() {
+export default function Wuf13DashboardPage() {
   const mapContainer = useRef(null)
   const map = useRef(null)
-  const markersRef = useRef([])
   const pulseMarkerRef = useRef(null)
+  const pinsRef = useRef([])
+  const dismissTimerRef = useRef(null)
 
   const { pins, stats, newPin } = useWuf13Pins('wuf13')
 
-  // Autopilot state
   const [activePin, setActivePin] = useState(null)
-  const activePinRef = useRef(null)
-  const showTimerRef = useRef(null)
-  const queueRef = useRef([])
-  const isProcessingRef = useRef(false)
-
-  // Dashboard layout — detect from screen ratio
   const [layout, setLayout] = useState('vertical')
+
   useEffect(() => {
     function check() {
       setLayout(window.innerWidth > window.innerHeight ? 'vertical' : 'horizontal')
@@ -55,7 +40,41 @@ export default function Wuf13ViewPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Init map
+  const removePulseMarker = useCallback(() => {
+    if (pulseMarkerRef.current) {
+      pulseMarkerRef.current.remove()
+      pulseMarkerRef.current = null
+    }
+  }, [])
+
+  const dismiss = useCallback(() => {
+    clearTimeout(dismissTimerRef.current)
+    removePulseMarker()
+    setActivePin(null)
+  }, [removePulseMarker])
+
+  // Refs so map click handlers always call the latest version
+  const showPinRef = useRef(null)
+  const dismissRef = useRef(dismiss)
+  useEffect(() => { dismissRef.current = dismiss }, [dismiss])
+
+  const showPinWithTimer = useCallback((pin) => {
+    clearTimeout(dismissTimerRef.current)
+    setActivePin(pin)
+    dismissTimerRef.current = setTimeout(() => {
+      removePulseMarker()
+      setActivePin(null)
+    }, AUTO_DISMISS_MS)
+  }, [removePulseMarker])
+
+  useEffect(() => { showPinRef.current = showPinWithTimer }, [showPinWithTimer])
+
+  // Keep pinsRef in sync for click handler
+  useEffect(() => {
+    pinsRef.current = pins
+  }, [pins])
+
+  // Init map — interactive
   useEffect(() => {
     if (map.current) return
     map.current = new mapboxgl.Map({
@@ -63,14 +82,14 @@ export default function Wuf13ViewPage() {
       style: 'mapbox://styles/mapbox/light-v11',
       center: WORLD_CENTER,
       zoom: WORLD_ZOOM,
-      interactive: false, // presentation mode — no user interaction
+      interactive: true,
     })
 
     map.current.on('load', () => {
-      // Add source + layer for all pins
       map.current.addSource('wuf13-pins', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
+        promoteId: 'id',
       })
       map.current.addLayer({
         id: 'wuf13-pins-layer',
@@ -93,6 +112,25 @@ export default function Wuf13ViewPage() {
           'circle-stroke-width': 1.5,
         },
       })
+
+      map.current.on('click', 'wuf13-pins-layer', (e) => {
+        const feature = e.features?.[0]
+        if (!feature) return
+        const pin = pinsRef.current.find(p => p.id === feature.id)
+        if (pin) showPinRef.current?.(pin)
+      })
+
+      map.current.on('mouseenter', 'wuf13-pins-layer', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+      })
+      map.current.on('mouseleave', 'wuf13-pins-layer', () => {
+        map.current.getCanvas().style.cursor = ''
+      })
+
+      map.current.on('click', (e) => {
+        const features = map.current.queryRenderedFeatures(e.point, { layers: ['wuf13-pins-layer'] })
+        if (features.length === 0) dismissRef.current?.()
+      })
     })
   }, [])
 
@@ -106,10 +144,7 @@ export default function Wuf13ViewPage() {
         type: 'Feature',
         id: p.id,
         geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-        properties: {
-          rating_color: p.ratingColor,
-          experience: p.experience,
-        },
+        properties: { id: p.id, rating_color: p.ratingColor },
       }))
 
     const geojson = { type: 'FeatureCollection', features }
@@ -126,78 +161,20 @@ export default function Wuf13ViewPage() {
     }
   }, [pins])
 
-  // Remove pulse marker helper
-  const removePulseMarker = useCallback(() => {
-    if (pulseMarkerRef.current) {
-      pulseMarkerRef.current.remove()
-      pulseMarkerRef.current = null
-    }
-  }, [])
-
-  // Autopilot — return to world view
-  const returnToWorld = useCallback(() => {
-    removePulseMarker()
-    setActivePin(null)
-    activePinRef.current = null
-    isProcessingRef.current = false
-
-    map.current?.flyTo({
-      center: WORLD_CENTER,
-      zoom: WORLD_ZOOM,
-      duration: 2500,
-      essential: true,
-    })
-  }, [removePulseMarker])
-
-  // Autopilot — show a pin
-  const showPin = useCallback((pin) => {
-    if (!map.current) return
-    activePinRef.current = pin
-    setActivePin(pin)
-    isProcessingRef.current = true
-
-    // Replace pulse marker
-    removePulseMarker()
-    const el = createPulseMarker(pin.ratingColor)
-    pulseMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([pin.lng, pin.lat])
-      .addTo(map.current)
-
-    map.current.flyTo({
-      center: [pin.lng, pin.lat],
-      zoom: PIN_ZOOM,
-      duration: 2000,
-      essential: true,
-    })
-
-    // Show for at least MIN_SHOW_MS, then check queue or return
-    showTimerRef.current = setTimeout(() => {
-      if (queueRef.current.length > 0) {
-        const next = queueRef.current.shift()
-        showPin(next)
-      } else {
-        // No more in queue — return to world after short delay
-        setTimeout(returnToWorld, RETURN_DELAY)
-      }
-    }, MIN_SHOW_MS)
-  }, [returnToWorld, removePulseMarker])
-
-  // Handle new pins from polling
+  // New pin — show card + pulse marker, no flyTo
   useEffect(() => {
     if (!newPin) return
+    removePulseMarker()
+    const el = createPulseMarker(newPin.ratingColor)
+    pulseMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([newPin.lng, newPin.lat])
+      .addTo(map.current)
+    showPinWithTimer(newPin)
+  }, [newPin, removePulseMarker, showPinWithTimer])
 
-    if (!isProcessingRef.current) {
-      showPin(newPin)
-    } else {
-      // Already showing something — queue it
-      queueRef.current.push(newPin)
-    }
-  }, [newPin, showPin])
-
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
-      clearTimeout(showTimerRef.current)
+      clearTimeout(dismissTimerRef.current)
       removePulseMarker()
     }
   }, [removePulseMarker])
@@ -205,8 +182,22 @@ export default function Wuf13ViewPage() {
   return (
     <div className="wuf-view">
       <div ref={mapContainer} className="wuf-view__map" />
+      <div style={{
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        zIndex: 40,
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: 17,
+        fontWeight: 700,
+        color: '#111',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+      }}>
+        Common Ground · WUF13 Dashboard
+      </div>
       <Wuf13Dashboard stats={stats} layout={layout} />
-      <Wuf13PinCard pin={activePin} />
+      <Wuf13PinCard pin={activePin} onDismiss={dismiss} />
     </div>
   )
 }

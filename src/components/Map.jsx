@@ -12,6 +12,7 @@ import './EmptyZoneTooltip/EmptyZoneTooltip.css'
 import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
 import { Hexagon } from 'lucide-react'
+import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -113,12 +114,27 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [hexMode, setHexMode] = useState(false)
   const [selectedHex, setSelectedHex] = useState(null)
   const [showHexTooltip, setShowHexTooltip] = useState(false)
+  const [pinFilter, setPinFilter] = useState(city === 'wuf13' ? 'wuf13' : 'all')
+  const pinFilterRef = useRef(city === 'wuf13' ? 'wuf13' : 'all')
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
   useEffect(() => {
     pageContentRef.current = pageContent
   }, [pageContent])
+
+  function handlePinFilterChange(filter) {
+    pinFilterRef.current = filter
+    setPinFilter(filter)
+    const records = allPointsRef.current
+    const filtered = filter === 'wuf13' ? records.filter(r => r.city === 'wuf13') : records
+    const geojson = toGeoJSON(filtered)
+    map.current?.getSource('cg-feedback')?.setData(geojson)
+    if (hexMode) {
+      const hexData = buildHexData(filtered)
+      map.current?.getSource('cg-hex')?.setData(hexData)
+    }
+  }
 
   function getRatingLabel(rating) {
     const v = Number(rating)
@@ -241,7 +257,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const records = await res.json()
       console.log('sample record:', records[0])
       allPointsRef.current = records
-      const geojson = toGeoJSON(records)
+      const filteredRecords = pinFilterRef.current === 'wuf13' ? records.filter(r => r.city === 'wuf13') : records
+      const geojson = toGeoJSON(filteredRecords)
       console.log('sample feature props:', geojson.features[0]?.properties)
 
 
@@ -340,6 +357,7 @@ if (feature.properties.id !== undefined) {
             created_at: props.created_time || null,
             original_date: props.original_date || null,
             source: props.source || null,
+            city: props.city || null,
           })
         })
 
@@ -420,6 +438,7 @@ if (feature.properties.id !== undefined) {
             created_at: record.created_at || null,
             original_date: record.original_date || null,
             source: record.source || null,
+            city: record.city || null,
           })
           const pinPadding = window.innerWidth <= 430
             ? { bottom: Math.round(window.innerHeight * 0.55) }
@@ -692,6 +711,8 @@ setTimeout(() => setShowHexTooltip(false), 3000)
     <div className="cg-map-outer">
       <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
+      {city === 'wuf13' && <Wuf13IntroModal />}
+
       {mode === 'select' && (
         <div className="cg-center-pin" ref={centerPinRef}>
           <div className="cg-center-pin-inner" />
@@ -722,6 +743,9 @@ setTimeout(() => setShowHexTooltip(false), 3000)
         hexMode={hexMode}
         variant={variant}
         lang={lang}
+        city={city}
+        pinFilter={pinFilter}
+        onPinFilterChange={handlePinFilterChange}
       />
 
       <FeedbackCard

@@ -60,15 +60,21 @@ const SurveySheet = forwardRef(function SurveySheet(
   }
 
   async function fetchCityName(lat, lng) {
-    try {
-      const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=place&limit=1`
-      )
-      const data = await res.json()
-      return data.features?.[0]?.text || null
-    } catch {
-      return null
+    // Try progressively broader types — many regions lack 'place' but have district/locality/region
+    const typeSets = ['place', 'district,locality', 'region']
+    for (const types of typeSets) {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=${types}&limit=1`
+        )
+        const data = await res.json()
+        const name = data.features?.[0]?.text
+        if (name) return name
+      } catch {
+        // continue to next fallback
+      }
     }
+    return null
   }
 
   async function fetchCountryName(lat, lng) {

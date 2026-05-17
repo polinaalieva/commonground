@@ -210,7 +210,7 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
               + Add your experience
             </button>
             <button className="btn-primary" onClick={handleShare}>
-              Share <Forward size={16} />
+              <Forward size={16} /> Share
             </button>
           </div>
         ) : generating ? (

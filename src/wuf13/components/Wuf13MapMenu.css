@@ -1,6 +1,4 @@
-/* src/components/MapMenu/MapMenu.css */
-
-.map-menu {
+.wuf13-map-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -11,23 +9,16 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   z-index: 10000;
   overflow: hidden;
-  animation: menu-appear 0.15s ease;
+  animation: wuf13-menu-appear 0.15s ease;
 }
 
-@keyframes menu-appear {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes wuf13-menu-appear {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* На мобиле — с отступами 16px с каждой стороны, все углы скруглены */
 @media (max-width: 768px) {
-  .map-menu {
+  .wuf13-map-menu {
     width: calc(100vw - 32px);
     right: 0;
     border-radius: 12px;
@@ -35,32 +26,24 @@
   }
 }
 
-/* ========================
-   ROW
-   ======================== */
-
-.map-menu__row {
+.wuf13-map-menu__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
 }
 
-.map-menu__row--home {
+.wuf13-map-menu__row--home {
   padding: 18px 20px;
 }
 
-.map-menu__divider {
+.wuf13-map-menu__divider {
   height: 1px;
   background: rgba(0, 0, 0, 0.06);
   margin: 0 20px;
 }
 
-/* ========================
-   HOME BUTTON
-   ======================== */
-
-.map-menu__home-btn {
+.wuf13-map-menu__home-btn {
   background: none;
   border: none;
   padding: 0;
@@ -72,17 +55,14 @@
   cursor: pointer;
   text-align: left;
   line-height: 1;
+  text-decoration: none;
 }
 
-.map-menu__home-btn:hover {
+.wuf13-map-menu__home-btn:hover {
   opacity: 0.7;
 }
 
-/* ========================
-   LABEL
-   ======================== */
-
-.map-menu__label {
+.wuf13-map-menu__label {
   font-family: Inter, Arial, sans-serif;
   font-size: 15px;
   font-weight: 400;
@@ -90,21 +70,16 @@
   line-height: 1;
 }
 
-/* ========================
-   SWITCHER (пилюли)
-   ======================== */
-
-.map-menu__switcher {
+.wuf13-map-menu__switcher {
   display: flex;
   align-items: center;
   background: rgba(0, 0, 0, 0.08);
   border-radius: 10px;
   padding: 0;
   gap: 0;
-  cursor: pointer;
 }
 
-.map-menu__option {
+.wuf13-map-menu__option {
   font-family: Inter, Arial, sans-serif;
   font-size: 11px;
   font-weight: 400;
@@ -120,7 +95,7 @@
   line-height: 1;
 }
 
-.map-menu__option--active {
+.wuf13-map-menu__option--active {
   background: #fff;
   color: #111;
   border: 1px solid rgba(17, 17, 17, 0.07);
@@ -128,6 +103,6 @@
   border-radius: 10px;
 }
 
-.map-menu__option:hover:not(.map-menu__option--active) {
+.wuf13-map-menu__option:hover:not(.wuf13-map-menu__option--active) {
   color: #111;
 }

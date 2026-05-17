@@ -47,8 +47,13 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
   if (!pin) return null
 
   const date = formatDate(pin.original_date || pin.created_at)
-  const sourceLabel = getSourceLabel(pin.source)
-  const authorLabel = sourceLabel ? `via ${sourceLabel}` : 'Local Contributor'
+  let authorLabel
+  if (pin.city === 'wuf13') {
+    authorLabel = 'via WUF13'
+  } else {
+    const sourceLabel = getSourceLabel(pin.source)
+    authorLabel = sourceLabel ? `via ${sourceLabel}` : 'Local Contributor'
+  }
 
   async function handleShare() {
     const result = await sharePoint(pin.id)
@@ -96,8 +101,8 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
 
       <div className="card-actions">
         <button className="btn-primary" onClick={handleShare} aria-label="Share">
-          Share
           <Forward size={16} />
+          Share
         </button>
       </div>
 

@@ -37,6 +37,12 @@ export function useWuf13Pins(cityFilter = null) {
   const knownIdsRef = useRef(new Set())
   const isFirstLoadRef = useRef(true)
 
+  function cityKey(p) {
+    if (p.city_name) return p.city_name
+    if (p.country_name) return `__unknown_${p.country_name}`
+    return null
+  }
+
   const computeStats = useCallback((data) => {
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
@@ -44,10 +50,10 @@ export function useWuf13Pins(cityFilter = null) {
     return {
       total: data.length,
       countries: new Set(data.map(p => p.country_name).filter(Boolean)).size,
-      cities: new Set(data.map(p => p.city_name).filter(Boolean)).size,
+      cities: new Set(data.map(cityKey).filter(Boolean)).size,
       todayTotal: todayPins.length,
       todayCountries: new Set(todayPins.map(p => p.country_name).filter(Boolean)).size,
-      todayCities: new Set(todayPins.map(p => p.city_name).filter(Boolean)).size,
+      todayCities: new Set(todayPins.map(cityKey).filter(Boolean)).size,
     }
   }, [])
 
@@ -58,7 +64,7 @@ export function useWuf13Pins(cityFilter = null) {
       rating,
       ratingColor: rating ? RATING_COLORS[rating] : '#9ca3af',
       ratingLabel: rating
-        ? (rating >= 9 ? 'Feels like mine' : rating >= 5 ? 'Mixed feelings' : 'Not mine')
+        ? (rating >= 8 ? 'Fits me' : rating >= 4 ? 'Sometimes fits' : "Doesn't fit me")
         : '',
     }
   }, [])

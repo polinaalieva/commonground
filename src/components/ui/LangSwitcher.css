@@ -14,7 +14,7 @@
   font-weight: 400;
   color: rgba(255, 255, 255);
   padding: 5px 5px;
-  border-radius: 5px;
+  border-radius: 10px;
   transition: all 0.15s ease;
   user-select: none;
   min-width: 24px;
@@ -24,6 +24,7 @@
 .lang-switcher__option--active {
   background: #ffffff;
   color: #111111;
-  outline: 1px solid rgba(0, 0, 0, 0.2);
-  /*box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);   ← равномерная тень */
+  border: 1px solid rgba(17, 17, 17, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
 }
