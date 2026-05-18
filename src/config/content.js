@@ -205,7 +205,7 @@ export const CONTENT = {
 
         // step 2
         step2_title: 'Share your experience',
-        question: 'Does this place fit you as a place to live in?',
+        question: 'Does this place fit your life?',
         slider_labels: ['doesn\'t fit', 'sometimes', 'fits me'],
         note_label: 'Add a note',
         note_placeholder: 'What it\'s like to live here for you',
