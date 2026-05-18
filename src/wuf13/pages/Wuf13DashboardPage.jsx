@@ -26,7 +26,7 @@ export default function Wuf13DashboardPage() {
   const pinsRef = useRef([])
   const dismissTimerRef = useRef(null)
 
-  const { pins, stats, newPin } = useWuf13Pins('wuf13')
+  const { pins, stats, newPin } = useWuf13Pins()
 
   const [activePin, setActivePin] = useState(null)
   const [layout, setLayout] = useState('vertical')

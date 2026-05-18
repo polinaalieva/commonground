@@ -1,0 +1,61 @@
+.cg-center-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .cg-center-pin { top: calc(23% + 20px); }
+}
+
+/* Круг — белый fill, border 15px идёт вовнутрь */
+.cg-center-pin-circle {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #fff;
+  box-sizing: border-box;
+  border: 13px solid #111;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+/* Стержень — 2×13px, закруглённые концы */
+.cg-center-pin-stem {
+  width: 2px;
+  height: 13px;
+  background: #111;
+  border-radius: 1px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+/* Тень — в покое скрыта */
+.cg-center-pin-shadow {
+  width: 10px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 6px 0 4px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  will-change: transform, opacity;
+}
+
+/* Dragging — пин поднимается, тень появляется */
+.cg-center-pin.is-dragging .cg-center-pin-circle,
+.cg-center-pin.is-dragging .cg-center-pin-stem {
+  transform: translateY(-6px);
+}
+
+.cg-center-pin.is-dragging .cg-center-pin-shadow {
+  transform: scale(1);
+  opacity: 1;
+}

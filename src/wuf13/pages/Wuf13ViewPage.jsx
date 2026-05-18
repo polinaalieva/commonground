@@ -35,7 +35,7 @@ export default function Wuf13ViewPage() {
   const markersRef = useRef([])
   const pulseMarkerRef = useRef(null)
 
-  const { pins, stats, newPin } = useWuf13Pins('wuf13')
+  const { pins, stats, newPin } = useWuf13Pins()
 
   // Autopilot state
   const [activePin, setActivePin] = useState(null)

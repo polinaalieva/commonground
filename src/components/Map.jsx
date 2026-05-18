@@ -13,6 +13,7 @@ import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
 import { Hexagon } from 'lucide-react'
 import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
+import { CenterPin } from './ui/CenterPin'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -114,8 +115,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [hexMode, setHexMode] = useState(false)
   const [selectedHex, setSelectedHex] = useState(null)
   const [showHexTooltip, setShowHexTooltip] = useState(false)
-  const [pinFilter, setPinFilter] = useState(city === 'wuf13' ? 'wuf13' : 'all')
-  const pinFilterRef = useRef(city === 'wuf13' ? 'wuf13' : 'all')
+  const [pinFilter, setPinFilter] = useState('all')
+  const pinFilterRef = useRef('all')
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -645,7 +646,8 @@ setTimeout(() => setShowHexTooltip(false), 3000)
       const mapRect = mapContainer.current.getBoundingClientRect()
       const pinRect = centerPinRef.current.getBoundingClientRect()
       const pinX = pinRect.left + pinRect.width / 2 - mapRect.left
-      const pinY = pinRect.top + pinRect.height / 2 - mapRect.top
+      // tip of stem = bottom of container minus shadow height (4px)
+      const pinY = pinRect.bottom - 4 - mapRect.top
       const coords = map.current.unproject([pinX, pinY])
       return { lat: coords.lat, lng: coords.lng }
     }
@@ -713,11 +715,7 @@ setTimeout(() => setShowHexTooltip(false), 3000)
 
       {city === 'wuf13' && <Wuf13IntroModal />}
 
-      {mode === 'select' && (
-        <div className="cg-center-pin" ref={centerPinRef}>
-          <div className="cg-center-pin-inner" />
-        </div>
-      )}
+      <CenterPin mapRef={map} mode={mode} ref={centerPinRef} />
 
       {showEmptyTooltip && mode === 'view' && (
         <EmptyZoneTooltip
