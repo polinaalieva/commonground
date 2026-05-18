@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import BottomSheet from './BottomSheet'
 import SheetHeader from './SheetHeader'
 import SheetContent from './SheetContent'
@@ -15,7 +15,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const SurveySheet = forwardRef(function SurveySheet(
-  { city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, pinSelected, bottomSheetRef },
+  { city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, onFlyTo, pinSelected, bottomSheetRef },
   ref
 ) {
   const [step, setStep] = useState('landing')
@@ -23,6 +23,11 @@ const SurveySheet = forwardRef(function SurveySheet(
   const [address, setAddress] = useState('')
   const [sliderValue, setSliderValue] = useState(null)
   const [note, setNote] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [addressNotFound, setAddressNotFound] = useState(false)
+  const suggestTimerRef = useRef(null)
+  const errorTimerRef = useRef(null)
+  const onMoveEndRef = useRef(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [showNotePrompt, setShowNotePrompt] = useState(false)
@@ -35,17 +40,70 @@ const SurveySheet = forwardRef(function SurveySheet(
     }
   }))
 
-  useEffect(() => {
-    if (step !== 1) return
+  // Keep ref current so the moveend listener always calls the latest fetchAddress/getCenter
+  onMoveEndRef.current = () => {
     const c = getCenter()
     fetchAddress(c.lat, c.lng)
+  }
 
-    const unsubscribe = onMapMoveEnd(() => {
-      const c = getCenter()
-      fetchAddress(c.lat, c.lng)
-    })
+  useEffect(() => {
+    if (step !== 1) return
+    onMoveEndRef.current?.()
+
+    const stableCallback = () => onMoveEndRef.current?.()
+    const unsubscribe = onMapMoveEnd(stableCallback)
     return unsubscribe
   }, [step])
+
+  function handleAddressChange(e) {
+    const val = e.target.value
+    setAddress(val)
+    setAddressNotFound(false)
+    clearTimeout(suggestTimerRef.current)
+    if (val.trim().length < 2) { setSuggestions([]); return }
+    suggestTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=3`
+        )
+        const data = await res.json()
+        const features = data.features || []
+        setSuggestions(features)
+        if (features.length === 0 && val.trim().length >= 2) {
+          clearTimeout(errorTimerRef.current)
+          setAddressNotFound(true)
+          errorTimerRef.current = setTimeout(() => setAddressNotFound(false), 2000)
+        }
+      } catch {
+        setSuggestions([])
+      }
+    }, 300)
+  }
+
+  function handleAddressKeyDown(e) {
+    if (e.key === 'Escape') {
+      setSuggestions([])
+    } else if (e.key === 'Enter') {
+      if (suggestions.length > 0) {
+        handleSelectSuggestion(suggestions[0])
+      } else {
+        setSuggestions([])
+      }
+    }
+  }
+
+  function handleClearAddress() {
+    setAddress('')
+    setSuggestions([])
+    setAddressNotFound(false)
+  }
+
+  function handleSelectSuggestion(feature) {
+    const [lng, lat] = feature.center
+    setAddress(feature.place_name)
+    setSuggestions([])
+    onFlyTo?.(lng, lat)
+  }
 
   async function fetchAddress(lat, lng) {
     try {
@@ -54,6 +112,8 @@ const SurveySheet = forwardRef(function SurveySheet(
       )
       const data = await res.json()
       setAddress(data.features?.[0]?.place_name || '')
+      clearTimeout(errorTimerRef.current)
+      setAddressNotFound(false)
     } catch {
       setAddress('')
     }
@@ -203,7 +263,15 @@ const SurveySheet = forwardRef(function SurveySheet(
               onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
             />
             <SheetContent>
-              <SheetAddress value={address} onChange={(e) => setAddress(e.target.value)} />
+              <SheetAddress
+                value={address}
+                onChange={handleAddressChange}
+                onKeyDown={handleAddressKeyDown}
+                onClear={handleClearAddress}
+                suggestions={suggestions}
+                onSelectSuggestion={handleSelectSuggestion}
+                error={addressNotFound}
+              />
             </SheetContent>
             <SheetActions>
               <SheetButton onClick={handleContinue}>

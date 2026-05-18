@@ -780,6 +780,7 @@ setTimeout(() => setShowHexTooltip(false), 3000)
         onDisableMap={disableMap}
         onEnableMap={enableMap}
         onClose={closeSurvey}
+        onFlyTo={(lng, lat) => map.current?.flyTo({ center: [lng, lat], zoom: Math.max(map.current.getZoom(), 14), essential: true })}
       />
     </div>
   )
