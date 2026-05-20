@@ -13,6 +13,7 @@ import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
 import { Hexagon } from 'lucide-react'
 import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
+import Wuf13FirstPinModal from '../wuf13/components/Wuf13FirstPinModal'
 import { CenterPin } from './ui/CenterPin'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
@@ -117,6 +118,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [showHexTooltip, setShowHexTooltip] = useState(false)
   const [pinFilter, setPinFilter] = useState('all')
   const pinFilterRef = useRef('all')
+  const [showFirstPinModal, setShowFirstPinModal] = useState(false)
+  const submitCountRef = useRef(0)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -707,6 +710,10 @@ setTimeout(() => setShowHexTooltip(false), 3000)
   function closeSurvey() {
     exitSelect()
     setTimeout(() => loadData(1), 300)
+    submitCountRef.current += 1
+    if (submitCountRef.current === 1 && city === 'wuf13') {
+      setTimeout(() => setShowFirstPinModal(true), 2000)
+    }
   }
 
   return (
@@ -714,6 +721,7 @@ setTimeout(() => setShowHexTooltip(false), 3000)
       <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
       {city === 'wuf13' && <Wuf13IntroModal />}
+      {showFirstPinModal && <Wuf13FirstPinModal onClose={() => setShowFirstPinModal(false)} />}
 
       <CenterPin mapRef={map} mode={mode} ref={centerPinRef} />
 
