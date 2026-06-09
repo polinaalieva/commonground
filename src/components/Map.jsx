@@ -1,8 +1,7 @@
 // src/components/Map.jsx
 
 import { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import { maplibregl, MAP_STYLE } from '../config/map'
 import './Map.css'
 import SurveySheet from './BottomSheet/SurveySheet'
 import { FeedbackCard } from './FeedbackCard/FeedbackCard'
@@ -16,7 +15,6 @@ import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
 import Wuf13FirstPinModal from '../wuf13/components/Wuf13FirstPinModal'
 import { CenterPin } from './ui/CenterPin'
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -170,9 +168,9 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       return
     }
 
-    map.current = new mapboxgl.Map({
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: MAP_STYLE,
       center: cityConfig.center,
       zoom: cityConfig.zoom
     })
@@ -700,7 +698,7 @@ setTimeout(() => setShowHexTooltip(false), 3000)
     if (!userMarker.current) {
       const el = document.createElement('div')
       el.className = 'cg-user-marker'
-      userMarker.current = new mapboxgl.Marker({ element: el })
+      userMarker.current = new maplibregl.Marker({ element: el })
     }
     userMarker.current.setLngLat([lng, lat])
     if (!userMarker.current._map) userMarker.current.addTo(map.current)

@@ -17,8 +17,8 @@
 }
 
 /* Hide Mapbox logo/attribution for presentation */
-.wuf-view .mapboxgl-ctrl-bottom-left,
-.wuf-view .mapboxgl-ctrl-bottom-right {
+.wuf-view .maplibregl-ctrl-bottom-left,
+.wuf-view .maplibregl-ctrl-bottom-right {
   display: none;
 }
 

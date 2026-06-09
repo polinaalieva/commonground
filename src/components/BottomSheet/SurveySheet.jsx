@@ -64,10 +64,14 @@ const SurveySheet = forwardRef(function SurveySheet(
     suggestTimerRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=3`
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=3&addressdetails=1`,
+          { headers: { 'Accept-Language': 'en' } }
         )
         const data = await res.json()
-        const features = data.features || []
+        const features = (data || []).map(item => ({
+          place_name: item.display_name,
+          center: [parseFloat(item.lon), parseFloat(item.lat)],
+        }))
         setSuggestions(features)
         if (features.length === 0 && val.trim().length >= 2) {
           clearTimeout(errorTimerRef.current)
@@ -108,10 +112,11 @@ const SurveySheet = forwardRef(function SurveySheet(
   async function fetchAddress(lat, lng) {
     try {
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=address,poi&limit=1`
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
       )
       const data = await res.json()
-      setAddress(data.features?.[0]?.place_name || '')
+      setAddress(data.display_name || '')
       clearTimeout(errorTimerRef.current)
       setAddressNotFound(false)
     } catch {
@@ -119,33 +124,20 @@ const SurveySheet = forwardRef(function SurveySheet(
     }
   }
 
-  async function fetchCityName(lat, lng) {
-    // Try progressively broader types — many regions lack 'place' but have district/locality/region
-    const typeSets = ['place', 'district,locality', 'region']
-    for (const types of typeSets) {
-      try {
-        const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=${types}&limit=1`
-        )
-        const data = await res.json()
-        const name = data.features?.[0]?.text
-        if (name) return name
-      } catch {
-        // continue to next fallback
-      }
-    }
-    return null
-  }
-
-  async function fetchCountryName(lat, lng) {
+  async function fetchGeoNames(lat, lng) {
     try {
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&types=country&limit=1`
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
       )
       const data = await res.json()
-      return data.features?.[0]?.text || null
+      const addr = data.address || {}
+      return {
+        cityName: addr.city || addr.town || addr.village || addr.county || addr.state || null,
+        countryName: addr.country || null,
+      }
     } catch {
-      return null
+      return { cityName: null, countryName: null }
     }
   }
 
@@ -167,10 +159,7 @@ const SurveySheet = forwardRef(function SurveySheet(
     setIsSubmitting(true)
     setError(null)
     try {
-      const [cityName, countryName] = await Promise.all([
-        fetchCityName(coords.lat, coords.lng),
-        fetchCountryName(coords.lat, coords.lng),
-      ])
+      const { cityName, countryName } = await fetchGeoNames(coords.lat, coords.lng)
 
       const res = await fetch(`${SUPABASE_URL}/rest/v1/feedback_map`, {
         method: 'POST',

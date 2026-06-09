@@ -5,7 +5,6 @@ import { latLngToCell, cellToLatLng } from 'h3-js'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.VITE_SUPABASE_SERVICE_KEY
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
-const MAPBOX_TOKEN = process.env.VITE_MAPBOX_TOKEN
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
 
@@ -53,16 +52,17 @@ async function upsertSummary(row) {
   })
 }
 
-// ── Mapbox reverse geocoding ──
+// ── Reverse geocoding ──
 
 async function getNeighborhood(lat, lng) {
   try {
     const res = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=neighborhood,locality&access_token=${MAPBOX_TOKEN}`
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'CommonGround/1.0' } }
     )
     const data = await res.json()
-    const feature = data.features?.[0]
-    return feature?.text || null
+    const addr = data.address || {}
+    return addr.neighbourhood || addr.suburb || addr.city_district || null
   } catch {
     return null
   }
@@ -178,7 +178,7 @@ async function main() {
 
       generated++
       // небольшая пауза чтобы не перегружать API
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 1100))
     } catch (err) {
       console.error(`Error for ${cell}:`, err.message)
     }

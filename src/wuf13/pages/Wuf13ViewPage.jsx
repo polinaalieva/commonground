@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import { maplibregl, MAP_STYLE } from '../../config/map'
 import { useWuf13Pins } from '../hooks/useWuf13Pins'
 import { Wuf13Dashboard } from '../components/Wuf13Dashboard'
 import { Wuf13PinCard } from '../components/Wuf13PinCard'
 import './Wuf13ViewPage.css'
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
 
 const WORLD_CENTER = [12, 20]
 const WORLD_ZOOM = 1.5
@@ -58,9 +56,9 @@ export default function Wuf13ViewPage() {
   // Init map
   useEffect(() => {
     if (map.current) return
-    map.current = new mapboxgl.Map({
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: MAP_STYLE,
       center: WORLD_CENTER,
       zoom: WORLD_ZOOM,
       interactive: false, // presentation mode — no user interaction
@@ -159,7 +157,7 @@ export default function Wuf13ViewPage() {
     // Replace pulse marker
     removePulseMarker()
     const el = createPulseMarker(pin.ratingColor)
-    pulseMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
+    pulseMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' })
       .setLngLat([pin.lng, pin.lat])
       .addTo(map.current)
 
