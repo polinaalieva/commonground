@@ -10,6 +10,7 @@ function DrawPage() {
   const fileInputRef = useRef(null)
   const csvInputRef = useRef(null)
   const cornersRef = useRef(null)
+  const baseCornersRef = useRef(null)
   const markersRef = useRef([])
   const centerMarkerRef = useRef(null)
   const imageUrlRef = useRef(null)
@@ -19,7 +20,9 @@ function DrawPage() {
   const [shapeCount, setShapeCount] = useState(0)
   const [selectedId, setSelectedId] = useState(null)
   const [panel, setPanel] = useState({ code: '', number: '', zone: '', type: '' })
-  const shapeMeta = useRef({}) // { featureId: { code, number, zone, type } }
+  const [scaleX, setScaleX] = useState(1)
+  const [scaleY, setScaleY] = useState(1)
+  const shapeMeta = useRef({})
 
   useEffect(() => {
     if (map.current) return
@@ -139,6 +142,40 @@ function DrawPage() {
     ]
   }
 
+  function applyScale(sx, sy) {
+    if (!baseCornersRef.current) return
+    const base = baseCornersRef.current
+    const center = getCenter(base)
+
+    const scaled = base.map(c => [
+      center[0] + (c[0] - center[0]) * sx,
+      center[1] + (c[1] - center[1]) * sy,
+    ])
+
+    cornersRef.current = scaled
+    updateImageOverlay()
+
+    // обновляем маркеры
+    if (centerMarkerRef.current) {
+      centerMarkerRef.current.setLngLat(getCenter(scaled))
+    }
+    if (markersRef.current[0]) {
+      markersRef.current[0].setLngLat(scaled[2])
+    }
+  }
+
+  function handleScaleX(e) {
+    const val = parseFloat(e.target.value)
+    setScaleX(val)
+    applyScale(val, scaleY)
+  }
+
+  function handleScaleY(e) {
+    const val = parseFloat(e.target.value)
+    setScaleY(val)
+    applyScale(scaleX, val)
+  }
+
   function updateImageOverlay() {
     if (!imageUrlRef.current || !cornersRef.current) return
 
@@ -215,6 +252,11 @@ function DrawPage() {
         center[1] + (c[1] - center[1]) * scale,
       ])
 
+      // обновляем базу после ручного скейла маркером
+      baseCornersRef.current = cornersRef.current.map(c => [...c])
+      setScaleX(1)
+      setScaleY(1)
+
       updateImageOverlay()
       centerMarkerRef.current?.setLngLat(getCenter(cornersRef.current))
       scaleMarker.setLngLat(cornersRef.current[2])
@@ -235,6 +277,9 @@ function DrawPage() {
       const dx = newCenter[0] - oldCenter[0]
       const dy = newCenter[1] - oldCenter[1]
       cornersRef.current = cornersRef.current.map(c => [c[0] + dx, c[1] + dy])
+      baseCornersRef.current = cornersRef.current.map(c => [...c])
+      setScaleX(1)
+      setScaleY(1)
       updateImageOverlay()
       scaleMarker.setLngLat(cornersRef.current[2])
     })
@@ -245,20 +290,34 @@ function DrawPage() {
   function handleImageUpload(e) {
     const file = e.target.files[0]
     if (!file) return
+
     const url = URL.createObjectURL(file)
     imageUrlRef.current = url
-    const bounds = map.current.getBounds()
-    const corners = [
-      [bounds.getWest(), bounds.getNorth()],
-      [bounds.getEast(), bounds.getNorth()],
-      [bounds.getEast(), bounds.getSouth()],
-      [bounds.getWest(), bounds.getSouth()],
-    ]
-    cornersRef.current = corners
-    updateImageOverlay()
-    addControlMarkers(corners)
-    setHasImage(true)
-    setLocked(false)
+
+    const img = new Image()
+    img.onload = () => {
+      const center = map.current.getCenter()
+      const w = 0.01
+      const h = w / (img.width / img.height)
+
+      const corners = [
+        [center.lng - w / 2, center.lat + h / 2],
+        [center.lng + w / 2, center.lat + h / 2],
+        [center.lng + w / 2, center.lat - h / 2],
+        [center.lng - w / 2, center.lat - h / 2],
+      ]
+
+      cornersRef.current = corners
+      baseCornersRef.current = corners.map(c => [...c])
+      setScaleX(1)
+      setScaleY(1)
+
+      updateImageOverlay()
+      addControlMarkers(corners)
+      setHasImage(true)
+      setLocked(false)
+    }
+    img.src = url
   }
 
   function handleOpacityChange(e) {
@@ -370,7 +429,7 @@ function DrawPage() {
         padding: '8px 12px',
         borderRadius: 8,
         flexWrap: 'wrap',
-        maxWidth: 600,
+        maxWidth: 700,
       }}>
         <button onClick={() => fileInputRef.current.click()}
           style={{ padding: '6px 10px', cursor: 'pointer' }}>
@@ -382,17 +441,36 @@ function DrawPage() {
         {hasImage && (
           <>
             <input type="range" min="0" max="1" step="0.05" value={opacity}
-              onChange={handleOpacityChange} style={{ width: 100, cursor: 'pointer' }} />
+              onChange={handleOpacityChange} style={{ width: 80, cursor: 'pointer' }} />
             <span style={{ fontSize: 12, color: '#333', minWidth: 30 }}>
               {Math.round(opacity * 100)}%
             </span>
+
+            {!locked && (
+              <>
+                <span style={{ fontSize: 11, color: '#666' }}>W</span>
+                <input type="range" min="0.2" max="3" step="0.01" value={scaleX}
+                  onChange={handleScaleX} style={{ width: 80, cursor: 'pointer' }} />
+                <span style={{ fontSize: 11, color: '#333', minWidth: 30 }}>
+                  {Math.round(scaleX * 100)}%
+                </span>
+
+                <span style={{ fontSize: 11, color: '#666' }}>H</span>
+                <input type="range" min="0.2" max="3" step="0.01" value={scaleY}
+                  onChange={handleScaleY} style={{ width: 80, cursor: 'pointer' }} />
+                <span style={{ fontSize: 11, color: '#333', minWidth: 30 }}>
+                  {Math.round(scaleY * 100)}%
+                </span>
+              </>
+            )}
+
             <button onClick={handleLockToggle} style={{
               padding: '6px 10px', cursor: 'pointer',
               background: locked ? '#333' : '#fff',
               color: locked ? '#fff' : '#333',
               border: '1px solid #333', borderRadius: 4,
             }}>
-              {locked ? '🔒 заблокировано' : '🔓 разблокировано'}
+              {locked ? '🔒' : '🔓'}
             </button>
             {!locked && (
               <span style={{ fontSize: 11, color: '#666' }}>🔵 двигать · ⚪ масштаб</span>
@@ -444,63 +522,45 @@ function DrawPage() {
 
           <div>
             <span style={labelStyle}>Code — уникальный ID</span>
-            <input
-              style={inputStyle}
-              placeholder="напр. HALL_A или booth_42"
+            <input style={inputStyle} placeholder="напр. HALL_A или booth_42"
               value={panel.code}
-              onChange={e => setPanel(p => ({ ...p, code: e.target.value }))}
-            />
+              onChange={e => setPanel(p => ({ ...p, code: e.target.value }))} />
           </div>
 
           <div>
             <span style={labelStyle}>Number — отображается на карте</span>
-            <input
-              style={inputStyle}
-              placeholder="напр. 12 или A3"
+            <input style={inputStyle} placeholder="напр. 12 или A3"
               value={panel.number}
-              onChange={e => setPanel(p => ({ ...p, number: e.target.value }))}
-            />
+              onChange={e => setPanel(p => ({ ...p, number: e.target.value }))} />
           </div>
 
           <div>
             <span style={labelStyle}>Zone</span>
-            <input
-              style={inputStyle}
-              placeholder="напр. A или B"
+            <input style={inputStyle} placeholder="напр. A или B"
               value={panel.zone}
-              onChange={e => setPanel(p => ({ ...p, zone: e.target.value }))}
-            />
+              onChange={e => setPanel(p => ({ ...p, zone: e.target.value }))} />
           </div>
 
           <div>
             <span style={labelStyle}>Type</span>
-            <input
-              style={inputStyle}
-              placeholder="напр. session, expo, service_cafe"
+            <input style={inputStyle} placeholder="напр. session, expo, service_cafe"
               value={panel.type}
-              onChange={e => setPanel(p => ({ ...p, type: e.target.value }))}
-            />
+              onChange={e => setPanel(p => ({ ...p, type: e.target.value }))} />
           </div>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <button
-              onClick={handlePanelSave}
-              style={{
-                flex: 1, padding: '6px 0', cursor: 'pointer',
-                background: '#333', color: '#fff',
-                border: 'none', borderRadius: 4, fontSize: 13,
-              }}
-            >
+            <button onClick={handlePanelSave} style={{
+              flex: 1, padding: '6px 0', cursor: 'pointer',
+              background: '#333', color: '#fff',
+              border: 'none', borderRadius: 4, fontSize: 13,
+            }}>
               Сохранить
             </button>
-            <button
-              onClick={() => setSelectedId(null)}
-              style={{
-                padding: '6px 10px', cursor: 'pointer',
-                background: '#fff', border: '1px solid #ccc',
-                borderRadius: 4, fontSize: 13,
-              }}
-            >
+            <button onClick={() => setSelectedId(null)} style={{
+              padding: '6px 10px', cursor: 'pointer',
+              background: '#fff', border: '1px solid #ccc',
+              borderRadius: 4, fontSize: 13,
+            }}>
               ✕
             </button>
           </div>
