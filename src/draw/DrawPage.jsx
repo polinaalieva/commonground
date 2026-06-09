@@ -18,8 +18,8 @@ function DrawPage() {
   const [locked, setLocked] = useState(false)
   const [shapeCount, setShapeCount] = useState(0)
   const [selectedId, setSelectedId] = useState(null)
-  const [panel, setPanel] = useState({ code: '', zone: '', type: '' })
-  const shapeMeta = useRef({}) // { featureId: { code, zone, type } }
+  const [panel, setPanel] = useState({ code: '', number: '', zone: '', type: '' })
+  const shapeMeta = useRef({}) // { featureId: { code, number, zone, type } }
 
   useEffect(() => {
     if (map.current) return
@@ -40,9 +40,9 @@ function DrawPage() {
 
       map.current.on('draw.create', (e) => {
         const id = e.features[0].id
-        shapeMeta.current[id] = { code: '', zone: '', type: '' }
+        shapeMeta.current[id] = { code: '', number: '', zone: '', type: '' }
         setSelectedId(id)
-        setPanel({ code: '', zone: '', type: '' })
+        setPanel({ code: '', number: '', zone: '', type: '' })
         updateShapeCount()
       })
 
@@ -52,7 +52,7 @@ function DrawPage() {
           return
         }
         const id = e.features[0].id
-        const meta = shapeMeta.current[id] || { code: '', zone: '', type: '' }
+        const meta = shapeMeta.current[id] || { code: '', number: '', zone: '', type: '' }
         setSelectedId(id)
         setPanel({ ...meta })
       })
@@ -87,7 +87,7 @@ function DrawPage() {
         type: 'symbol',
         source: 'labels-source',
         layout: {
-          'text-field': ['get', 'code'],
+          'text-field': ['get', 'number'],
           'text-size': 13,
           'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
           'text-anchor': 'center',
@@ -109,7 +109,7 @@ function DrawPage() {
 
     const features = all.features.map(f => {
       const meta = shapeMeta.current[f.id] || {}
-      if (!meta.code) return null
+      if (!meta.number) return null
 
       let center
       if (f.geometry.type === 'Point') {
@@ -125,7 +125,7 @@ function DrawPage() {
       return {
         type: 'Feature',
         geometry: { type: 'Point', coordinates: center },
-        properties: { code: meta.code },
+        properties: { number: meta.number },
       }
     }).filter(Boolean)
 
@@ -281,10 +281,10 @@ function DrawPage() {
           : f.geometry.coordinates[0]
       )
       const geomType = f.geometry.type === 'Point' ? 'point' : 'polygon'
-      return `${i + 1},"${meta.code || ''}","${meta.zone || ''}","${meta.type || ''}","${geomType}","${coords}"`
+      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${meta.zone || ''}","${meta.type || ''}","${geomType}","${coords}"`
     })
 
-    const csv = ['id,code,zone,type,geometry_type,coordinates', ...rows].join('\n')
+    const csv = ['id,code,number,zone,type,geometry_type,coordinates', ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -304,10 +304,10 @@ function DrawPage() {
       const lines = text.trim().split('\n').slice(1)
 
       const features = lines.map(line => {
-        const parts = line.match(/^(\d+),"([^"]*)","([^"]*)","([^"]*)","([^"]*)","(.+)"$/)
+        const parts = line.match(/^(\d+),"([^"]*)","([^"]*)","([^"]*)","([^"]*)","([^"]*)","(.+)"$/)
         if (!parts) return null
 
-        const [, , code, zone, type, geomType, coordsRaw] = parts
+        const [, , code, number, zone, type, geomType, coordsRaw] = parts
 
         try {
           const coords = JSON.parse(coordsRaw)
@@ -318,7 +318,7 @@ function DrawPage() {
               : { type: 'Polygon', coordinates: [coords] },
             properties: {},
           }
-          return { feature, meta: { code, zone, type } }
+          return { feature, meta: { code, number, zone, type } }
         } catch {
           return null
         }
@@ -443,12 +443,22 @@ function DrawPage() {
           </div>
 
           <div>
-            <span style={labelStyle}>Code</span>
+            <span style={labelStyle}>Code — уникальный ID</span>
             <input
               style={inputStyle}
-              placeholder="напр. 12 или HALL_A"
+              placeholder="напр. HALL_A или booth_42"
               value={panel.code}
               onChange={e => setPanel(p => ({ ...p, code: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <span style={labelStyle}>Number — отображается на карте</span>
+            <input
+              style={inputStyle}
+              placeholder="напр. 12 или A3"
+              value={panel.number}
+              onChange={e => setPanel(p => ({ ...p, number: e.target.value }))}
             />
           </div>
 
