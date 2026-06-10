@@ -27,3 +27,9 @@ export function shareHex(cellId, zoom) {
   const url = `https://commonground.page/map?hex=${cellId}&z=${Math.round(zoom)}&utm_source=hex_share`
   return doShare({ text, url })
 }
+
+export function shareVenue(venueCode, eventId) {
+  const text = 'Check out this venue'
+  const url = `https://commonground.page/event/${eventId}?venue=${encodeURIComponent(venueCode)}&utm_source=venue_share`
+  return doShare({ text, url })
+}

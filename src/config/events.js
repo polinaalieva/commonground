@@ -13,3 +13,8 @@ export const EVENTS = {
     }
   }
 }
+
+export function buildZoneColorExpression(zoneColors, fallback = '#cccccc') {
+  const pairs = Object.entries(zoneColors).flat()
+  return ['match', ['get', 'zone'], ...pairs, fallback]
+}

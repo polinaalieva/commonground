@@ -15,6 +15,8 @@ import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
 import Wuf13FirstPinModal from '../wuf13/components/Wuf13FirstPinModal'
 import { CenterPin } from './ui/CenterPin'
 import { supabaseFetch } from '../config/supabase'
+import { EVENTS, buildZoneColorExpression } from '../config/events'
+import { EventCard } from './EventCard/EventCard'
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -79,7 +81,7 @@ function isMobile() {
   return window.innerWidth <= 768
 }
 
-function Map({ city, cityConfig, pageContent, variant, source, lang }) {
+function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, venues = [] }) {
 
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -94,15 +96,16 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const emptyTooltipShownRef = useRef(false)
   const allPointsRef = useRef([])
   const hexModeRef = useRef(false)
+  const venuesRenderedRef = useRef(false)
 
   function getHexResolution() {
-  const zoom = map.current?.getZoom() ?? 10
-  if (zoom < 7.5) return 6
-  if (zoom < 9) return 7
-  if (zoom < 11) return 7
-  if (zoom < 13) return 8
-  return 9
-}
+    const zoom = map.current?.getZoom() ?? 10
+    if (zoom < 7.5) return 6
+    if (zoom < 9) return 7
+    if (zoom < 11) return 7
+    if (zoom < 13) return 8
+    return 9
+  }
 
   const [mode, setMode] = useState('view')
   const [isLoading, setIsLoading] = useState(false)
@@ -112,6 +115,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   const [selectedHex, setSelectedHex] = useState(null)
   const [showHexTooltip, setShowHexTooltip] = useState(false)
   const [pinFilter, setPinFilter] = useState('all')
+  const [selectedVenue, setSelectedVenue] = useState(null)
   const pinFilterRef = useRef('all')
   const [showFirstPinModal, setShowFirstPinModal] = useState(false)
   const submitCountRef = useRef(0)
@@ -121,6 +125,137 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
   useEffect(() => {
     pageContentRef.current = pageContent
   }, [pageContent])
+
+  // ── Venues layer ──
+  useEffect(() => {
+    if (!venues.length || venuesRenderedRef.current) return
+    if (!map.current) return
+    venuesRenderedRef.current = true
+    if (map.current.isStyleLoaded()) {
+      renderEventVenues(venues)
+    } else {
+      map.current.once('load', () => renderEventVenues(venues))
+    }
+  }, [venues])
+
+  function renderEventVenues(data) {
+    if (map.current.getSource('venues-polygons')) return
+    const zoneColor = buildZoneColorExpression(EVENTS[eventId]?.zoneColors || {})
+    const polygons = data.filter(v => v.geometry_type === 'polygon')
+    const points = data.filter(v => v.geometry_type === 'point')
+
+    if (polygons.length) {
+      const geojson = {
+        type: 'FeatureCollection',
+        features: polygons.map(v => ({
+          type: 'Feature',
+          properties: {
+            id: v.id,
+            code: v.code,
+            number: v.number,
+            zone: v.zone,
+            type: v.type,
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [typeof v.coordinates === 'string'
+              ? JSON.parse(v.coordinates)
+              : v.coordinates],
+          },
+        })),
+      }
+
+      map.current.addSource('venues-polygons', { type: 'geojson', data: geojson })
+
+      map.current.addLayer({
+        id: 'venues-fill',
+        type: 'fill',
+        source: 'venues-polygons',
+        paint: {
+          'fill-color': zoneColor,
+          'fill-opacity': 0.3,
+        },
+      })
+
+      map.current.addLayer({
+        id: 'venues-outline',
+        type: 'line',
+        source: 'venues-polygons',
+        paint: {
+          'line-color': zoneColor,
+          'line-width': 1.5,
+        },
+      })
+
+      map.current.addLayer({
+        id: 'venues-labels',
+        type: 'symbol',
+        source: 'venues-polygons',
+        layout: {
+          'text-field': ['get', 'number'],
+          'text-size': 12,
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-anchor': 'center',
+        },
+        paint: {
+          'text-color': '#111',
+          'text-halo-color': '#fff',
+          'text-halo-width': 2,
+        },
+      })
+
+      map.current.on('click', 'venues-fill', (e) => {
+        e.originalEvent.stopPropagation()
+        const props = e.features[0]?.properties
+        if (!props) return
+        setSelectedVenue(props)
+        dismissSelectedPin()
+      })
+
+      map.current.on('mouseenter', 'venues-fill', () => {
+        map.current.getCanvas().style.cursor = 'pointer'
+      })
+      map.current.on('mouseleave', 'venues-fill', () => {
+        map.current.getCanvas().style.cursor = ''
+      })
+    }
+
+    points.forEach(v => {
+      const el = document.createElement('div')
+      el.style.cssText = `
+        width: 10px; height: 10px;
+        background: #F5A623;
+        border: 2px solid white;
+        border-radius: 50%;
+        cursor: pointer;
+      `
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(typeof v.coordinates === 'string'
+          ? JSON.parse(v.coordinates)
+          : v.coordinates)
+        .addTo(map.current)
+
+      marker.getElement().addEventListener('click', () => {
+        setSelectedVenue({
+          code: v.code, type: v.type, zone: v.zone, number: v.number,
+        })
+      })
+    })
+
+    const params = new URLSearchParams(window.location.search)
+    const venueCode = params.get('venue')
+    if (venueCode) {
+      const v = data.find(v => v.code === venueCode)
+      if (v) {
+        setSelectedVenue({ code: v.code, type: v.type, zone: v.zone, number: v.number })
+        const raw = typeof v.coordinates === 'string' ? JSON.parse(v.coordinates) : v.coordinates
+        const center = v.geometry_type === 'point'
+          ? raw
+          : [raw.reduce((s, c) => s + c[0], 0) / raw.length, raw.reduce((s, c) => s + c[1], 0) / raw.length]
+        map.current.flyTo({ center, zoom: 17, essential: true })
+      }
+    }
+  }
 
   function handlePinFilterChange(filter) {
     pinFilterRef.current = filter
@@ -252,7 +387,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const geojson = toGeoJSON(filteredRecords)
       console.log('sample feature props:', geojson.features[0]?.properties)
 
-
       const mapSource = map.current.getSource('cg-feedback')
       if (mapSource) {
         mapSource.setData(geojson)
@@ -268,50 +402,48 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           type: 'circle',
           source: 'cg-feedback',
           paint: {
-  'circle-radius': [
-  'case', ['boolean', ['feature-state', 'selected'], false], 10,
-  ['case', ['==', ['get', 'has_comment'], 1], 7, 4]
-],
-  'circle-color': [
-    'to-color',
-    ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-      ['case',
-        ['==', ['var', 'c'], ''], '#9ca3af',
-        ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-        ['concat', '#', ['var', 'c']]
-      ]
-    ], '#9ca3af'
-  ],
-  'circle-opacity': [
-  'case', ['boolean', ['feature-state', 'selected'], false], 1,
-  ['case', ['==', ['get', 'is_old'], 1], 0.25,
-    ['case', ['==', ['get', 'has_comment'], 1], 0.70, 0.20]
-  ]
-],
-  'circle-stroke-color': [
-    'case', ['boolean', ['feature-state', 'selected'], false], '#ffffff',
-    ['to-color',
-      ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-        ['case',
-          ['==', ['var', 'c'], ''], '#9ca3af',
-          ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-          ['concat', '#', ['var', 'c']]
-        ]
-      ], '#9ca3af'
-    ]
-  ],
-  'circle-stroke-width': [
-  'case', ['boolean', ['feature-state', 'selected'], false], 3,
-  ['case', ['==', ['get', 'has_comment'], 1], 0, 2.5]
-],
-  'circle-stroke-opacity': [
-    'case', ['boolean', ['feature-state', 'selected'], false], 1,
-    ['case', ['==', ['get', 'is_old'], 1], 0.35, 0.6]
-  ],
-}
+            'circle-radius': [
+              'case', ['boolean', ['feature-state', 'selected'], false], 10,
+              ['case', ['==', ['get', 'has_comment'], 1], 7, 4]
+            ],
+            'circle-color': [
+              'to-color',
+              ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+                ['case',
+                  ['==', ['var', 'c'], ''], '#9ca3af',
+                  ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+                  ['concat', '#', ['var', 'c']]
+                ]
+              ], '#9ca3af'
+            ],
+            'circle-opacity': [
+              'case', ['boolean', ['feature-state', 'selected'], false], 1,
+              ['case', ['==', ['get', 'is_old'], 1], 0.25,
+                ['case', ['==', ['get', 'has_comment'], 1], 0.70, 0.20]
+              ]
+            ],
+            'circle-stroke-color': [
+              'case', ['boolean', ['feature-state', 'selected'], false], '#ffffff',
+              ['to-color',
+                ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+                  ['case',
+                    ['==', ['var', 'c'], ''], '#9ca3af',
+                    ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+                    ['concat', '#', ['var', 'c']]
+                  ]
+                ], '#9ca3af'
+              ]
+            ],
+            'circle-stroke-width': [
+              'case', ['boolean', ['feature-state', 'selected'], false], 3,
+              ['case', ['==', ['get', 'has_comment'], 1], 0, 2.5]
+            ],
+            'circle-stroke-opacity': [
+              'case', ['boolean', ['feature-state', 'selected'], false], 1,
+              ['case', ['==', ['get', 'is_old'], 1], 0.35, 0.6]
+            ],
+          }
         })
-
-        
 
         dataLoadedRef.current = true
 
@@ -320,25 +452,26 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
           e.originalEvent.stopPropagation()
           const feature = e.features[0]
           if (!feature) return
+          setSelectedVenue(null)
 
           const props = feature.properties || {}
           const rating = getFeatureRating(props)
           const color = getRatingColor(rating)
 
           if (selectedFeatureId.current !== null) {
-  map.current.setFeatureState(
-    { source: 'cg-feedback', id: selectedFeatureId.current },
-    { selected: false }
-  )
-}
+            map.current.setFeatureState(
+              { source: 'cg-feedback', id: selectedFeatureId.current },
+              { selected: false }
+            )
+          }
 
-if (feature.properties.id !== undefined) {
-  map.current.setFeatureState(
-    { source: 'cg-feedback', id: feature.properties.id },
-    { selected: true }
-  )
-  selectedFeatureId.current = feature.properties.id
-}
+          if (feature.properties.id !== undefined) {
+            map.current.setFeatureState(
+              { source: 'cg-feedback', id: feature.properties.id },
+              { selected: true }
+            )
+            selectedFeatureId.current = feature.properties.id
+          }
 
           setSelectedPin({
             id: feature.id,
@@ -368,10 +501,8 @@ if (feature.properties.id !== undefined) {
         })
       }
 
-      // deep links
       const params = new URLSearchParams(window.location.search)
 
-      // ?hex=cellId&z=zoom
       const hexCellId = params.get('hex')
       const hexZoom = params.get('z')
       if (hexCellId) {
@@ -415,7 +546,6 @@ if (feature.properties.id !== undefined) {
         }
       }
 
-      // ?point=ID
       const pointId = params.get('point')
       if (pointId) {
         const record = records.find(r => String(r.id) === String(pointId))
@@ -454,7 +584,6 @@ if (feature.properties.id !== undefined) {
     }
   }
 
-  // ── Hex layer ──
 
   function buildHexData(points) {
     const hexMap = {}
@@ -761,7 +890,7 @@ setTimeout(() => setShowHexTooltip(false), 3000)
       />
 
       <SurveySheet
-        pinSelected={!!selectedPin || !!selectedHex}
+        pinSelected={!!selectedPin || !!selectedHex || !!selectedVenue}
         ref={surveySheetRef}
         bottomSheetRef={bottomSheetRef}
         city={city}
@@ -776,6 +905,11 @@ setTimeout(() => setShowHexTooltip(false), 3000)
         onEnableMap={enableMap}
         onClose={closeSurvey}
         onFlyTo={(lng, lat) => map.current?.flyTo({ center: [lng, lat], zoom: Math.max(map.current.getZoom(), 14), essential: true })}
+      />
+    <EventCard
+        venue={selectedVenue}
+        eventId={eventId}
+        onDismiss={() => setSelectedVenue(null)}
       />
     </div>
   )

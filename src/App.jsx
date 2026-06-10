@@ -3,12 +3,18 @@ import Wuf13DashboardPage from './wuf13/pages/Wuf13DashboardPage'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import City from './pages/City.jsx'
+import EventPage from './events/pages/EventPage'
 import Dev from './pages/Dev.jsx'
 import QRPage from './pages/QRpage/QRPage'
 
 function App() {
   return (
     <Routes>
+      {/* Event → карта ивентов */}
+      <Route path="/event/:eventId" element={<EventPage />} />
+      <Route path="/ru/event/:eventId" element={<EventPage />} />
+
+
       {/* Главная → мировая карта */}
       <Route path="/" element={<City />} />
       <Route path="/ru" element={<City />} />
