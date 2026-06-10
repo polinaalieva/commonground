@@ -10,8 +10,7 @@ import SheetTextarea from './SheetTextarea'
 import SheetDropdown from './SheetDropdown'
 import { CONTENT } from '../../config/content'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../../config/supabase'
 
 function SuggestCitySheet({ onClose }) {
   const { pathname } = useLocation()
@@ -31,14 +30,9 @@ function SuggestCitySheet({ onClose }) {
     setIsSubmitting(true)
     setError(null)
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/city_suggestions`, {
+      await supabaseFetch('city_suggestions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Prefer': 'return=minimal',
-        },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({
           city: city.trim(),
           why: why.trim() || null,
@@ -46,7 +40,6 @@ function SuggestCitySheet({ onClose }) {
           contact: contact.trim() || null,
         }),
       })
-      if (!res.ok) throw new Error(await res.text())
       setDone(true)
     } catch (e) {
       setError(c.error)

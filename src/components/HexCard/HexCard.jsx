@@ -11,8 +11,7 @@ import { getResolution } from 'h3-js'
 
 const ENABLE_SUMMARY = true
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../../config/supabase'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -103,11 +102,7 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
     setGenerating(true)
     await new Promise(r => setTimeout(r, 2000))
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/hex_summaries?cell=eq.${hex.cell}&select=*`,
-        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-      )
-      const data = await res.json()
+      const data = await supabaseFetch(`hex_summaries?cell=eq.${hex.cell}&select=*`)
       const existing = Array.isArray(data) ? data[0] || null : null
       if (existing) {
         setSummaryData(existing)

@@ -10,9 +10,7 @@ import SheetTextarea from './SheetTextarea'
 import FormAnswerConfirmMSheet from '../ModalSheet/FormAnswerConfirmMSheet'
 import '../ModalSheet/ModalSheet.css'
 import posthog from 'posthog-js'
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../../config/supabase'
 
 const SurveySheet = forwardRef(function SurveySheet(
   { city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, onFlyTo, pinSelected, bottomSheetRef },
@@ -161,15 +159,9 @@ const SurveySheet = forwardRef(function SurveySheet(
     try {
       const { cityName, countryName } = await fetchGeoNames(coords.lat, coords.lng)
 
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/feedback_map`, {
+      await supabaseFetch('feedback_map', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Prefer': 'return=minimal',
-          'Content-Profile': 'public',
-        },
+        headers: { Prefer: 'return=minimal', 'Content-Profile': 'public' },
         body: JSON.stringify({
           country_name: countryName,
           city: city || null,
@@ -183,7 +175,6 @@ const SurveySheet = forwardRef(function SurveySheet(
           lang: lang,
         }),
       })
-      if (!res.ok) throw new Error(await res.text())
 
       posthog.capture('survey_submitted', {
         city,

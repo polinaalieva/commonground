@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../../config/supabase'
 const POLL_INTERVAL = 5000
 
 const RATING_COLORS = {
@@ -17,17 +15,9 @@ function clamp(x, min, max) {
 // cityFilter: null = all pins (for presentation to management)
 //             'wuf13' = only event pins (switch to this during the event)
 async function fetchWuf13Pins(cityFilter = null) {
-  let url = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,city_name,country_name,lat,lng,place_rate,experience,created_at,metric_type&order=created_at.desc&limit=1000`
-  if (cityFilter) url += `&city=eq.${encodeURIComponent(cityFilter)}`
-  const res = await fetch(url, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-    },
-    cache: 'no-store',
-  })
-  if (!res.ok) throw new Error(`Supabase error ${res.status}`)
-  return res.json()
+  let path = 'feedback_map?select=id,city,city_name,country_name,lat,lng,place_rate,experience,created_at,metric_type&order=created_at.desc&limit=1000'
+  if (cityFilter) path += `&city=eq.${encodeURIComponent(cityFilter)}`
+  return supabaseFetch(path, { cache: 'no-store' })
 }
 
 export function useWuf13Pins(cityFilter = null) {

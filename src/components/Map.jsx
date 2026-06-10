@@ -14,10 +14,7 @@ import { Hexagon } from 'lucide-react'
 import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
 import Wuf13FirstPinModal from '../wuf13/components/Wuf13FirstPinModal'
 import { CenterPin } from './ui/CenterPin'
-
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../config/supabase'
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -244,19 +241,11 @@ function Map({ city, cityConfig, pageContent, variant, source, lang }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      const apiUrl = `${SUPABASE_URL}/rest/v1/feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)&order=created_at.desc&limit=1000`
-
-      const res = await fetch(apiUrl, {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        cache: 'no-store',
-        signal: controller.signal,
-      })
+      const records = await supabaseFetch(
+        'feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)&order=created_at.desc&limit=1000',
+        { cache: 'no-store', signal: controller.signal }
+      )
       clearTimeout(timeoutId)
-
-      const records = await res.json()
       console.log('sample record:', records[0])
       allPointsRef.current = records
       const filteredRecords = pinFilterRef.current === 'wuf13' ? records.filter(r => r.city === 'wuf13') : records

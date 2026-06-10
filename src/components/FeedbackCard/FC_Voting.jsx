@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import './FC_Voting.css'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../../config/supabase'
 
 function getSessionId() {
   let id = localStorage.getItem('cg_session_id')
@@ -35,16 +34,9 @@ export function FC_Voting({ feedbackId, onVoted }) {
   async function fetchVotes() {
     setLoading(true)
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/feedback_votes?feedback_id=eq.${feedbackId}&select=direction,session_id`,
-        {
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-          },
-        }
+      const data = await supabaseFetch(
+        `feedback_votes?feedback_id=eq.${feedbackId}&select=direction,session_id`
       )
-      const data = await res.json()
       const up = data.filter(v => v.direction === 'up').length
       const down = data.filter(v => v.direction === 'down').length
       const mine = data.find(v => v.session_id === sessionId)
@@ -69,15 +61,9 @@ export function FC_Voting({ feedbackId, onVoted }) {
       setVotesDown(v => direction === 'down' ? v - 1 : v)
       setMyVote(null)
 
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/feedback_votes?feedback_id=eq.${feedbackId}&session_id=eq.${sessionId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-          },
-        }
+      await supabaseFetch(
+        `feedback_votes?feedback_id=eq.${feedbackId}&session_id=eq.${sessionId}`,
+        { method: 'DELETE' }
       )
     } else {
       const prev = myVote
@@ -94,14 +80,9 @@ export function FC_Voting({ feedbackId, onVoted }) {
       setMyVote(direction)
       onVoted?.(direction)
 
-      await fetch(`${SUPABASE_URL}/rest/v1/feedback_votes`, {
+      await supabaseFetch('feedback_votes', {
         method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'resolution=merge-duplicates',
-        },
+        headers: { Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({ feedback_id: feedbackId, session_id: sessionId, direction }),
       })
     }

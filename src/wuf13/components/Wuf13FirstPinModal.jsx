@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import './Wuf13FirstPinModal.css'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+import { supabaseFetch } from '../../config/supabase'
 
 function Wuf13FirstPinModal({ onClose }) {
   const [view, setView] = useState('idle')
@@ -20,14 +19,9 @@ function Wuf13FirstPinModal({ onClose }) {
     if (!value.trim()) return
     setSending(true)
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/wuf13_contacts`, {
+      await supabaseFetch('wuf13_contacts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Prefer': 'return=minimal',
-        },
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ message: value.trim() }),
       })
       setView('success')
