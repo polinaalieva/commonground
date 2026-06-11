@@ -90,9 +90,29 @@ export function VenueLayer({
     return el
   }
 
-  function renderVenues(data) {
-    const zoneColors = EVENTS[eventId]?.zoneColors || {}
-    const serviceColor = EVENTS[eventId]?.serviceColor || '#6B7280'
+  function renderFloorplan() {
+  const floorplan = EVENTS[eventId]?.floorplan
+  if (!floorplan) return
+  if (map.current.getSource('floorplan')) return
+
+  map.current.addSource('floorplan', {
+    type: 'image',
+    url: floorplan.url,
+    coordinates: floorplan.coordinates,
+  })
+
+  map.current.addLayer({
+    id: 'floorplan-layer',
+    type: 'raster',
+    source: 'floorplan',
+    paint: { 'raster-opacity': 0.85 },
+  })
+}
+
+function renderVenues(data) {
+  renderFloorplan()
+  const zoneColors = EVENTS[eventId]?.zoneColors || {}
+  const serviceColor = EVENTS[eventId]?.serviceColor || '#6B7280'
     const allMarkerEls = []
 
 function getMarkerSize() {

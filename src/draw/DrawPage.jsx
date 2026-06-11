@@ -353,6 +353,26 @@ function DrawPage() {
     URL.revokeObjectURL(url)
   }
 
+  function handleExportCorners() {
+  if (!cornersRef.current) return
+  const corners = cornersRef.current
+  const json = JSON.stringify({
+    coordinates: [
+      corners[0], // top-left
+      corners[1], // top-right
+      corners[2], // bottom-right
+      corners[3], // bottom-left
+    ]
+  }, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'floorplan-coords.json'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
   function handleCsvImport(e) {
     const file = e.target.files[0]
     if (!file) return
@@ -488,16 +508,25 @@ function DrawPage() {
           style={{ display: 'none' }} onChange={handleCsvImport} />
 
         {shapeCount > 0 && (
-          <>
-            <span style={{ fontSize: 12, color: '#666' }}>шейпов: {shapeCount}</span>
-            <button onClick={handleExport} style={{
-              padding: '6px 10px', cursor: 'pointer',
-              background: '#333', color: '#fff', border: 'none', borderRadius: 4,
-            }}>
-              Экспорт CSV
-            </button>
-          </>
-        )}
+  <>
+    <span style={{ fontSize: 12, color: '#666' }}>шейпов: {shapeCount}</span>
+    <button onClick={handleExport} style={{
+      padding: '6px 10px', cursor: 'pointer',
+      background: '#333', color: '#fff', border: 'none', borderRadius: 4,
+    }}>
+      Экспорт CSV
+    </button>
+  </>
+)}
+
+{hasImage && (
+  <button onClick={handleExportCorners} style={{
+    padding: '6px 10px', cursor: 'pointer',
+    background: '#1a6b3c', color: '#fff', border: 'none', borderRadius: 4,
+  }}>
+    Экспорт координат
+  </button>
+)}
       </div>
 
       {/* Боковая панель редактирования */}
