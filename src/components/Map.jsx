@@ -15,8 +15,8 @@ import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
 import Wuf13FirstPinModal from '../wuf13/components/Wuf13FirstPinModal'
 import { CenterPin } from './ui/CenterPin'
 import { supabaseFetch } from '../config/supabase'
-import { EVENTS, buildZoneColorExpression } from '../config/events'
 import { EventCard } from './EventCard/EventCard'
+import { VenueLayer } from '../events/components/VenueLayer'
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -77,11 +77,7 @@ function getFeatureComment(props) {
   return ''
 }
 
-function isMobile() {
-  return window.innerWidth <= 768
-}
-
-function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, venues = [] }) {
+function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, eventVenues = [] }) {
 
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -96,7 +92,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
   const emptyTooltipShownRef = useRef(false)
   const allPointsRef = useRef([])
   const hexModeRef = useRef(false)
-  const venuesRenderedRef = useRef(false)
 
   function getHexResolution() {
     const zoom = map.current?.getZoom() ?? 10
@@ -119,6 +114,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
   const pinFilterRef = useRef('all')
   const [showFirstPinModal, setShowFirstPinModal] = useState(false)
   const submitCountRef = useRef(0)
+  const [mapReady, setMapReady] = useState(false)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -126,135 +122,13 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
     pageContentRef.current = pageContent
   }, [pageContent])
 
-  // ── Venues layer ──
-  useEffect(() => {
-    if (!venues.length || venuesRenderedRef.current) return
-    if (!map.current) return
-    venuesRenderedRef.current = true
-    if (map.current.isStyleLoaded()) {
-      renderEventVenues(venues)
-    } else {
-      map.current.once('load', () => renderEventVenues(venues))
+  function handleVenueSelect(venue) {
+    dismissSelectedPin()
+    setSelectedHex(null)
+    if (map.current?.getLayer('cg-hex-selected-layer')) {
+      map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
     }
-  }, [venues])
-
-  function renderEventVenues(data) {
-    if (map.current.getSource('venues-polygons')) return
-    const zoneColor = buildZoneColorExpression(EVENTS[eventId]?.zoneColors || {})
-    const polygons = data.filter(v => v.geometry_type === 'polygon')
-    const points = data.filter(v => v.geometry_type === 'point')
-
-    if (polygons.length) {
-      const geojson = {
-        type: 'FeatureCollection',
-        features: polygons.map(v => ({
-          type: 'Feature',
-          properties: {
-            id: v.id,
-            code: v.code,
-            number: v.number,
-            zone: v.zone,
-            type: v.type,
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: [typeof v.coordinates === 'string'
-              ? JSON.parse(v.coordinates)
-              : v.coordinates],
-          },
-        })),
-      }
-
-      map.current.addSource('venues-polygons', { type: 'geojson', data: geojson })
-
-      map.current.addLayer({
-        id: 'venues-fill',
-        type: 'fill',
-        source: 'venues-polygons',
-        paint: {
-          'fill-color': zoneColor,
-          'fill-opacity': 0.3,
-        },
-      })
-
-      map.current.addLayer({
-        id: 'venues-outline',
-        type: 'line',
-        source: 'venues-polygons',
-        paint: {
-          'line-color': zoneColor,
-          'line-width': 1.5,
-        },
-      })
-
-      map.current.addLayer({
-        id: 'venues-labels',
-        type: 'symbol',
-        source: 'venues-polygons',
-        layout: {
-          'text-field': ['get', 'number'],
-          'text-size': 12,
-          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-          'text-anchor': 'center',
-        },
-        paint: {
-          'text-color': '#111',
-          'text-halo-color': '#fff',
-          'text-halo-width': 2,
-        },
-      })
-
-      map.current.on('click', 'venues-fill', (e) => {
-        e.originalEvent.stopPropagation()
-        const props = e.features[0]?.properties
-        if (!props) return
-        setSelectedVenue(props)
-        dismissSelectedPin()
-      })
-
-      map.current.on('mouseenter', 'venues-fill', () => {
-        map.current.getCanvas().style.cursor = 'pointer'
-      })
-      map.current.on('mouseleave', 'venues-fill', () => {
-        map.current.getCanvas().style.cursor = ''
-      })
-    }
-
-    points.forEach(v => {
-      const el = document.createElement('div')
-      el.style.cssText = `
-        width: 10px; height: 10px;
-        background: #F5A623;
-        border: 2px solid white;
-        border-radius: 50%;
-        cursor: pointer;
-      `
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat(typeof v.coordinates === 'string'
-          ? JSON.parse(v.coordinates)
-          : v.coordinates)
-        .addTo(map.current)
-
-      marker.getElement().addEventListener('click', () => {
-        setSelectedVenue({
-          code: v.code, type: v.type, zone: v.zone, number: v.number,
-        })
-      })
-    })
-
-    const params = new URLSearchParams(window.location.search)
-    const venueCode = params.get('venue')
-    if (venueCode) {
-      const v = data.find(v => v.code === venueCode)
-      if (v) {
-        setSelectedVenue({ code: v.code, type: v.type, zone: v.zone, number: v.number })
-        const raw = typeof v.coordinates === 'string' ? JSON.parse(v.coordinates) : v.coordinates
-        const center = v.geometry_type === 'point'
-          ? raw
-          : [raw.reduce((s, c) => s + c[0], 0) / raw.length, raw.reduce((s, c) => s + c[1], 0) / raw.length]
-        map.current.flyTo({ center, zoom: 17, essential: true })
-      }
-    }
+    setSelectedVenue(venue)
   }
 
   function handlePinFilterChange(filter) {
@@ -304,11 +178,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
       container: mapContainer.current,
       style: MAP_STYLE,
       center: cityConfig.center,
-      zoom: cityConfig.zoom
+      zoom: cityConfig.zoom,
+  ...(cityConfig.minZoom && { minZoom: cityConfig.minZoom }),
+  ...(cityConfig.maxBounds && { maxBounds: cityConfig.maxBounds }),
     })
 
     map.current.on('load', () => {
       loadData()
+      setMapReady(true)
       if (city === 'map') setTimeout(() => requestGeoAuto(), 500)
     })
 
@@ -584,7 +461,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
     }
   }
 
-
   function buildHexData(points) {
     const hexMap = {}
     points.forEach(r => {
@@ -598,10 +474,10 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
         source: r.source || null,
       })
       hexMap[cell].comments.sort((a, b) => {
-  const da = new Date(a.date || 0)
-  const db = new Date(b.date || 0)
-  return db - da
-})
+        const da = new Date(a.date || 0)
+        const db = new Date(b.date || 0)
+        return db - da
+      })
     })
 
     const features = Object.entries(hexMap).map(([cell, data]) => {
@@ -631,67 +507,68 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ve
     return { type: 'FeatureCollection', features }
   }
 
-function showHexLayer() {
-  const hexData = buildHexData(allPointsRef.current)
+  function showHexLayer() {
+    const hexData = buildHexData(allPointsRef.current)
 
-  if (map.current.getSource('cg-hex')) {
-    map.current.getSource('cg-hex').setData(hexData)
-    map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'visible')
-    return
+    if (map.current.getSource('cg-hex')) {
+      map.current.getSource('cg-hex').setData(hexData)
+      map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'visible')
+      return
+    }
+
+    map.current.addSource('cg-hex', { type: 'geojson', data: hexData })
+
+    map.current.addLayer({
+      id: 'cg-hex-layer',
+      type: 'fill',
+      source: 'cg-hex',
+      paint: {
+        'fill-color': ['get', 'fillColor'],
+        'fill-opacity': ['get', 'opacity'],
+      },
+    })
+
+    map.current.addLayer({
+      id: 'cg-hex-selected-layer',
+      type: 'line',
+      source: 'cg-hex',
+      paint: {
+        'line-color': ['get', 'fillColor'],
+        'line-width': 2.5,
+        'line-opacity': 0.7,
+      },
+      filter: ['==', ['get', 'cell'], ''],
+    })
+
+    map.current.on('zoomend', () => {
+      if (!hexModeRef.current) return
+      const updated = buildHexData(allPointsRef.current)
+      map.current.getSource('cg-hex')?.setData(updated)
+    })
+
+    map.current.on('click', 'cg-hex-layer', (e) => {
+      if (modeRef.current !== 'view') return
+      e.originalEvent.stopPropagation()
+      const props = e.features[0]?.properties
+      if (!props) return
+      map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], props.cell])
+      setSelectedHex({
+        cell: props.cell,
+        avgRating: props.avgRating,
+        count: props.count,
+        comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
+        ratings: typeof props.ratings === 'string' ? JSON.parse(props.ratings) : (props.ratings || []),
+      })
+    })
+
+    map.current.on('mouseenter', 'cg-hex-layer', () => {
+      map.current.getCanvas().style.cursor = 'pointer'
+    })
+    map.current.on('mouseleave', 'cg-hex-layer', () => {
+      map.current.getCanvas().style.cursor = ''
+    })
   }
 
-  map.current.addSource('cg-hex', { type: 'geojson', data: hexData })
-
-  map.current.addLayer({
-    id: 'cg-hex-layer',
-    type: 'fill',
-    source: 'cg-hex',
-    paint: {
-      'fill-color': ['get', 'fillColor'],
-      'fill-opacity': ['get', 'opacity'],
-    },
-  })
-
-  map.current.addLayer({
-    id: 'cg-hex-selected-layer',
-    type: 'line',
-    source: 'cg-hex',
-    paint: {
-      'line-color': ['get', 'fillColor'],
-      'line-width': 2.5,
-      'line-opacity': 0.7,
-    },
-    filter: ['==', ['get', 'cell'], ''],
-  })
-
-  map.current.on('zoomend', () => {
-    if (!hexModeRef.current) return
-    const updated = buildHexData(allPointsRef.current)
-    map.current.getSource('cg-hex')?.setData(updated)
-  })
-
-  map.current.on('click', 'cg-hex-layer', (e) => {
-    if (modeRef.current !== 'view') return
-    e.originalEvent.stopPropagation()
-    const props = e.features[0]?.properties
-    if (!props) return
-    map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], props.cell])
-    setSelectedHex({
-      cell: props.cell,
-      avgRating: props.avgRating,
-      count: props.count,
-      comments: typeof props.comments === 'string' ? JSON.parse(props.comments) : props.comments,
-      ratings: typeof props.ratings === 'string' ? JSON.parse(props.ratings) : (props.ratings || []),
-    })
-  })
-
-  map.current.on('mouseenter', 'cg-hex-layer', () => {
-    map.current.getCanvas().style.cursor = 'pointer'
-  })
-  map.current.on('mouseleave', 'cg-hex-layer', () => {
-    map.current.getCanvas().style.cursor = ''
-  })
-}
   function toggleHex() {
     const next = !hexModeRef.current
     hexModeRef.current = next
@@ -699,28 +576,28 @@ function showHexLayer() {
     setSelectedHex(null)
 
     if (!localStorage.getItem('hexTipSeen')) {
-  setShowHexTooltip(true)
-setTimeout(() => setShowHexTooltip(false), 3000)
-}
+      setShowHexTooltip(true)
+      setTimeout(() => setShowHexTooltip(false), 3000)
+    }
     if (next) {
-    setShowHexTooltip(true)
-  setTimeout(() => setShowHexTooltip(false), 3000)
-  if (map.current.getLayer('cg-feedback-layer')) {
+      setShowHexTooltip(true)
+      setTimeout(() => setShowHexTooltip(false), 3000)
+      if (map.current.getLayer('cg-feedback-layer')) {
         map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
       }
       dismissSelectedPin()
       showHexLayer()
     } else {
-  if (map.current.getLayer('cg-hex-selected-layer')) {
-    map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
-  }
-  if (map.current.getLayer('cg-feedback-layer')) {
-    map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'visible')
-  }
-  if (map.current.getLayer('cg-hex-layer')) {
-    map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'none')
-  }
-}
+      if (map.current.getLayer('cg-hex-selected-layer')) {
+        map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
+      }
+      if (map.current.getLayer('cg-feedback-layer')) {
+        map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'visible')
+      }
+      if (map.current.getLayer('cg-hex-layer')) {
+        map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'none')
+      }
+    }
   }
 
   function dismissSelectedPin() {
@@ -735,14 +612,14 @@ setTimeout(() => setShowHexTooltip(false), 3000)
   }
 
   function enterSelect() {
-  setShowEmptyTooltip(false)
-  dismissSelectedPin()
-  setModeSync('select')
-  setSelectedHex(null)
-  if (map.current?.getLayer('cg-hex-selected-layer')) {
-    map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
+    setShowEmptyTooltip(false)
+    dismissSelectedPin()
+    setModeSync('select')
+    setSelectedHex(null)
+    if (map.current?.getLayer('cg-hex-selected-layer')) {
+      map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
+    }
   }
-}
 
   function exitSelect() {
     setModeSync('view')
@@ -765,7 +642,6 @@ setTimeout(() => setShowHexTooltip(false), 3000)
       const mapRect = mapContainer.current.getBoundingClientRect()
       const pinRect = centerPinRef.current.getBoundingClientRect()
       const pinX = pinRect.left + pinRect.width / 2 - mapRect.left
-      // tip of stem = bottom of container minus shadow height (4px)
       const pinY = pinRect.bottom - 4 - mapRect.top
       const coords = map.current.unproject([pinX, pinY])
       return { lat: coords.lat, lng: coords.lng }
@@ -850,12 +726,12 @@ setTimeout(() => setShowHexTooltip(false), 3000)
       )}
 
       {showHexTooltip && (
-  <EmptyZoneTooltip
-    text={<>Tap any <Hexagon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> to see area feedback</>}
-    cta=""
-    onClick={() => setShowHexTooltip(false)}
-  />
-)}
+        <EmptyZoneTooltip
+          text={<>Tap any <Hexagon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> to see area feedback</>}
+          cta=""
+          onClick={() => setShowHexTooltip(false)}
+        />
+      )}
 
       <MapUI
         onZoomIn={() => map.current?.zoomIn()}
@@ -906,11 +782,23 @@ setTimeout(() => setShowHexTooltip(false), 3000)
         onClose={closeSurvey}
         onFlyTo={(lng, lat) => map.current?.flyTo({ center: [lng, lat], zoom: Math.max(map.current.getZoom(), 14), essential: true })}
       />
-    <EventCard
+
+      <EventCard
         venue={selectedVenue}
         eventId={eventId}
         onDismiss={() => setSelectedVenue(null)}
       />
+
+      {mapReady && eventVenues.length > 0 && (
+        <VenueLayer
+          map={map}
+          eventVenues={eventVenues}
+          eventId={eventId}
+          onSelect={handleVenueSelect}
+          onDeselect={() => setSelectedVenue(null)}
+          selectedVenue={selectedVenue}
+        />
+      )}
     </div>
   )
 }

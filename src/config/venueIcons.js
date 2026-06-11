@@ -1,0 +1,41 @@
+// src/config/venueIcons.js
+
+import {
+  IconCar,
+  IconParking,
+  IconAssembly,
+  IconLuggage,
+  IconInfoCircle,
+  IconFirstAidKit,
+  IconBabyCarriage,
+  IconMosque,
+  IconVolumeOff,
+  IconCash,
+  IconToolsKitchen2,
+  IconCoffee,
+  IconSmoking,
+  IconPaw,
+  IconDog,
+  IconToiletPaper,
+  IconHospital,
+} from '@tabler/icons-react'
+
+export const VENUE_ICONS = {
+  service_pickup:     IconCar,
+  service_parking:    IconParking,
+  service_assembly:   IconAssembly,
+  service_lost_found: IconLuggage,
+  service_info:       IconInfoCircle,
+  service_medical:    IconFirstAidKit,
+  service_nursing:    IconBabyCarriage,
+  service_prayer:     IconMosque,
+  service_quiet:      IconVolumeOff,
+  service_atm:        IconCash,
+  service_food:       IconToolsKitchen2,
+  service_cafe:       IconCoffee,
+  service_smoking:    IconSmoking,
+  service_vet:        IconPaw,
+  service_relief:     IconDog,
+  service_restroom:   IconToiletPaper,
+  service_hospital:   IconHospital,
+}

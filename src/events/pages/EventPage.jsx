@@ -1,3 +1,5 @@
+// src/events/pages/EventPage.jsx
+
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { EVENTS } from '../../config/events'
@@ -8,12 +10,12 @@ import Map from '../../components/Map'
 function EventPage() {
   const { eventId } = useParams()
   const event = EVENTS[eventId]
-  const [venues, setVenues] = useState([])
+  const [eventVenues, setEventVenues] = useState([])
 
   useEffect(() => {
     if (!eventId) return
     supabaseFetch(`event_${eventId}_venues?event_id=eq.${eventId}&select=*`)
-      .then(setVenues)
+      .then(setEventVenues)
       .catch(e => console.error('Failed to load venues', e))
   }, [eventId])
 
@@ -32,7 +34,7 @@ function EventPage() {
       source="event"
       lang="en"
       eventId={eventId}
-      venues={venues}
+      eventVenues={eventVenues}
     />
   )
 }

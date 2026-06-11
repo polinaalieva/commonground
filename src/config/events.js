@@ -6,11 +6,14 @@ export const EVENTS = {
     bbox: [[49.910, 40.425], [49.930, 40.438]],
     center: [49.920, 40.431],
     zoom: 15,
+  minZoom: 14,
+  maxBounds: [[49.900, 40.420], [49.940, 40.445]],
     zoneColors: {
       'Area A': '#4A90E2',
       'Urban Expo': '#F5A623',
       'Area B': '#7ED321',
-    }
+    },
+    serviceColor: '#6B7280',
   }
 }
 
