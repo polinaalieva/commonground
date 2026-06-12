@@ -17,7 +17,7 @@ export const EVENTS = {
     },
     serviceColor: '#6B7280',
     
-  floorplan: {url: '/floorplans/wuf13.png',
+  floorplan: {url: '/floorplans/wuf13-v2.png',
       coordinates: [
         [49.91300582305555, 40.43617368340293],
         [49.92681429980005, 40.43617368340293],
