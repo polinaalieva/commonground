@@ -44,7 +44,7 @@ function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = tr
           error={locateError}
         />
         {mode === 'global' && <Switcher hexMode={hexMode} onToggle={onToggleHex} />}
-        {mode === 'event' && <Slider label="Swipe to exit event" onExit={onExit} />}
+        {mode === 'event' && <Slider label="Swipe to exit" onExit={onExit} />}
       </div>
       <StartSurveyButton onClick={onStartSurvey} />
     </div>
