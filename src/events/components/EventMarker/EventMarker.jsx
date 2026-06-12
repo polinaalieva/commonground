@@ -65,7 +65,7 @@ export function EventMarker({ mapRef, eventId, eventConfig }) {
       map.off('zoom', update)
       marker.remove()
     }
-  }, [])
+  }, [mapRef.current])
 
   return null
 }
