@@ -9,7 +9,7 @@
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(4px);
   height: 36px;
-  padding: 0;
+  padding: 0 5px 0 10px;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;

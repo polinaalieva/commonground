@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import MapButton from '../MapButton/MapButton'
 import Switcher from '../Switcher/Switcher'
+import Slider from '../Slider/Slider'
 import StartSurveyButton from '../StartSurveyButton/StartSurveyButton'
 import './BottomBar.css'
 
@@ -10,7 +11,7 @@ const NavIcon = () => (
   </svg>
 )
 
-function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = true }) {
+function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = true, mode = 'global', onExit }) {
   const [locateError, setLocateError] = useState(false)
 
   function handleLocateClick() {
@@ -42,7 +43,8 @@ function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = tr
           ariaLabel="My location"
           error={locateError}
         />
-        <Switcher hexMode={hexMode} onToggle={onToggleHex} />
+        {mode === 'global' && <Switcher hexMode={hexMode} onToggle={onToggleHex} />}
+        {mode === 'event' && <Slider label="Swipe to exit event" onExit={onExit} />}
       </div>
       <StartSurveyButton onClick={onStartSurvey} />
     </div>

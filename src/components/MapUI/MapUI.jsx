@@ -13,6 +13,8 @@ function MapUI({
   variant,
   lang,
   bottomBarVisible,
+  source,
+  onExitEvent,
 }) {
   return (
     <div className="map-ui">
@@ -30,6 +32,8 @@ function MapUI({
         hexMode={hexMode}
         onStartSurvey={onStartSurvey}
         visible={bottomBarVisible}
+        mode={source === 'event' ? 'event' : 'global'}
+        onExit={onExitEvent}
       />
     </div>
   )

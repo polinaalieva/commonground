@@ -1,6 +1,7 @@
 // src/components/Map.jsx
 
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { maplibregl, MAP_STYLE } from '../config/map'
 import './Map.css'
 import SurveySheet from './BottomSheet/SurveySheet'
@@ -78,6 +79,7 @@ function getFeatureComment(props) {
 }
 
 function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, eventVenues = [] }) {
+  const navigate = useNavigate()
 
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -722,6 +724,8 @@ const [mapReady, setMapReady] = useState(false)
         variant={variant}
         lang={lang}
         bottomBarVisible={!selectedPin && !selectedHex && !selectedVenue && mode !== 'select'}
+        source={source}
+        onExitEvent={() => navigate('/map')}
       />
 
       <FeedbackCard
