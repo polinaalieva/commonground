@@ -1,0 +1,69 @@
+/* src/events/components/EventMarker/EventMarker.css */
+
+.event-marker {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(17, 17, 17, 0.08);
+  user-select: none;
+  width: fit-content;
+}
+
+.event-marker:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(17, 17, 17, 0.1);
+}
+
+/* ── tiny: zoom < 10 ── */
+.event-marker--tiny {
+  padding: 2px;
+}
+
+.event-marker--tiny .event-marker__img {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── medium: zoom < 15 ── */
+.event-marker--medium {
+  padding: 4px;
+}
+
+.event-marker--medium .event-marker__img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── pill: zoom >= 15 ── */
+.event-marker--pill {
+  padding: 4px 8px 4px 4px;
+  border-radius: 16px;
+  gap: 6px;
+}
+
+.event-marker--pill .event-marker__img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.event-marker__label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 11px;
+  color: rgba(17, 17, 17, 0.50);
+  white-space: nowrap;
+}

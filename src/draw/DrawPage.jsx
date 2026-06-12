@@ -379,39 +379,57 @@ function DrawPage() {
 
     const reader = new FileReader()
     reader.onload = (event) => {
-      const text = event.target.result
-      const lines = text.trim().split('\n').slice(1)
+  const text = event.target.result
+  const lines = text.trim().split('\n')
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
 
-      const features = lines.map(line => {
-        const parts = line.match(/^(\d+),"([^"]*)","([^"]*)","([^"]*)","([^"]*)","([^"]*)","(.+)"$/)
-        if (!parts) return null
+  const coordIdx = headers.indexOf('coordinates')
 
-        const [, , code, number, zone, type, geomType, coordsRaw] = parts
+  const features = lines.slice(1).map(line => {
+    if (!line.trim()) return null
+    // берём всё до координат и координаты отдельно
+    const coordStart = line.indexOf('"[')
+    const coordEnd = line.lastIndexOf(']"') + 2
+    const coordsRaw = line.slice(coordStart + 1, coordEnd - 1)
+    const before = line.slice(0, coordStart - 1).split(',')
 
-        try {
-          const coords = JSON.parse(coordsRaw)
-          const feature = {
-            type: 'Feature',
-            geometry: geomType === 'point'
-              ? { type: 'Point', coordinates: coords }
-              : { type: 'Polygon', coordinates: [coords] },
-            properties: {},
-          }
-          return { feature, meta: { code, number, zone, type } }
-        } catch {
-          return null
-        }
-      }).filter(Boolean)
-
-      if (features.length) {
-        features.forEach(({ feature, meta }) => {
-          const ids = draw.current.add(feature)
-          shapeMeta.current[ids[0]] = meta
-        })
-        updateShapeCount()
-        updateLabels()
-      }
+    const get = (name) => {
+      const i = headers.indexOf(name)
+      return i >= 0 ? before[i]?.replace(/"/g, '').trim() : ''
     }
+
+    try {
+      const coords = JSON.parse(coordsRaw)
+      const geomType = get('geometry_type')
+      return {
+        feature: {
+          type: 'Feature',
+          geometry: geomType === 'point'
+            ? { type: 'Point', coordinates: coords }
+            : { type: 'Polygon', coordinates: [coords] },
+          properties: {},
+        },
+        meta: {
+          code: get('code'),
+          number: get('number'),
+          zone: get('zone'),
+          type: get('type'),
+        }
+      }
+    } catch {
+      return null
+    }
+  }).filter(Boolean)
+
+  if (features.length) {
+    features.forEach(({ feature, meta }) => {
+      const ids = draw.current.add(feature)
+      shapeMeta.current[ids[0]] = meta
+    })
+    updateShapeCount()
+    updateLabels()
+  }
+}
     reader.readAsText(file)
     e.target.value = ''
   }

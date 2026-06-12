@@ -17,6 +17,8 @@ import { CenterPin } from './ui/CenterPin'
 import { supabaseFetch } from '../config/supabase'
 import { EventCard } from './EventCard/EventCard'
 import { VenueLayer } from '../events/components/VenueLayer'
+import { EVENTS, buildZoneColorExpression } from '../config/events'
+import { EventMarker } from '../events/components/EventMarker/EventMarker'
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -788,6 +790,10 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         eventId={eventId}
         onDismiss={() => setSelectedVenue(null)}
       />
+
+      {source !== 'event' && Object.entries(EVENTS).map(([id, config]) => (
+  <EventMarker key={id} mapRef={map} eventId={id} eventConfig={config} />
+))}
 
       {mapReady && eventVenues.length > 0 && (
         <VenueLayer
