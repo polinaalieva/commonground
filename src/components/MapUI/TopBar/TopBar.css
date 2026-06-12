@@ -1,0 +1,18 @@
+.top-bar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  pointer-events: auto;
+}
+
+.top-bar__menu-wrap {
+  position: relative;
+}
+
+/* ── MOBILE ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .top-bar {
+    top: 23px;      /* 20 × 1.167 */
+    left: 23px;
+  }
+}

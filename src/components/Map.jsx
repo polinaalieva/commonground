@@ -11,8 +11,6 @@ import './EmptyZoneTooltip/EmptyZoneTooltip.css'
 import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
 import { Hexagon } from 'lucide-react'
-import Wuf13IntroModal from '../wuf13/components/Wuf13IntroModal'
-import Wuf13FirstPinModal from '../wuf13/components/Wuf13FirstPinModal'
 import { CenterPin } from './ui/CenterPin'
 import { supabaseFetch } from '../config/supabase'
 import { EventCard } from './EventCard/EventCard'
@@ -111,12 +109,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   const [hexMode, setHexMode] = useState(false)
   const [selectedHex, setSelectedHex] = useState(null)
   const [showHexTooltip, setShowHexTooltip] = useState(false)
-  const [pinFilter, setPinFilter] = useState('all')
   const [selectedVenue, setSelectedVenue] = useState(null)
-  const pinFilterRef = useRef('all')
-  const [showFirstPinModal, setShowFirstPinModal] = useState(false)
-  const submitCountRef = useRef(0)
-  const [mapReady, setMapReady] = useState(false)
+const [mapReady, setMapReady] = useState(false)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -131,19 +125,6 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
     }
     setSelectedVenue(venue)
-  }
-
-  function handlePinFilterChange(filter) {
-    pinFilterRef.current = filter
-    setPinFilter(filter)
-    const records = allPointsRef.current
-    const filtered = filter === 'wuf13' ? records.filter(r => r.city === 'wuf13') : records
-    const geojson = toGeoJSON(filtered)
-    map.current?.getSource('cg-feedback')?.setData(geojson)
-    if (hexMode) {
-      const hexData = buildHexData(filtered)
-      map.current?.getSource('cg-hex')?.setData(hexData)
-    }
   }
 
   function getRatingLabel(rating) {
@@ -183,9 +164,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       zoom: cityConfig.zoom,
   ...(cityConfig.minZoom && { minZoom: cityConfig.minZoom }),
   ...(cityConfig.maxBounds && { maxBounds: cityConfig.maxBounds }),
+  attributionControl: false,
     })
 
     map.current.on('load', () => {
+      map.current.addControl(
+    new maplibregl.AttributionControl({ compact: true }),
+    'top-right'
+  )
       loadData()
       setMapReady(true)
       if (city === 'map') setTimeout(() => requestGeoAuto(), 500)
@@ -262,8 +248,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       clearTimeout(timeoutId)
       console.log('sample record:', records[0])
       allPointsRef.current = records
-      const filteredRecords = pinFilterRef.current === 'wuf13' ? records.filter(r => r.city === 'wuf13') : records
-      const geojson = toGeoJSON(filteredRecords)
+      const geojson = toGeoJSON(records)
       console.log('sample feature props:', geojson.features[0]?.properties)
 
       const mapSource = map.current.getSource('cg-feedback')
@@ -577,13 +562,12 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
     setHexMode(next)
     setSelectedHex(null)
 
-    if (!localStorage.getItem('hexTipSeen')) {
-      setShowHexTooltip(true)
-      setTimeout(() => setShowHexTooltip(false), 3000)
-    }
     if (next) {
-      setShowHexTooltip(true)
-      setTimeout(() => setShowHexTooltip(false), 3000)
+      if (!localStorage.getItem('hexTipSeen')) {
+        localStorage.setItem('hexTipSeen', '1')
+        setShowHexTooltip(true)
+        setTimeout(() => setShowHexTooltip(false), 3000)
+      }
       if (map.current.getLayer('cg-feedback-layer')) {
         map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
       }
@@ -704,18 +688,11 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   function closeSurvey() {
     exitSelect()
     setTimeout(() => loadData(1), 300)
-    submitCountRef.current += 1
-    if (submitCountRef.current === 1 && city === 'wuf13') {
-      setTimeout(() => setShowFirstPinModal(true), 2000)
-    }
   }
 
   return (
     <div className="cg-map-outer">
       <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
-
-      {city === 'wuf13' && <Wuf13IntroModal />}
-      {showFirstPinModal && <Wuf13FirstPinModal onClose={() => setShowFirstPinModal(false)} />}
 
       <CenterPin mapRef={map} mode={mode} ref={centerPinRef} />
 
@@ -741,11 +718,10 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         onLocate={onLocate}
         onToggleHex={toggleHex}
         hexMode={hexMode}
+        onStartSurvey={() => surveySheetRef.current?.startSelect()}
         variant={variant}
         lang={lang}
-        city={city}
-        pinFilter={pinFilter}
-        onPinFilterChange={handlePinFilterChange}
+        bottomBarVisible={!selectedPin && !selectedHex && !selectedVenue && mode !== 'select'}
       />
 
       <FeedbackCard

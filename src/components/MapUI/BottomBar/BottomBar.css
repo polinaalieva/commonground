@@ -1,0 +1,35 @@
+.bottom-bar {
+  position: absolute;
+  bottom: 15px;
+  left: 20px;
+  right: 20px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bottom-bar--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.bottom-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── MOBILE ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .bottom-bar {
+    bottom: 20px;     /* 20 × 1.167 */
+    left: 20px;
+    right: 20px;
+  }
+
+  .bottom-bar__left {
+    gap: 23px;        /* 20 × 1.167 */
+  }
+}

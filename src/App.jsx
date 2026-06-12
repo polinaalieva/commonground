@@ -1,5 +1,3 @@
-import Wuf13ViewPage from './wuf13/pages/Wuf13ViewPage'
-import Wuf13DashboardPage from './wuf13/pages/Wuf13DashboardPage'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import City from './pages/City.jsx'
@@ -35,8 +33,6 @@ function App() {
       <Route path="/qr" element={<QRPage />} />
       <Route path="/ru/qr" element={<QRPage />} />
       <Route path="/dev" element={<Dev />} />
-      <Route path="/wuf13view" element={<Wuf13ViewPage />} />
-      <Route path="/wuf13dashboard" element={<Wuf13DashboardPage />} />
     </Routes>
     
   )

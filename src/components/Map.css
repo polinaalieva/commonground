@@ -11,63 +11,6 @@
   overflow: hidden;
 }
 
-/* =========================
-   MOBILE BOTTOM (select mode)
-   ========================= */
-
-.cg-mobile-bottom {
-  display: none;
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 56px;
-  z-index: 25;
-  pointer-events: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.cg-mobile-bottom .cg-map-btn {
-  pointer-events: auto;
-}
-
-.cg-mobile-note {
-  display: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 24;
-  font-size: 12px;
-  line-height: 1.35;
-  color: #111;
-  pointer-events: none;
-  background: rgba(255,255,255,0.96);
-  padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
-  text-align: center;
-}
-
-.cg-mobile-select-actions {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cg-mobile-select-actions .cg-map-btn {
-  flex: 0 0 auto;
-  width: auto;
-}
-
-@media (max-width: 768px) {
-  .cg-mobile-bottom {
-    display: flex;
-  }
-  .cg-mobile-note {
-    display: block;
-  }
-}
 
 /* =========================
    USER LOCATION MARKER

@@ -1,0 +1,18 @@
+.middle-bar {
+  position: absolute;
+  right: 20px;
+  top: 35%;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── MOBILE ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .middle-bar {
+    right: 20px;      /* 20 × 1.167 */
+    gap: 20px;        /* 20 × 1.167 */
+  }
+}

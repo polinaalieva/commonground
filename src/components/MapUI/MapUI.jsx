@@ -1,20 +1,35 @@
-import MapControls from './MapControls/MapControls'
+import TopBar from './TopBar/TopBar'
+import MiddleBar from './MiddleBar/MiddleBar'
+import BottomBar from './BottomBar/BottomBar'
 import './MapUI.css'
 
-function MapUI({ onZoomIn, onZoomOut, onLocate, onToggleHex, hexMode, variant, lang, city, pinFilter, onPinFilterChange }) {
+function MapUI({
+  onZoomIn,
+  onZoomOut,
+  onLocate,
+  onToggleHex,
+  hexMode,
+  onStartSurvey,
+  variant,
+  lang,
+  bottomBarVisible,
+}) {
   return (
     <div className="map-ui">
-      <MapControls
+      <TopBar
+        variant={variant}
+        lang={lang}
+      />
+      <MiddleBar
         onZoomIn={onZoomIn}
         onZoomOut={onZoomOut}
+      />
+      <BottomBar
         onLocate={onLocate}
         onToggleHex={onToggleHex}
         hexMode={hexMode}
-        variant={variant}
-        lang={lang}
-        city={city}
-        pinFilter={pinFilter}
-        onPinFilterChange={onPinFilterChange}
+        onStartSurvey={onStartSurvey}
+        visible={bottomBarVisible}
       />
     </div>
   )

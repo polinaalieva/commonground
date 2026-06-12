@@ -12,7 +12,7 @@
 
 .hc-card {
   position: fixed;
-  z-index: 30;
+  z-index: 35;
   pointer-events: auto;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);

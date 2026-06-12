@@ -1,0 +1,83 @@
+/* ── Container ───────────────────────────────── */
+.switcher {
+  --pill-w: 42px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.10);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 0;
+  gap: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+/* ── Sliding white pill ───────────────────────── */
+.switcher__pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--pill-w);
+  border-radius: 15px;
+  background: #fff;
+  border: 1px solid rgba(17, 17, 17, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 10px rgba(0, 0, 0, 0.10);
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+/* ── Icon slots (above pill) ─────────────────── */
+.switcher__slot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+/* ── icon-point: CSS circle ───────────────────── */
+.sw-point {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 100px;
+  border: 2px solid #fff;
+  background: rgba(0, 0, 0, 0.20);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.20);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sw-point--active {
+  background: linear-gradient(145deg, #31D0AA 0%, #6C95C1 50%, #ED4BBA 100%);
+}
+
+/* ── MOBILE ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .switcher {
+    --pill-w: 49px;
+    border-radius: 18px;
+  }
+
+  .switcher__pill {
+    border-radius: 18px;
+  }
+
+  .switcher__slot {
+    width: 49px;
+    height: 42px;
+  }
+
+  .sw-point {
+    width: 14px;
+    height: 14px;
+  }
+}

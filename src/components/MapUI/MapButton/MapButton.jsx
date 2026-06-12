@@ -1,6 +1,4 @@
-// src/components/MapUI/MapControls/MapButton.jsx
-
-import './MapControls.css'
+import './MapButton.css'
 
 function MapButton({ icon, onClick, ariaLabel, active = false, error = false }) {
   return (

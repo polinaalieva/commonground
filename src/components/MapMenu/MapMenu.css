@@ -3,7 +3,7 @@
 .map-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  left: 0;
   width: 360px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -29,7 +29,7 @@
 @media (max-width: 768px) {
   .map-menu {
     width: calc(100vw - 32px);
-    right: 0;
+    left: 0;
     border-radius: 12px;
     border: 1px solid rgba(0, 0, 0, 0.08);
   }
