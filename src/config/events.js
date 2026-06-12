@@ -16,8 +16,8 @@ export const EVENTS = {
       'Area B': '#7ED321',
     },
     serviceColor: '#6B7280',
-    floorplan: {
-      url: '/floorplans/wuf13.png',
+    
+  floorplan: {url: '/floorplans/wuf13.png',
       coordinates: [
         [49.91300582305555, 40.43617368340293],
         [49.92681429980005, 40.43617368340293],
