@@ -165,9 +165,10 @@ const [mapReady, setMapReady] = useState(false)
       style: MAP_STYLE,
       center: cityConfig.center,
       zoom: cityConfig.zoom,
-  ...(cityConfig.minZoom && { minZoom: cityConfig.minZoom }),
-  ...(cityConfig.maxBounds && { maxBounds: cityConfig.maxBounds }),
-  attributionControl: false,
+      ...(source === 'event' && { bearing: cityConfig.bearing ?? 0, pitch: 0, pitchWithRotate: false }),
+      ...(cityConfig.minZoom && { minZoom: cityConfig.minZoom }),
+      ...(cityConfig.maxBounds && { maxBounds: cityConfig.maxBounds }),
+      attributionControl: false,
     })
 
     map.current.on('load', () => {
@@ -177,6 +178,15 @@ const [mapReady, setMapReady] = useState(false)
   )
       loadData()
       setMapReady(true)
+      if (source === 'event') {
+        setTimeout(() => {
+          map.current?.getStyle().layers.forEach(layer => {
+            if (layer.type === 'fill-extrusion') {
+              map.current.setPaintProperty(layer.id, 'fill-extrusion-height', 5)
+            }
+          })
+        }, 0)
+      }
       if (city === 'map') setTimeout(() => requestGeoAuto(), 500)
     })
 

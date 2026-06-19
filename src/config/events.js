@@ -25,6 +25,36 @@ export const EVENTS = {
         [49.91300582305555, 40.4253899164859],
       ]
     }
+  },
+  uis27: {
+    name: 'Urban Intelligence Summit 2027',
+    shortName: 'UIS27',
+    markerImage: '/events/uis27.png',
+    location: 'Barcelona, Spain',
+    dates: ['2027-09-13', '2027-09-15'],
+    center: [2.142519076132203, 41.379661064465864],
+    zoom: 20,
+    bearing: 135,
+    bbox: [[2.1418, 41.3790], [2.1433, 41.3803]],
+    minZoom: 17,
+    maxBounds: [
+      [2.1418, 41.3790],
+      [2.1433, 41.3803],
+    ],
+    zoneColors: {
+      'Zone A': '#4A90E2',
+      'Expo Area': '#F5A623',
+    },
+    serviceColor: '#6B7280',
+    floorplan: {
+      url: '/floorplans/uis27_plan.png',
+      coordinates: [
+        [2.1422313456499102, 41.379862061414904],
+        [2.1427886690649496, 41.379862061414904],
+        [2.1427886690649496, 41.37943883449626],
+        [2.1422313456499102, 41.37943883449626],
+      ]
+    }
   }
 }
 

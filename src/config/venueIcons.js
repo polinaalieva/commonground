@@ -18,6 +18,8 @@ import {
   IconDog,
   IconBadgeWc,
   IconHospital,
+  IconStairs,
+  IconDoorEnter,
 } from '@tabler/icons-react'
 
 export const VENUE_ICONS = {
@@ -38,4 +40,6 @@ export const VENUE_ICONS = {
   service_relief:     IconDog,
   service_restroom:   IconBadgeWc,
   service_hospital:   IconHospital,
+  service_stairs:     IconStairs,
+  service_entrance:   IconDoorEnter,
 }

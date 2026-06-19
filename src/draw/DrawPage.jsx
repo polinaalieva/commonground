@@ -23,6 +23,32 @@ function DrawPage() {
   const [scaleX, setScaleX] = useState(1)
   const [scaleY, setScaleY] = useState(1)
   const shapeMeta = useRef({})
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const searchTimeout = useRef(null)
+
+  function handleSearchInput(e) {
+    const q = e.target.value
+    setSearchQuery(q)
+    setSearchResults([])
+    clearTimeout(searchTimeout.current)
+    if (q.length < 2) return
+    searchTimeout.current = setTimeout(async () => {
+      const key = import.meta.env.VITE_MAPTILER_KEY
+      const res = await fetch(
+        `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?key=${key}&limit=5`
+      )
+      const data = await res.json()
+      setSearchResults(data.features || [])
+    }, 300)
+  }
+
+  function handleSearchSelect(feature) {
+    const [lng, lat] = feature.center
+    map.current.flyTo({ center: [lng, lat], zoom: 14 })
+    setSearchQuery(feature.place_name)
+    setSearchResults([])
+  }
 
   useEffect(() => {
     if (map.current) return
@@ -32,9 +58,23 @@ function DrawPage() {
       style: MAP_STYLE,
       center: [37.6173, 55.7558],
       zoom: 12,
+      pitch: 0,
+      bearing: 0,
+      pitchWithRotate: false,
+      dragRotate: false,
     })
 
     map.current.on('load', () => {
+      map.current.setPitch(0)
+      map.current.setBearing(0)
+
+      map.current.getStyle().layers.forEach(layer => {
+        if (layer.type === 'fill-extrusion') {
+          map.current.setPaintProperty(layer.id, 'fill-extrusion-height', 0)
+          map.current.setPaintProperty(layer.id, 'fill-extrusion-base', 0)
+        }
+      })
+
       draw.current = new MaplibreDraw({
         displayControlsDefault: false,
         controls: { polygon: true, trash: true, point: true },
@@ -515,6 +555,51 @@ function DrawPage() {
             )}
           </>
         )}
+
+        <div style={{ width: '100%', height: 1, background: '#ddd', margin: '4px 0' }} />
+
+        {/* Поиск адреса */}
+        <div style={{ position: 'relative', width: '100%' }}>
+          <input
+            type="text"
+            placeholder="Поиск адреса..."
+            value={searchQuery}
+            onChange={handleSearchInput}
+            onKeyDown={e => e.key === 'Escape' && setSearchResults([])}
+            style={{ ...inputStyle, paddingRight: 28 }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => { setSearchQuery(''); setSearchResults([]) }}
+              style={{
+                position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#999',
+              }}
+            >✕</button>
+          )}
+          {searchResults.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+              background: 'white', border: '1px solid #ddd', borderRadius: 4,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)', marginTop: 2,
+            }}>
+              {searchResults.map((f, i) => (
+                <div
+                  key={i}
+                  onClick={() => handleSearchSelect(f)}
+                  style={{
+                    padding: '8px 10px', cursor: 'pointer', fontSize: 12,
+                    borderBottom: i < searchResults.length - 1 ? '1px solid #f0f0f0' : 'none',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                >
+                  {f.place_name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div style={{ width: '100%', height: 1, background: '#ddd', margin: '4px 0' }} />
 
