@@ -1,7 +1,7 @@
 import { useState } from 'react'
+import { Search } from 'lucide-react'
 import MapButton from '../MapButton/MapButton'
 import Switcher from '../Switcher/Switcher'
-import Slider from '../Slider/Slider'
 import StartSurveyButton from '../StartSurveyButton/StartSurveyButton'
 import './BottomBar.css'
 
@@ -11,7 +11,7 @@ const NavIcon = () => (
   </svg>
 )
 
-function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = true, mode = 'global', onExit }) {
+function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = true, mode = 'global', onExit, onSearch }) {
   const [locateError, setLocateError] = useState(false)
 
   function handleLocateClick() {
@@ -44,7 +44,13 @@ function BottomBar({ onLocate, onToggleHex, hexMode, onStartSurvey, visible = tr
           error={locateError}
         />
         {mode === 'global' && <Switcher hexMode={hexMode} onToggle={onToggleHex} />}
-        {mode === 'event' && <Slider label="Swipe to exit" onExit={onExit} />}
+        {mode === 'event' && (
+          <MapButton
+            icon={<Search size={18} strokeWidth={1.8} />}
+            onClick={onSearch}
+            ariaLabel="Search"
+          />
+        )}
       </div>
       <StartSurveyButton onClick={onStartSurvey} />
     </div>

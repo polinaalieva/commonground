@@ -15,12 +15,15 @@ function MapUI({
   bottomBarVisible,
   source,
   onExitEvent,
+  onSearch,
 }) {
   return (
     <div className="map-ui">
       <TopBar
         variant={variant}
         lang={lang}
+        isEventMode={source === 'event'}
+        onExitEvent={onExitEvent}
       />
       <MiddleBar
         onZoomIn={onZoomIn}
@@ -34,6 +37,7 @@ function MapUI({
         visible={bottomBarVisible}
         mode={source === 'event' ? 'event' : 'global'}
         onExit={onExitEvent}
+        onSearch={onSearch}
       />
     </div>
   )

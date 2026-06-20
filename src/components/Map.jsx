@@ -18,6 +18,7 @@ import { EventCard } from './EventCard/EventCard'
 import { VenueLayer } from '../events/components/VenueLayer'
 import { EVENTS, buildZoneColorExpression } from '../config/events'
 import { EventMarker } from '../events/components/EventMarker/EventMarker'
+import { SearchCard } from '../events/components/SearchCard/SearchCard'
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -113,7 +114,9 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   const [selectedHex, setSelectedHex] = useState(null)
   const [showHexTooltip, setShowHexTooltip] = useState(false)
   const [selectedVenue, setSelectedVenue] = useState(null)
-const [mapReady, setMapReady] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [highlightedVenueCode, setHighlightedVenueCode] = useState(null)
+  const [mapReady, setMapReady] = useState(false)
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -127,6 +130,8 @@ const [mapReady, setMapReady] = useState(false)
     if (map.current?.getLayer('cg-hex-selected-layer')) {
       map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
     }
+    setHighlightedVenueCode(null)
+    setSearchOpen(false)
     setSelectedVenue(venue)
   }
 
@@ -735,6 +740,7 @@ const [mapReady, setMapReady] = useState(false)
         bottomBarVisible={!selectedPin && !selectedHex && !selectedVenue && mode !== 'select'}
         source={source}
         onExitEvent={() => navigate('/', { state: { fitBounds: cityConfig.bbox } })}
+        onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
       />
 
       <FeedbackCard
@@ -774,6 +780,26 @@ const [mapReady, setMapReady] = useState(false)
         onFlyTo={(lng, lat) => map.current?.flyTo({ center: [lng, lat], zoom: Math.max(map.current.getZoom(), 14), essential: true })}
       />
 
+      {source === 'event' && searchOpen && (
+        <SearchCard
+          eventId={eventId}
+          venues={eventVenues}
+          onDismiss={() => setSearchOpen(false)}
+          onShowOnMap={(venue) => {
+            const coords = typeof venue.coordinates === 'string'
+              ? JSON.parse(venue.coordinates)
+              : venue.coordinates
+            if (coords) {
+              const padding = window.innerWidth <= 430
+                ? { bottom: Math.round(window.innerHeight * 0.62) }
+                : { left: 420 }
+              map.current?.flyTo({ center: coords, zoom: 22, essential: true, padding })
+            }
+            setHighlightedVenueCode(venue.code)
+          }}
+        />
+      )}
+
       <EventCard
         venue={selectedVenue}
         eventId={eventId}
@@ -792,6 +818,7 @@ const [mapReady, setMapReady] = useState(false)
           onSelect={handleVenueSelect}
           onDeselect={() => setSelectedVenue(null)}
           selectedVenue={selectedVenue}
+          highlightedVenueCode={highlightedVenueCode}
         />
       )}
     </div>

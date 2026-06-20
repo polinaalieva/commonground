@@ -5,7 +5,7 @@ import MapMenu from '../../MapMenu/MapMenu'
 import AboutModal from '../../AboutModal/AboutModal'
 import './TopBar.css'
 
-function TopBar({ variant, lang }) {
+function TopBar({ variant, lang, isEventMode = false, onExitEvent }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const menuWrapRef = useRef(null)
@@ -36,6 +36,8 @@ function TopBar({ variant, lang }) {
           <MapMenu
             onClose={() => setMenuOpen(false)}
             onAboutOpen={() => { setMenuOpen(false); setAboutOpen(true) }}
+            isEventMode={isEventMode}
+            onExitEvent={onExitEvent}
           />
         )}
 

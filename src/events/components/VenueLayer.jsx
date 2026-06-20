@@ -12,15 +12,38 @@ export function VenueLayer({
   eventId,
   onSelect,
   selectedVenue,
+  highlightedVenueCode,
 }) {
   const renderedRef = useRef(false)
   const selectedMarkerElRef = useRef(null)
+  const markerElsByCode = useRef({})
 
   useEffect(() => {
     if (!selectedVenue) {
       resetSelectedMarker()
+      return
     }
+    const el = markerElsByCode.current[selectedVenue.code]
+    if (!el || el === selectedMarkerElRef.current) return
+    resetSelectedMarker()
+    applyHighlight(el)
   }, [selectedVenue])
+
+  useEffect(() => {
+    if (!highlightedVenueCode) return
+    const el = markerElsByCode.current[highlightedVenueCode]
+    if (!el || el === selectedMarkerElRef.current) return
+    resetSelectedMarker()
+    applyHighlight(el)
+  }, [highlightedVenueCode])
+
+  function applyHighlight(el) {
+    el.style.width = '34px'
+    el.style.height = '34px'
+    el.style.border = '4px solid white'
+    el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)'
+    selectedMarkerElRef.current = el
+  }
 
   useEffect(() => {
     if (!eventVenues.length || renderedRef.current) return
@@ -158,7 +181,8 @@ map.current.on('zoom', applyMarkerSizes)
         .setLngLat(coords)
         .addTo(map.current)
 
-        allMarkerEls.push({ el, isService })
+      allMarkerEls.push({ el, isService })
+      if (v.code) markerElsByCode.current[v.code] = el
 
       marker.getElement().addEventListener('click', e => {
         e.stopPropagation()

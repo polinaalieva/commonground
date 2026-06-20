@@ -352,3 +352,103 @@
 .btn-secondary:hover {
   opacity: 0.7;
 }
+
+/* =============================================
+   SEARCH CARD
+   ============================================= */
+
+.hc-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(17, 17, 17, 0.05);
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  color: #111;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.hc-search-input::placeholder {
+  color: rgba(17, 17, 17, 0.35);
+}
+
+.sc-tab-switcher {
+  display: flex;
+  gap: 0;
+  background: rgba(17, 17, 17, 0.06);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.sc-tab {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(17, 17, 17, 0.5);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sc-tab--active {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10);
+}
+
+.sc-venue-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.05);
+}
+
+.sc-venue-row:last-child {
+  border-bottom: none;
+}
+
+.sc-session-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.05);
+}
+
+.sc-session-row:last-child {
+  border-bottom: none;
+}
+
+.sc-session-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-show-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4A90E2;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sc-dot {
+  color: rgba(17, 17, 17, 0.3);
+  margin: 0 2px;
+}

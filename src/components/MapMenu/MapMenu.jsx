@@ -11,7 +11,7 @@ const CITY_LABELS = {
 }
 // ↑ добавили словарь с названиями городов на разных языках --- IGNORE ---
 
-function MapMenu({ onClose, onAboutOpen }) {
+function MapMenu({ onClose, onAboutOpen, isEventMode = false, onExitEvent }) {
   const { pathname, search } = useLocation()
   const navigate = useNavigate()
   const isRu = pathname.startsWith('/ru')
@@ -55,6 +55,17 @@ function MapMenu({ onClose, onAboutOpen }) {
       </div>
 
       <div className="map-menu__divider" />
+
+      {isEventMode && (
+        <>
+          <div className="map-menu__row map-menu__row--home">
+            <button className="map-menu__home-btn" onClick={() => { onClose(); onExitEvent() }}>
+              Exit event
+            </button>
+          </div>
+          <div className="map-menu__divider" />
+        </>
+      )}
 
       {/* Выбор города — скрыт для hideCitySwitcher */}
       {!hideCitySwitcher && (
