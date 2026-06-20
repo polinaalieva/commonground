@@ -200,6 +200,7 @@ const [mapReady, setMapReady] = useState(false)
     const EMPTY_RADIUS_PX = 120
 
     function checkEmptyZone() {
+      if (source === 'event') return
       if (!dataLoadedRef.current) return
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has('point') || urlParams.has('hex')) return

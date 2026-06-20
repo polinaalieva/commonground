@@ -34,7 +34,7 @@ export const EVENTS = {
     dates: ['2027-09-13', '2027-09-15'],
     center: [2.142519076132203, 41.379661064465864],
     zoom: 20,
-    bearing: 135,
+    bearing: 45,
     bbox: [[2.1418, 41.3790], [2.1433, 41.3803]],
     minZoom: 17,
     maxBounds: [
@@ -47,7 +47,7 @@ export const EVENTS = {
     },
     serviceColor: '#6B7280',
     floorplan: {
-      url: '/floorplans/uis27_plan.png',
+      url: '/floorplans/uis27_planv.png',
       coordinates: [
         [2.1422313456499102, 41.379862061414904],
         [2.1427886690649496, 41.379862061414904],

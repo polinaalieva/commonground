@@ -16,6 +16,8 @@ function DrawPage() {
   const imageUrlRef = useRef(null)
   const [opacity, setOpacity] = useState(0.7)
   const [hasImage, setHasImage] = useState(false)
+  const [coordInput, setCoordInput] = useState('')
+  const [showCoordInput, setShowCoordInput] = useState(false)
   const [locked, setLocked] = useState(false)
   const [shapeCount, setShapeCount] = useState(0)
   const [selectedId, setSelectedId] = useState(null)
@@ -23,6 +25,7 @@ function DrawPage() {
   const [scaleX, setScaleX] = useState(1)
   const [scaleY, setScaleY] = useState(1)
   const shapeMeta = useRef({})
+  const pendingCoordsRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const searchTimeout = useRef(null)
@@ -330,22 +333,27 @@ function DrawPage() {
   function handleImageUpload(e) {
     const file = e.target.files[0]
     if (!file) return
+    e.target.value = ''
 
     const url = URL.createObjectURL(file)
     imageUrlRef.current = url
 
     const img = new Image()
     img.onload = () => {
-      const center = map.current.getCenter()
-      const w = 0.01
-      const h = w / (img.width / img.height)
+      const pending = pendingCoordsRef.current
+      pendingCoordsRef.current = null
 
-      const corners = [
-        [center.lng - w / 2, center.lat + h / 2],
-        [center.lng + w / 2, center.lat + h / 2],
-        [center.lng + w / 2, center.lat - h / 2],
-        [center.lng - w / 2, center.lat - h / 2],
-      ]
+      const corners = pending ?? (() => {
+        const center = map.current.getCenter()
+        const w = 0.01
+        const h = w / (img.width / img.height)
+        return [
+          [center.lng - w / 2, center.lat + h / 2],
+          [center.lng + w / 2, center.lat + h / 2],
+          [center.lng + w / 2, center.lat - h / 2],
+          [center.lng - w / 2, center.lat - h / 2],
+        ]
+      })()
 
       cornersRef.current = corners
       baseCornersRef.current = corners.map(c => [...c])
@@ -356,8 +364,30 @@ function DrawPage() {
       addControlMarkers(corners)
       setHasImage(true)
       setLocked(false)
+
+      if (pending) {
+        map.current.fitBounds([
+          [Math.min(...corners.map(c => c[0])), Math.min(...corners.map(c => c[1]))],
+          [Math.max(...corners.map(c => c[0])), Math.max(...corners.map(c => c[1]))],
+        ], { padding: 80, duration: 800 })
+      }
     }
     img.src = url
+  }
+
+  function handleLoadWithCoords() {
+    try {
+      const clean = coordInput.replace(/[""«»]/g, '"').replace(/['']/g, "'").trim()
+      const parsed = JSON.parse(clean)
+      const coords = parsed.coordinates
+      if (!Array.isArray(coords) || coords.length !== 4) { alert('Неверный формат'); return }
+      pendingCoordsRef.current = coords
+      fileInputRef.current.click()
+      setShowCoordInput(false)
+      setCoordInput('')
+    } catch (e) {
+      alert('Не удалось распарсить JSON: ' + e.message)
+    }
   }
 
   function handleOpacityChange(e) {
@@ -392,6 +422,39 @@ function DrawPage() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  function applyCoords(json) {
+    try {
+      const clean = json
+        .replace(/[“”«»]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .trim()
+      const parsed = JSON.parse(clean)
+      const coords = parsed.coordinates
+      if (!Array.isArray(coords) || coords.length !== 4) return 'Неверный формат: нужен массив из 4 точек'
+      cornersRef.current = coords
+      baseCornersRef.current = coords.map(c => [...c])
+      setScaleX(1)
+      setScaleY(1)
+      updateImageOverlay()
+      addControlMarkers(coords)
+      map.current.fitBounds([
+        [Math.min(...coords.map(c => c[0])), Math.min(...coords.map(c => c[1]))],
+        [Math.max(...coords.map(c => c[0])), Math.max(...coords.map(c => c[1]))],
+      ], { padding: 60, duration: 800 })
+      return null
+    } catch (e) {
+      return 'Не удалось распарсить JSON: ' + e.message
+    }
+  }
+
+  function handleImportCorners() {
+    const err = applyCoords(coordInput)
+    if (err) { alert(err); return }
+    setShowCoordInput(false)
+    setCoordInput('')
+  }
+
 
   function handleExportCorners() {
   if (!cornersRef.current) return
@@ -513,8 +576,40 @@ function DrawPage() {
           style={{ padding: '6px 10px', cursor: 'pointer' }}>
           Загрузить план
         </button>
+        <button onClick={() => setShowCoordInput(v => !v)}
+          style={{ padding: '6px 10px', cursor: 'pointer' }}>
+          По координатам
+        </button>
         <input ref={fileInputRef} type="file" accept="image/*"
           style={{ display: 'none' }} onChange={handleImageUpload} />
+
+        {showCoordInput && (
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <textarea
+              value={coordInput}
+              onChange={e => setCoordInput(e.target.value)}
+              placeholder='Вставь JSON: {"coordinates": [[lng,lat],[lng,lat],[lng,lat],[lng,lat]]}'
+              style={{ width: '100%', height: 80, fontSize: 11, fontFamily: 'monospace',
+                padding: '4px 8px', border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box', resize: 'vertical' }}
+            />
+            <div style={{ display: 'flex', gap: 6 }}>
+              {hasImage && (
+                <button onClick={handleImportCorners} style={{
+                  padding: '5px 10px', cursor: 'pointer', fontSize: 12,
+                  background: '#1a3b6b', color: '#fff', border: 'none', borderRadius: 4,
+                }}>
+                  Применить к плану
+                </button>
+              )}
+              <button onClick={handleLoadWithCoords} style={{
+                padding: '5px 10px', cursor: 'pointer', fontSize: 12,
+                background: '#333', color: '#fff', border: 'none', borderRadius: 4,
+              }}>
+                Загрузить план по координатам
+              </button>
+            </div>
+          </div>
+        )}
 
         {hasImage && (
           <>
