@@ -42,8 +42,8 @@ export const EVENTS = {
       [2.1433, 41.3803],
     ],
     zoneColors: {
-      'Zone A': '#4A90E2',
-      'Expo Area': '#F5A623',
+      'Zone A': '#00DBB0',
+      'Expo Area': '#03A1EA',
     },
     serviceColor: '#6B7280',
     floorplan: {
