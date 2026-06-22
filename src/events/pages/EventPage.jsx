@@ -3,7 +3,7 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { EVENTS } from '../../config/events'
-import { CONTENT } from '../../config/content'
+import { SURVEY_CONTENT } from '../../config/content-survey'
 import { supabaseFetch } from '../../config/supabase'
 import Map from '../../components/Map'
 
@@ -23,7 +23,7 @@ function EventPage() {
     return <div style={{ padding: 40 }}>Event not found: {eventId}</div>
   }
 
-  const content = CONTENT.map['belonging']['en']
+  const content = SURVEY_CONTENT
 
   return (
     <Map

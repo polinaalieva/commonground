@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { maplibregl, MAP_STYLE } from '../config/map'
+import { maplibregl, MAP_STYLE, MAP_STYLE_EVENT } from '../config/map'
 import './Map.css'
 import SurveySheet from './BottomSheet/SurveySheet'
 import { FeedbackCard } from './FeedbackCard/FeedbackCard'
@@ -13,6 +13,7 @@ import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
 import { Hexagon } from 'lucide-react'
 import { CenterPin } from './ui/CenterPin'
+import MapLoader from './ui/MapLoader'
 import { supabaseFetch } from '../config/supabase'
 import { EventCard } from './EventCard/EventCard'
 import { VenueLayer } from '../events/components/VenueLayer'
@@ -167,7 +168,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: MAP_STYLE,
+      style: source === 'event' ? MAP_STYLE_EVENT : MAP_STYLE,
       center: cityConfig.center,
       zoom: cityConfig.zoom,
       ...(source === 'event' && { bearing: cityConfig.bearing ?? 0, pitch: 0, pitchWithRotate: false }),
@@ -710,6 +711,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
     <div className="cg-map-outer">
       <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
+      <MapLoader visible={!mapReady || isLoading} />
       <CenterPin mapRef={map} mode={mode} ref={centerPinRef} />
 
       {showEmptyTooltip && mode === 'view' && (
@@ -739,6 +741,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         lang={lang}
         bottomBarVisible={!selectedPin && !selectedHex && !selectedVenue && mode !== 'select'}
         source={source}
+        eventConfig={source === 'event' ? cityConfig : undefined}
         onExitEvent={() => navigate('/', { state: { fitBounds: cityConfig.bbox } })}
         onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
       />

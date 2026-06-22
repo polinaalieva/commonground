@@ -140,8 +140,8 @@ function renderVenues(data) {
 
 function getMarkerSize() {
   const zoom = map.current.getZoom()
-  if (zoom < 16) return { size: 16, icon: 10, font: 7 }
-  if (zoom < 18) return { size: 25, icon: 14, font: 9 }
+  if (zoom < 16) return { size: 12, icon: 9, font: 5 }
+  if (zoom < 18) return { size: 18, icon: 11, font: 7 }
   return { size: 32, icon: 18, font: 12 }
 }
 

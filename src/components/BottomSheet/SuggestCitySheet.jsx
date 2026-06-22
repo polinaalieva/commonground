@@ -8,14 +8,14 @@ import SheetButton from './SheetButton'
 import SheetText from './SheetText'
 import SheetTextarea from './SheetTextarea'
 import SheetDropdown from './SheetDropdown'
-import { CONTENT } from '../../config/content'
+import { SUGGEST_CITY_CONTENT } from '../../config/content-suggest-city'
 
 import { supabaseFetch } from '../../config/supabase'
 
 function SuggestCitySheet({ onClose }) {
   const { pathname } = useLocation()
   const lang = pathname.startsWith('/ru') ? 'ru' : 'en'
-  const c = CONTENT.suggest_city[lang]
+  const c = SUGGEST_CITY_CONTENT[lang]
 
   const [step, setStep] = useState(1)
   const [city, setCity] = useState('')

@@ -3,14 +3,14 @@
 import Map from '../components/Map'
 import { CITY_CONFIGS } from '../config/cities'
 import { Navigate } from 'react-router-dom'
-import { CONTENT } from '../config/content'
+import { SURVEY_CONTENT } from '../config/content-survey'
 import { usePageParams } from '../hooks/usePageParams'
 import posthog from 'posthog-js'
 
 function City() {
   const { city, lang, variant, source } = usePageParams()
   const config = CITY_CONFIGS[city]
-  const content = CONTENT.map[variant]?.[lang] ?? CONTENT.map['belonging']['en']
+  const content = SURVEY_CONTENT
 
   posthog.capture('city_opened', { city, variant, lang, source })
 

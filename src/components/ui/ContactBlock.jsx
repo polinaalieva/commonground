@@ -1,8 +1,8 @@
 import './ContactBlock.css'
-import { CONTENT } from '../../config/content'
+import { HOME_CONTENT } from '../../config/content-home-page'
 
 function ContactBlock({ lang, inter = false }) {
-  const c = CONTENT.home[lang]
+  const c = HOME_CONTENT[lang]
   const isRu = lang === 'ru'
 
   return (

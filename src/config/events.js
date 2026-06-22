@@ -2,6 +2,7 @@ export const EVENTS = {
   wuf13: {
     name: 'World Urban Forum 13',
     shortName: 'WUF13',
+    description: 'WUF13 brings together urban leaders, practitioners, and researchers to shape the future of sustainable cities. This map lets participants mark places across the venue and share how they experience them.',
     markerImage: '/events/wuf13.png',
     location: 'Baku, Azerbaijan',
     dates: ['2026-11-01', '2026-11-07'],
@@ -29,6 +30,7 @@ export const EVENTS = {
   uis27: {
     name: 'Urban Intelligence Summit 2027',
     shortName: 'UIS27',
+        description: 'An event bringing together people shaping the future of cities through data, technology, design, and new approaches to understanding urban life.',
     markerImage: '/events/uis27.png',
     location: 'Barcelona, Spain',
     dates: ['2027-09-13', '2027-09-15'],

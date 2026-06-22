@@ -2,13 +2,13 @@ import { useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import CgButton from '../components/ui/Buttons/CgBtn'
 import './Home.css'
-import { CONTENT } from '../config/content'
+import { HOME_CONTENT } from '../config/content-home-page'
 import ContactBlock from '../components/ui/ContactBlock'
 
 function Home() {
   const { pathname } = useLocation()
   const lang = pathname.startsWith('/ru') ? 'ru' : 'en'
-  const c = CONTENT.home[lang]
+  const c = HOME_CONTENT[lang]
 
   return (
     <div className="cg-landing">

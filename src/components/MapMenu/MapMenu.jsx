@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CITY_CONFIGS } from '../../config/cities'
+import { MENU_CONTENT } from '../../config/content-menu'
 import './MapMenu.css'
 
 const ACTIVE_CITIES = ['london']
@@ -11,7 +12,7 @@ const CITY_LABELS = {
 }
 // ↑ добавили словарь с названиями городов на разных языках --- IGNORE ---
 
-function MapMenu({ onClose, onAboutOpen, isEventMode = false, onExitEvent }) {
+function MapMenu({ onClose, onAboutOpen, onEventAboutOpen, isEventMode = false, eventConfig, onExitEvent }) {
   const { pathname, search } = useLocation()
   const navigate = useNavigate()
   const isRu = pathname.startsWith('/ru')
@@ -47,60 +48,29 @@ function MapMenu({ onClose, onAboutOpen, isEventMode = false, onExitEvent }) {
   return (
     <div className="map-menu">
 
-      {/* О проекте — теперь открывает модалку */}
-      <div className="map-menu__row map-menu__row--home">
-        <button className="map-menu__home-btn" onClick={handleAbout}>
-          {isRu ? 'О проекте' : 'About the project'}
-        </button>
-      </div>
+      {isEventMode && eventConfig?.description && (
+        <div className="map-menu__row map-menu__row--home">
+          <button className="map-menu__home-btn" onClick={() => { onClose(); onEventAboutOpen() }}>
+            About {eventConfig.shortName}
+          </button>
+        </div>
+      )}
+
+      {isEventMode && (
+        <div className="map-menu__row map-menu__row--home">
+          <button className="map-menu__home-btn" onClick={() => { onClose(); onExitEvent() }}>
+            Exit event
+          </button>
+        </div>
+      )}
 
       <div className="map-menu__divider" />
 
-      {isEventMode && (
-        <>
-          <div className="map-menu__row map-menu__row--home">
-            <button className="map-menu__home-btn" onClick={() => { onClose(); onExitEvent() }}>
-              Exit event
-            </button>
-          </div>
-          <div className="map-menu__divider" />
-        </>
-      )}
-
-      {/* Выбор города — скрыт для hideCitySwitcher */}
-      {!hideCitySwitcher && (
-        <div className="map-menu__row">
-          <span className="map-menu__label">
-            {isRu ? 'Город' : 'Explore the map'}
-          </span>
-          <div className="map-menu__switcher">
-            {allOptions.map(key => (
-              <button
-                key={key}
-                className={`map-menu__option ${currentCity === key ? 'map-menu__option--active' : ''}`}
-                onClick={() => goToCity(key)}
-              >
-                {key === 'map'
-                  ? (isRu ? 'Мир' : 'World')
-                  : (CITY_LABELS[key]?.[isRu ? 'ru' : 'en'] ?? key)
-                }
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!hideCitySwitcher && <div className="map-menu__divider" />}
-
-      {/* Язык */}
-      <div className="map-menu__row">
-        <span className="map-menu__label">
-          {isRu ? 'Язык' : 'Language'}
-        </span>
-        <div className="map-menu__switcher" onClick={toggleLang}>
-          <button className={`map-menu__option ${!isRu ? 'map-menu__option--active' : ''}`}>EN</button>
-          <button className={`map-menu__option ${isRu ? 'map-menu__option--active' : ''}`}>RU</button>
-        </div>
+      {/* About map - open modal */}
+      <div className="map-menu__row map-menu__row--home">
+        <button className="map-menu__home-btn" onClick={handleAbout}>
+          {MENU_CONTENT[isEventMode ? 'event' : 'city'].about_btn}
+        </button>
       </div>
 
     </div>

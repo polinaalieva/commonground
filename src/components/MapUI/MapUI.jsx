@@ -14,6 +14,7 @@ function MapUI({
   lang,
   bottomBarVisible,
   source,
+  eventConfig,
   onExitEvent,
   onSearch,
 }) {
@@ -23,6 +24,7 @@ function MapUI({
         variant={variant}
         lang={lang}
         isEventMode={source === 'event'}
+        eventConfig={eventConfig}
         onExitEvent={onExitEvent}
       />
       <MiddleBar

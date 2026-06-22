@@ -1,0 +1,22 @@
+.map-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.map-loader__spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(17, 17, 17, 0.12);
+  border-top-color: rgba(17, 17, 17, 0.5);
+  border-radius: 50%;
+  animation: map-spin 0.7s linear infinite;
+}
+
+@keyframes map-spin {
+  to { transform: rotate(360deg); }
+}
