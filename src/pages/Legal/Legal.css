@@ -1,0 +1,26 @@
+/* src/components/Legal/Legal.css */
+
+.legal-content h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111111;
+  margin-top: 40px;
+}
+
+.legal-content h3,
+.legal-content h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111111;
+  margin-top: 40px;
+}
+
+.legal-content p,
+.legal-content li {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111111;
+}

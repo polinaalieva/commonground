@@ -4,6 +4,8 @@ import City from './pages/City.jsx'
 import EventPage from './events/pages/EventPage'
 import Dev from './pages/Dev.jsx'
 import QRPage from './pages/QRpage/QRPage'
+import TermsOfUse from './pages/Legal/TermsOfUse.jsx'
+import PrivacyPolicy from './pages/Legal/PrivacyPolicy.jsx'
 
 function App() {
   return (
@@ -11,7 +13,6 @@ function App() {
       {/* Event → карта ивентов */}
       <Route path="/event/:eventId" element={<EventPage />} />
       <Route path="/ru/event/:eventId" element={<EventPage />} />
-
 
       {/* Главная → мировая карта */}
       <Route path="/" element={<City />} />
@@ -21,9 +22,15 @@ function App() {
       <Route path="/map" element={<City />} />
       <Route path="/ru/map" element={<City />} />
 
-      {/* Лендинг переехал на /about */}
+      {/* Лендинг*/}
       <Route path="/about" element={<Home />} />
       <Route path="/ru/about" element={<Home />} />
+
+      {/* Legal */}
+      <Route path="/legal/terms-of-use" element={<TermsOfUse />} />
+      <Route path="/ru/legal/terms-of-use" element={<TermsOfUse />} />
+      <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/ru/legal/privacy-policy" element={<PrivacyPolicy />} />
 
       {/* Города */}
       <Route path="/:city" element={<City />} />

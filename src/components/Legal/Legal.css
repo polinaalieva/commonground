@@ -1,0 +1,65 @@
+/* src/components/Legal/Legal.css */
+
+.legal-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 60px 24px 120px;
+  text-align: left;
+}
+
+.legal-content > .h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: #111111;
+  margin-bottom: 8px;
+}
+
+.legal-content > .text-grey {
+  margin-bottom: 40px;
+}
+
+.legal-content h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111111;
+  margin-top: 40px;
+}
+
+.legal-content h3,
+.legal-content h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111111;
+  margin-top: 40px;
+}
+
+.legal-content p,
+.legal-content li {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111111;
+}
+
+.legal-content ul {
+  margin: 0 0 18px 20px;
+  padding: 0;
+}
+
+.legal-content hr {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 40px 0;
+}
+
+.legal-content a {
+  color: #111111;
+  text-decoration: underline;
+}
+
+.legal-content strong {
+  font-weight: 800;
+}
