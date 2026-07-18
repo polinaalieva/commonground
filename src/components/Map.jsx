@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { maplibregl, MAP_STYLE, MAP_STYLE_EVENT } from '../config/map'
 import './Map.css'
-import SurveySheet from './BottomSheet/SurveySheet'
+import Survey_BSheet from './BottomSheet/Survey/Survey_BSheet'
 import { FeedbackCard } from './FeedbackCard/FeedbackCard'
 import { HexCard } from './HexCard/HexCard'
 import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
@@ -765,7 +765,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         }}
       />
 
-      <SurveySheet
+      <Survey_BSheet
         pinSelected={!!selectedPin || !!selectedHex || !!selectedVenue}
         ref={surveySheetRef}
         bottomSheetRef={bottomSheetRef}

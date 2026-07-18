@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import BottomSheet from './BottomSheet'
-import BSheet_header from './ui/BSheet_header'
-import BSheet_content from './ui/BSheet_content'
-import BSheet_actions from './ui/BSheet_actions'
-import BSheet_button from './ui/BSheet_button'
-import BSheet_text from './ui/BSheet_text'
-import BSheet_textarea from './ui/BSheet_textarea'
-import BSheet_dropdown from './ui/BSheet_dropdown'
-import { SUGGEST_CITY_CONTENT } from '../../config/content-suggest-city'
+import BottomSheet from '../BottomSheet'
+import BSheet_header from '../ui/BSheet_header'
+import BSheet_content from '../ui/BSheet_content'
+import BSheet_actions from '../ui/BSheet_actions'
+import BSheet_button from '../ui/BSheet_button'
+import BSheet_text from '../ui/BSheet_text'
+import BSheet_textarea from '../ui/BSheet_textarea'
+import BSheet_dropdown from '../ui/BSheet_dropdown'
+import { SUGGEST_CITY_CONTENT } from '../../../config/content-suggest-city'
 
-import { supabaseFetch } from '../../config/supabase'
+import { supabaseFetch } from '../../../config/supabase'
 
-function SuggestCitySheet({ onClose }) {
+function SuggestCity_BSheet({ onClose }) {
   const { pathname } = useLocation()
   const lang = pathname.startsWith('/ru') ? 'ru' : 'en'
   const c = SUGGEST_CITY_CONTENT[lang]
@@ -143,4 +143,4 @@ function SuggestCitySheet({ onClose }) {
   )
 }
 
-export default SuggestCitySheet
+export default SuggestCity_BSheet

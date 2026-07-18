@@ -1,4 +1,4 @@
-import SuggestCitySheet from './SuggestCitySheet'
+import SuggestCity_BSheet from './SuggestCity_BSheet'
 import './SuggestCityModal.css'
 
 function SuggestCityModal({ isOpen, onClose }) {
@@ -8,7 +8,7 @@ function SuggestCityModal({ isOpen, onClose }) {
     <div className="suggest-modal">
       {/* backdrop: white 20% + blur 5px */}
       <div className="suggest-modal__backdrop" onClick={onClose} />
-      <SuggestCitySheet onClose={onClose} />
+      <SuggestCity_BSheet onClose={onClose} />
     </div>
   )
 }

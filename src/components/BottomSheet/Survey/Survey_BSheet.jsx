@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import BottomSheet from './BottomSheet'
-import BSheet_header from './ui/BSheet_header'
-import BSheet_content from './ui/BSheet_content'
-import BSheet_actions from './ui/BSheet_actions'
-import BSheet_button from './ui/BSheet_button'
-import BSheet_address from './ui/BSheet_address'
-import BSheet_slider from './ui/BSheet_slider'
-import BSheet_textarea from './ui/BSheet_textarea'
-import FormAnswerConfirmMSheet from '../ModalSheet/FormAnswerConfirmMSheet'
-import '../ModalSheet/ModalSheet.css'
+import BottomSheet from '../BottomSheet'
+import BSheet_header from '../ui/BSheet_header'
+import BSheet_content from '../ui/BSheet_content'
+import BSheet_actions from '../ui/BSheet_actions'
+import BSheet_button from '../ui/BSheet_button'
+import BSheet_address from '../ui/BSheet_address'
+import BSheet_slider from '../ui/BSheet_slider'
+import BSheet_textarea from '../ui/BSheet_textarea'
+import FormAnswerConfirmMSheet from '../../ModalSheet/FormAnswerConfirmMSheet'
+import '../../ModalSheet/ModalSheet.css'
 import posthog from 'posthog-js'
-import { supabaseFetch } from '../../config/supabase'
+import { supabaseFetch } from '../../../config/supabase'
 
-const SurveySheet = forwardRef(function SurveySheet(
+const Survey_BSheet = forwardRef(function Survey_BSheet(
   { city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onDisableMap, onEnableMap, onClose, onFlyTo, pinSelected, bottomSheetRef },
   ref
 ) {
@@ -316,4 +316,4 @@ const SurveySheet = forwardRef(function SurveySheet(
   )
 })
 
-export default SurveySheet
+export default Survey_BSheet
