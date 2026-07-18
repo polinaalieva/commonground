@@ -22,7 +22,7 @@ const getThumbColor = (value) => {
   return SNAP_COLORS[index]
 }
 
-function SheetSlider({ label, value, onChange, labels }) {
+function BSheet_slider({ label, value, onChange, labels }) {
   const trackRef = useRef(null)
 
   const snapValue = (raw) => {
@@ -111,4 +111,4 @@ function SheetSlider({ label, value, onChange, labels }) {
   )
 }
 
-export default SheetSlider
+export default BSheet_slider

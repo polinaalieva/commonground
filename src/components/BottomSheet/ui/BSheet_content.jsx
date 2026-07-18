@@ -1,4 +1,4 @@
-function SheetContent({ children }) {
+function BSheet_content({ children }) {
   return (
     <div className="sheet-content">
       {children}
@@ -6,4 +6,4 @@ function SheetContent({ children }) {
   )
 }
 
-export default SheetContent
+export default BSheet_content

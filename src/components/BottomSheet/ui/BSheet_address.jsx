@@ -2,7 +2,7 @@ import { Search, X } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-function SheetAddress({ value, onChange, onKeyDown, onClear, suggestions = [], onSelectSuggestion, error = false, placeholder = 'Search address' }) {
+function BSheet_address({ value, onChange, onKeyDown, onClear, suggestions = [], onSelectSuggestion, error = false, placeholder = 'Search address' }) {
   const fieldRef = useRef(null)
   const [dropdownStyle, setDropdownStyle] = useState(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -84,4 +84,4 @@ function SheetAddress({ value, onChange, onKeyDown, onClear, suggestions = [], o
   )
 }
 
-export default SheetAddress
+export default BSheet_address

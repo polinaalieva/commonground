@@ -1,4 +1,4 @@
-function SheetButton({ children, onClick, disabled, loading, variant = 'primary' }) {
+function BSheet_button({ children, onClick, disabled, loading, variant = 'primary' }) {
   return (
     <button
       className={`sheet-button sheet-button--${variant} ${disabled || loading ? 'sheet-button--disabled' : ''}`}
@@ -10,4 +10,4 @@ function SheetButton({ children, onClick, disabled, loading, variant = 'primary'
   )
 }
 
-export default SheetButton
+export default BSheet_button

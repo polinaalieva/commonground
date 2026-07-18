@@ -1,4 +1,4 @@
-function SheetText({ children, center }) {
+function BSheet_text({ children, center }) {
   return (
     <p className={`sheet-text${center ? ' sheet-text--center' : ''}`}>
       {children}
@@ -6,4 +6,4 @@ function SheetText({ children, center }) {
   )
 }
 
-export default SheetText
+export default BSheet_text

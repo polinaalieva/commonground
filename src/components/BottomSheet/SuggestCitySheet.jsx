@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import BottomSheet from './BottomSheet'
-import SheetHeader from './SheetHeader'
-import SheetContent from './SheetContent'
-import SheetActions from './SheetActions'
-import SheetButton from './SheetButton'
-import SheetText from './SheetText'
-import SheetTextarea from './SheetTextarea'
-import SheetDropdown from './SheetDropdown'
+import BSheet_header from './ui/BSheet_header'
+import BSheet_content from './ui/BSheet_content'
+import BSheet_actions from './ui/BSheet_actions'
+import BSheet_button from './ui/BSheet_button'
+import BSheet_text from './ui/BSheet_text'
+import BSheet_textarea from './ui/BSheet_textarea'
+import BSheet_dropdown from './ui/BSheet_dropdown'
 import { SUGGEST_CITY_CONTENT } from '../../config/content-suggest-city'
 
 import { supabaseFetch } from '../../config/supabase'
@@ -52,20 +52,20 @@ function SuggestCitySheet({ onClose }) {
   if (done) {
     return (
       <BottomSheet variant="default">
-        <SheetHeader
+        <BSheet_header
           title={c.thanks_title}
           onClose={onClose}
         />
-        <SheetContent>
-          <SheetText center>
+        <BSheet_content>
+          <BSheet_text center>
             {c.thanks_text.split('\n').map((line, i) => (
               <span key={i}>{line}{i === 0 && <br />}</span>
             ))}
-          </SheetText>
-        </SheetContent>
-        <SheetActions>
-          <SheetButton onClick={onClose}>{c.btn_close}</SheetButton>
-        </SheetActions>
+          </BSheet_text>
+        </BSheet_content>
+        <BSheet_actions>
+          <BSheet_button onClick={onClose}>{c.btn_close}</BSheet_button>
+        </BSheet_actions>
       </BottomSheet>
     )
   }
@@ -74,69 +74,69 @@ function SuggestCitySheet({ onClose }) {
     <BottomSheet variant="default">
       {step === 1 && (
         <>
-          <SheetHeader
+          <BSheet_header
             title={c.step1_title}
             onClose={onClose}
           />
-          <SheetContent>
-            <SheetText>{c.description}</SheetText>
-            <SheetTextarea
+          <BSheet_content>
+            <BSheet_text>{c.description}</BSheet_text>
+            <BSheet_textarea
               label={c.label_city}
               placeholder={c.placeholder_city}
               value={city}
               onChange={e => setCity(e.target.value)}
               required
             />
-            <SheetTextarea
+            <BSheet_textarea
               label={c.label_why}
               placeholder={c.placeholder_why}
               value={why}
               onChange={e => setWhy(e.target.value)}
             />
-          </SheetContent>
-          <SheetActions>
-            <SheetButton
+          </BSheet_content>
+          <BSheet_actions>
+            <BSheet_button
               onClick={() => setStep(2)}
               disabled={!city.trim()}
             >
               {c.btn_continue}
-            </SheetButton>
-          </SheetActions>
+            </BSheet_button>
+          </BSheet_actions>
         </>
       )}
 
       {step === 2 && (
         <>
-          <SheetHeader
+          <BSheet_header
             title={c.step2_title}
             onBack={() => setStep(1)}
             onClose={onClose}
           />
-          <SheetContent>
-            <SheetDropdown
+          <BSheet_content>
+            <BSheet_dropdown
               label={c.label_relation}
               placeholder={c.placeholder_relation}
               options={c.relation_options}
               value={relation}
               onChange={setRelation}
             />
-            <SheetTextarea
+            <BSheet_textarea
               label={c.label_contact}
               placeholder={c.placeholder_contact}
               value={contact}
               onChange={e => setContact(e.target.value)}
             />
             {error && <p style={{ color: 'red', fontSize: 13 }}>{error}</p>}
-          </SheetContent>
-          <SheetActions>
-            <SheetButton
+          </BSheet_content>
+          <BSheet_actions>
+            <BSheet_button
               onClick={handleSubmit}
               disabled={isSubmitting}
               loading={isSubmitting}
             >
               {c.btn_submit}
-            </SheetButton>
-          </SheetActions>
+            </BSheet_button>
+          </BSheet_actions>
         </>
       )}
     </BottomSheet>

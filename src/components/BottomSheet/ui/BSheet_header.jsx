@@ -1,6 +1,6 @@
 import { X, ChevronLeft } from 'lucide-react'
 
-function SheetHeader({ title, subtitle, onBack, onClose }) {
+function BSheet_header({ title, subtitle, onBack, onClose }) {
   return (
     <div className="sheet-header">
 
@@ -31,4 +31,4 @@ function SheetHeader({ title, subtitle, onBack, onClose }) {
   )
 }
 
-export default SheetHeader
+export default BSheet_header

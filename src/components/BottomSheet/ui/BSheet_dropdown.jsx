@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-function SheetDropdown({ label, placeholder = 'Select option', options = [], value, onChange, disabled }) {
+function BSheet_dropdown({ label, placeholder = 'Select option', options = [], value, onChange, disabled }) {
   const [isOpen, setIsOpen] = useState(false)
   const ref = useRef(null)
 
@@ -54,4 +54,4 @@ function SheetDropdown({ label, placeholder = 'Select option', options = [], val
   )
 }
 
-export default SheetDropdown
+export default BSheet_dropdown

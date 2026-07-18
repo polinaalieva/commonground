@@ -1,4 +1,4 @@
-function SheetActions({ children }) {
+function BSheet_actions({ children }) {
   return (
     <div className="sheet-actions">
       {children}
@@ -6,4 +6,4 @@ function SheetActions({ children }) {
   )
 }
 
-export default SheetActions
+export default BSheet_actions

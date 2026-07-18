@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import BottomSheet from './BottomSheet'
-import SheetHeader from './SheetHeader'
-import SheetContent from './SheetContent'
-import SheetActions from './SheetActions'
-import SheetButton from './SheetButton'
-import SheetAddress from './SheetAddress'
-import SheetSlider from './SheetSlider'
-import SheetTextarea from './SheetTextarea'
+import BSheet_header from './ui/BSheet_header'
+import BSheet_content from './ui/BSheet_content'
+import BSheet_actions from './ui/BSheet_actions'
+import BSheet_button from './ui/BSheet_button'
+import BSheet_address from './ui/BSheet_address'
+import BSheet_slider from './ui/BSheet_slider'
+import BSheet_textarea from './ui/BSheet_textarea'
 import FormAnswerConfirmMSheet from '../ModalSheet/FormAnswerConfirmMSheet'
 import '../ModalSheet/ModalSheet.css'
 import posthog from 'posthog-js'
@@ -216,7 +216,7 @@ const SurveySheet = forwardRef(function SurveySheet(
 
         {step === 'landing' && (
           <>
-            <SheetContent>
+            <BSheet_content>
               {!pinSelected && (
                 <p className="landing-sheet__text landing-sheet__text--mobile">
                   {pageContent.modal_text_mobile}
@@ -225,25 +225,25 @@ const SurveySheet = forwardRef(function SurveySheet(
               <p className="landing-sheet__text landing-sheet__text--desktop">
                 {pageContent.modal_text_desktop}
               </p>
-            </SheetContent>
-            <SheetActions>
-              <SheetButton onClick={handleStartSelect}>
+            </BSheet_content>
+            <BSheet_actions>
+              <BSheet_button onClick={handleStartSelect}>
                 {pageContent.button}
-              </SheetButton>
-            </SheetActions>
+              </BSheet_button>
+            </BSheet_actions>
           </>
         )}
 
         {step === 1 && (
           <>
-            <SheetHeader
+            <BSheet_header
               title={pageContent.step1_title}
               subtitle={pageContent.step1_subtitle}
               onBack={() => { onEnableMap(); onClose(); setStep('landing') }}
               onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
             />
-            <SheetContent>
-              <SheetAddress
+            <BSheet_content>
+              <BSheet_address
                 value={address}
                 onChange={handleAddressChange}
                 onKeyDown={handleAddressKeyDown}
@@ -252,30 +252,30 @@ const SurveySheet = forwardRef(function SurveySheet(
                 onSelectSuggestion={handleSelectSuggestion}
                 error={addressNotFound}
               />
-            </SheetContent>
-            <SheetActions>
-              <SheetButton onClick={handleContinue}>
+            </BSheet_content>
+            <BSheet_actions>
+              <BSheet_button onClick={handleContinue}>
                 {pageContent.btn_continue}
-              </SheetButton>
-            </SheetActions>
+              </BSheet_button>
+            </BSheet_actions>
           </>
         )}
 
         {step === 2 && (
           <>
-            <SheetHeader
+            <BSheet_header
               title={pageContent.step2_title}
               onBack={() => { onEnableMap(); setStep(1) }}
               onClose={() => { onEnableMap(); onClose(); setStep('landing') }}
             />
-            <SheetContent>
-              <SheetSlider
+            <BSheet_content>
+              <BSheet_slider
                 label={pageContent.question}
                 value={sliderValue}
                 onChange={setSliderValue}
                 labels={pageContent.slider_labels}
               />
-              <SheetTextarea
+              <BSheet_textarea
                 label={pageContent.note_label}
                 placeholder={pageContent.note_placeholder}
                 value={note}
@@ -283,15 +283,15 @@ const SurveySheet = forwardRef(function SurveySheet(
                 disabled={sliderValue === null}
               />
               {error && <p style={{ color: 'red', fontSize: 13 }}>{error}</p>}
-            </SheetContent>
-            <SheetActions>
-              <SheetButton
+            </BSheet_content>
+            <BSheet_actions>
+              <BSheet_button
                 onClick={handleDoneClick}
                 disabled={sliderValue === null || isSubmitting}
               >
                 {isSubmitting ? pageContent.btn_sharing : pageContent.btn_share}
-              </SheetButton>
-            </SheetActions>
+              </BSheet_button>
+            </BSheet_actions>
           </>
         )}
 

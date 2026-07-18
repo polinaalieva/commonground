@@ -1,4 +1,4 @@
-function SheetTextarea({ label, placeholder, value, onChange, disabled }) {
+function BSheet_textarea({ label, placeholder, value, onChange, disabled }) {
   return (
     <div className={`sheet-textarea ${disabled ? 'sheet-textarea--disabled' : ''}`}>
       <label className="sheet-textarea__label">{label}</label>
@@ -15,4 +15,4 @@ function SheetTextarea({ label, placeholder, value, onChange, disabled }) {
   )
 }
 
-export default SheetTextarea
+export default BSheet_textarea
