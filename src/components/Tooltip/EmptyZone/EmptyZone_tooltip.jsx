@@ -1,4 +1,4 @@
-function EmptyZoneTooltip({ text, cta, onClick }) {
+function EmptyZone_tooltip({ text, cta, onClick }) {
   return (
     <div className="cg-empty-tooltip" onClick={onClick}>
       <div className="cg-empty-tooltip__card">
@@ -10,5 +10,5 @@ function EmptyZoneTooltip({ text, cta, onClick }) {
   )
 }
  
-export default EmptyZoneTooltip
+export default EmptyZone_tooltip
  

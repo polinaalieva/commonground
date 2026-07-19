@@ -7,8 +7,8 @@ import './Map.css'
 import Survey_BSheet from './BottomSheet/Survey/Survey_BSheet'
 import { Feedback_card } from './Card/Feedback/Feedback_card'
 import { Hex_card } from './Card/Hex/Hex_card'
-import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
-import './EmptyZoneTooltip/EmptyZoneTooltip.css'
+import EmptyZone_tooltip from './Tooltip/EmptyZone/EmptyZone_tooltip'
+import './Tooltip/EmptyZone/EmptyZone_tooltip.css'
 import MapUI from './MapUI/MapUI'
 import { latLngToCell, cellToBoundary } from 'h3-js'
 import { Hexagon } from 'lucide-react'
@@ -715,7 +715,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       <CenterPin mapRef={map} mode={mode} ref={centerPinRef} />
 
       {showEmptyTooltip && mode === 'view' && (
-        <EmptyZoneTooltip
+        <EmptyZone_tooltip
           text={pageContent.empty_zone_tooltip.text}
           cta={pageContent.empty_zone_tooltip.cta}
           onClick={handleEmptyTooltipClick}
@@ -723,7 +723,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       )}
 
       {showHexTooltip && (
-        <EmptyZoneTooltip
+        <EmptyZone_tooltip
           text={<>Tap any <Hexagon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> to see area feedback</>}
           cta=""
           onClick={() => setShowHexTooltip(false)}
