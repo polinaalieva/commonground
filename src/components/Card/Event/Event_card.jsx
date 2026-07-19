@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { X, Forward } from 'lucide-react'
-import '../HexCard/HexCard.css'
-import { supabaseFetch } from '../../config/supabase'
-import { useToast } from '../Toast/useToast'
-import { Toast } from '../Toast/Toast'
-import { useOverflow } from '../../hooks/useOverflow'
-import { shareVenue } from '../../utils/share'
+import '../Hex/Hex_card.css'
+import { supabaseFetch } from '../../../config/supabase'
+import { useToast } from '../../Toast/useToast'
+import { Toast } from '../../Toast/Toast'
+import { useOverflow } from '../../../hooks/useOverflow'
+import { shareVenue } from '../../../utils/share'
 
 function truncate(text, max = 240) {
   if (!text) return null
@@ -77,7 +77,7 @@ function OrgBlock({ org }) {
   )
 }
 
-export function EventCard({ venue, eventId, onDismiss }) {
+export function Event_card({ venue, eventId, onDismiss }) {
   const [visible, setVisible] = useState(false)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)

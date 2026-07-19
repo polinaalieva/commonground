@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Forward } from 'lucide-react'
-import './FeedbackCard.css'
+import './Feedback_card.css'
 import { FC_Voting } from './FC_Voting'
-import { getSourceLabel } from '../../config/sources'
-import { sharePoint } from '../../utils/share'
-import { useToast } from '../Toast/useToast'
-import { Toast } from '../Toast/Toast'
-import { useOverflow } from '../../hooks/useOverflow'
+import { getSourceLabel } from '../../../config/sources'
+import { sharePoint } from '../../../utils/share'
+import { useToast } from '../../Toast/useToast'
+import { Toast } from '../../Toast/Toast'
+import { useOverflow } from '../../../hooks/useOverflow'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -16,7 +16,7 @@ function formatDate(iso) {
 }
 
 
-export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
+export function Feedback_card({ pin, surveySheetRef, onDismiss }) {
   const cardRef = useRef(null)
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
@@ -111,4 +111,4 @@ export function FeedbackCard({ pin, surveySheetRef, onDismiss }) {
   )
 }
 
-export default FeedbackCard
+export default Feedback_card

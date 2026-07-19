@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { supabaseFetch } from '../../../config/supabase'
 import { useOverflow } from '../../../hooks/useOverflow'
-import '../../../components/HexCard/HexCard.css'
+import '../../../components/Card/Hex/Hex_card.css'
 
 function formatDate(iso) {
   if (!iso) return ''

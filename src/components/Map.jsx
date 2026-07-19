@@ -5,8 +5,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { maplibregl, MAP_STYLE, MAP_STYLE_EVENT } from '../config/map'
 import './Map.css'
 import Survey_BSheet from './BottomSheet/Survey/Survey_BSheet'
-import { FeedbackCard } from './FeedbackCard/FeedbackCard'
-import { HexCard } from './HexCard/HexCard'
+import { Feedback_card } from './Card/Feedback/Feedback_card'
+import { Hex_card } from './Card/Hex/Hex_card'
 import EmptyZoneTooltip from './EmptyZoneTooltip/EmptyZoneTooltip'
 import './EmptyZoneTooltip/EmptyZoneTooltip.css'
 import MapUI from './MapUI/MapUI'
@@ -15,7 +15,7 @@ import { Hexagon } from 'lucide-react'
 import { CenterPin } from './ui/CenterPin'
 import MapLoader from './ui/MapLoader'
 import { supabaseFetch } from '../config/supabase'
-import { EventCard } from './EventCard/EventCard'
+import { Event_card } from './Card/Event/Event_card'
 import { VenueLayer } from '../events/components/VenueLayer'
 import { EVENTS, buildZoneColorExpression } from '../config/events'
 import { EventMarker } from '../events/components/EventMarker/EventMarker'
@@ -746,13 +746,13 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
       />
 
-      <FeedbackCard
+      <Feedback_card
         pin={selectedPin}
         surveySheetRef={bottomSheetRef}
         onDismiss={dismissSelectedPin}
       />
 
-      <HexCard
+      <Hex_card
         hex={selectedHex}
         surveySheetRef={bottomSheetRef}
         onAddExperience={() => surveySheetRef.current?.startSelect()}
@@ -803,7 +803,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         />
       )}
 
-      <EventCard
+      <Event_card
         venue={selectedVenue}
         eventId={eventId}
         onDismiss={() => setSelectedVenue(null)}

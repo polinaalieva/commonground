@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Sparkles, Forward } from 'lucide-react'
-import './HexCard.css'
-import { getSourceLabel } from '../../config/sources'
-import { shareHex } from '../../utils/share'
-import { useToast } from '../Toast/useToast'
-import { Toast } from '../Toast/Toast'
-import { useOverflow } from '../../hooks/useOverflow'
+import './Hex_card.css'
+import { getSourceLabel } from '../../../config/sources'
+import { shareHex } from '../../../utils/share'
+import { useToast } from '../../Toast/useToast'
+import { Toast } from '../../Toast/Toast'
+import { useOverflow } from '../../../hooks/useOverflow'
 import { RatingChart } from './RatingChart'
 import { getResolution } from 'h3-js'
 
 const ENABLE_SUMMARY = true
 
-import { supabaseFetch } from '../../config/supabase'
+import { supabaseFetch } from '../../../config/supabase'
 
 function formatDate(iso) {
   if (!iso) return null
@@ -54,7 +54,7 @@ function CommentBlock({ comment }) {
   )
 }
 
-export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZoom }) {
+export function Hex_card({ hex, surveySheetRef, onAddExperience, onDismiss, getZoom }) {
   const cardRef = useRef(null)
   const [visible, setVisible] = useState(false)
   const [bottomOffset, setBottomOffset] = useState(20)
@@ -225,4 +225,4 @@ export function HexCard({ hex, surveySheetRef, onAddExperience, onDismiss, getZo
   )
 }
 
-export default HexCard
+export default Hex_card

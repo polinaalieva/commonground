@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import './FC_Voting.css'
 
-import { supabaseFetch } from '../../config/supabase'
+import { supabaseFetch } from '../../../config/supabase'
 
 function getSessionId() {
   let id = localStorage.getItem('cg_session_id')
