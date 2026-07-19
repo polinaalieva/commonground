@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function MSheetButton({ children, onClick, type = 'primary', disabled = false, loadingText }) {
+function MSheet_button({ children, onClick, type = 'primary', disabled = false, loadingText }) {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleClick = async () => {
@@ -28,4 +28,4 @@ function MSheetButton({ children, onClick, type = 'primary', disabled = false, l
   )
 }
 
-export default MSheetButton
+export default MSheet_button

@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 
-function MSheetHeader({ title, onClose }) {
+function MSheet_header({ title, onClose }) {
   return (
     <div className="msheet-header">
       <div className="msheet-header__left" />
@@ -20,4 +20,4 @@ function MSheetHeader({ title, onClose }) {
   )
 }
 
-export default MSheetHeader
+export default MSheet_header

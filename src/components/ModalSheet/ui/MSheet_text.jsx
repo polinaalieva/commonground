@@ -1,7 +1,7 @@
-function MSheetText({ children }) {
+function MSheet_text({ children }) {
   return (
     <p className="msheet-text">{children}</p>
   )
 }
 
-export default MSheetText
+export default MSheet_text

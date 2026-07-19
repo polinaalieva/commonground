@@ -1,4 +1,4 @@
-function MSheetActions({ children }) {
+function MSheet_actions({ children }) {
   return (
     <div className="msheet-actions">
       {children}
@@ -6,4 +6,4 @@ function MSheetActions({ children }) {
   )
 }
 
-export default MSheetActions
+export default MSheet_actions
