@@ -1,10 +1,10 @@
-import ModalSheet from './ModalSheet'
-import MSheet_header from './ui/MSheet_header'
-import MSheet_text from './ui/MSheet_text'
-import MSheet_actions from './ui/MSheet_actions'
-import MSheet_button from './ui/MSheet_button'
+import ModalSheet from '../ModalSheet'
+import MSheet_header from '../ui/MSheet_header'
+import MSheet_text from '../ui/MSheet_text'
+import MSheet_actions from '../ui/MSheet_actions'
+import MSheet_button from '../ui/MSheet_button'
 
-function FormAnswerConfirmMSheet({ onClose, onSkip, onAddNote, pageContent }) {
+function FormAnswerConfirm_MSheet({ onClose, onSkip, onAddNote, pageContent }) {
   return (
     <ModalSheet onOverlayClick={onClose}>
       <MSheet_header title={pageContent.confirm_title} onClose={onClose} />
@@ -23,4 +23,4 @@ function FormAnswerConfirmMSheet({ onClose, onSkip, onAddNote, pageContent }) {
   )
 }
 
-export default FormAnswerConfirmMSheet
+export default FormAnswerConfirm_MSheet

@@ -7,7 +7,7 @@ import BSheet_button from '../ui/BSheet_button'
 import BSheet_address from '../ui/BSheet_address'
 import BSheet_slider from '../ui/BSheet_slider'
 import BSheet_textarea from '../ui/BSheet_textarea'
-import FormAnswerConfirmMSheet from '../../ModalSheet/FormAnswerConfirmMSheet'
+import FormAnswerConfirm_MSheet from '../../ModalSheet/FormAnswerConfirm/FormAnswerConfirm_MSheet'
 import '../../ModalSheet/ModalSheet.css'
 import posthog from 'posthog-js'
 import { supabaseFetch } from '../../../config/supabase'
@@ -298,7 +298,7 @@ const Survey_BSheet = forwardRef(function Survey_BSheet(
       </BottomSheet>
 
       {showNotePrompt && (
-        <FormAnswerConfirmMSheet
+        <FormAnswerConfirm_MSheet
           onClose={() => setShowNotePrompt(false)}
           pageContent={pageContent}
           onSkip={() => {
