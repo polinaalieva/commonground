@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Forward } from 'lucide-react'
 import '../Hex/Hex_card.css'
+import '../ui/Card_shared.css'
 import { supabaseFetch } from '../../../config/supabase'
 import { useToast } from '../../Toast/useToast'
 import { Toast } from '../../Toast/Toast'

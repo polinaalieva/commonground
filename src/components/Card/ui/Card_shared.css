@@ -1,0 +1,235 @@
+/* =============================================
+   HEADER
+   ============================================= */
+
+.hc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.hc-rating {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 21px;
+  letter-spacing: -0.16px;
+}
+
+/* =============================================
+   COMMENTS
+   ============================================= */
+
+.hc-comment-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  position: relative;
+}
+
+.hc-comment-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.hc-comment-block {
+  margin-bottom: 16px;
+}
+
+.hc-comment-block:last-child {
+  margin-bottom: 0;
+}
+
+.hc-comment-author {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 22px;
+  color: rgba(17, 17, 17, 0.85);
+  margin: 0;
+}
+
+.hc-comment-date {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 11px;
+  color: rgba(17, 17, 17, 0.50);
+  margin: 0 0 5px 0;
+}
+
+.hc-comment {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 17px;
+  color: #000;
+  margin: 0;
+}
+
+/* =============================================
+   META
+   ============================================= */
+
+.hc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 11px;
+  color: rgba(17, 17, 17, 0.50);
+  flex-shrink: 0;
+}
+
+/* =============================================
+   SUMMARY WRAP
+   ============================================= */
+
+.hc-summary-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  position: relative;
+}
+
+.hc-summary-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.hc-summary-text {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 22px;
+  color: rgba(17, 17, 17, 0.85);
+  margin: 0;
+}
+
+.hc-summary-neighborhood {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 22px;
+  color: rgba(17, 17, 17, 0.85);
+  margin: 0 0 2px 0;
+}
+
+.hc-summary-unavailable {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 22px;
+  color: rgba(17, 17, 17, 0.4);
+  text-align: center;
+  padding: 16px 0;
+  margin: 0;
+}
+
+.hc-pros,
+.hc-cons {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.hc-pro-item,
+.hc-con-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(17, 17, 17, 0.85);
+}
+
+.hc-check {
+  color: #31D0AA;
+  flex-shrink: 0;
+  line-height: 20px;
+}
+
+.hc-cross {
+  color: #ED4B9E;
+  flex-shrink: 0;
+  line-height: 20px;
+}
+
+.hc-vibe {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: rgba(17, 17, 17, 0.4);
+  margin: 10px 0 0 0;
+}
+
+.hc-local-lore {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 20px;
+  color: rgba(17, 17, 17, 0.6);
+  margin: 6px 0 0 0;
+}
+
+/* =============================================
+   OVERFLOW GRADIENT
+   ============================================= */
+
+.hc-comment-wrap.has-overflow::after,
+.hc-summary-wrap.has-overflow::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 48px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.85), transparent);
+  pointer-events: none;
+}
+
+/* =============================================
+   ACTIONS
+   ============================================= */
+
+.hc-generate-btn {
+  align-self: center;
+  background: #111;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+.hc-generate-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.hc-generate-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.hc-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}

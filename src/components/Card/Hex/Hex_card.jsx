@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Sparkles, Forward } from 'lucide-react'
 import './Hex_card.css'
+import '../ui/Card_shared.css'
 import { getSourceLabel } from '../../../config/sources'
 import { shareHex } from '../../../utils/share'
 import { useToast } from '../../Toast/useToast'
