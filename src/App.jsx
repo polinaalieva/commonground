@@ -6,6 +6,7 @@ import Dev from './pages/Dev.jsx'
 import QRPage from './pages/QRpage/QRPage'
 import TermsOfUse from './pages/Legal/TermsOfUse.jsx'
 import PrivacyPolicy from './pages/Legal/PrivacyPolicy.jsx'
+import ContentRules from './pages/Legal/ContentRules.jsx'
 
 function App() {
   return (
@@ -31,6 +32,8 @@ function App() {
       <Route path="/ru/legal/terms-of-use" element={<TermsOfUse />} />
       <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/ru/legal/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/legal/content-rules" element={<ContentRules />} />
+      <Route path="/ru/legal/content-rules" element={<ContentRules />} />
 
       {/* Города */}
       <Route path="/:city" element={<City />} />

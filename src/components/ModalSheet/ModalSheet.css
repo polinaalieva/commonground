@@ -21,7 +21,7 @@
 .modal-sheet {
   width: 100%;
   max-width: 358px;
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 16px 16px 24px;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
@@ -107,7 +107,7 @@
 .msheet-button {
   height: 40px;
   flex: 1;
-  border-radius: 12px;
+  border-radius: 18px;
   font-family: Inter, system-ui, sans-serif;
   font-size: 15px;
   font-weight: 500;

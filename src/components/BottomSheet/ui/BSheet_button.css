@@ -1,0 +1,53 @@
+.sheet-button {
+  display: flex;
+  height: 40px;
+  padding: 10px 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+
+  border: none;
+  border-radius: 17px;
+  background: rgba(0, 0, 0, 1);
+
+  color: #fff;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+/* ширина */
+.sheet-button--fixed {
+  width: 190px;
+  min-width: 190px;
+}
+
+.sheet-button--fluid {
+  width: 100%;
+}
+
+.sheet-button--auto {
+  width: fit-content;
+  min-width: 0;
+}
+
+.sheet-button--primary:hover {
+  opacity: 0.85;
+}
+
+.sheet-button--disabled {
+  background: rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+
+.sheet-button--disabled:hover {
+  opacity: 1;
+}
+
+.sheet-button--flex {
+  flex: 1;
+  min-width: 0;
+}

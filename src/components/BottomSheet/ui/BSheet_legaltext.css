@@ -1,0 +1,28 @@
+.sheet-legaltext {
+  align-self: stretch;
+  margin: 0;
+
+  color: rgba(0, 0, 0, 0.50);
+  text-align: center;
+  leading-trim: both;
+  text-edge: cap;
+  text-shadow:
+    -2px -2px 4px rgba(255, 255, 255, 0.25),
+    2px 2px 4px rgba(255, 255, 255, 0.50);
+
+  font-family: Inter, Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 12px;
+}
+
+.sheet-legaltext__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 1px;
+}
+
+.sheet-legaltext__link:hover {
+  color: rgba(0, 0, 0, 0.75);
+}

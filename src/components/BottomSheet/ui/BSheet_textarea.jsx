@@ -1,7 +1,7 @@
 function BSheet_textarea({ label, placeholder, value, onChange, disabled }) {
   return (
     <div className={`sheet-textarea ${disabled ? 'sheet-textarea--disabled' : ''}`}>
-      <label className="sheet-textarea__label">{label}</label>
+      {label && <label className="sheet-textarea__label">{label}</label>}
       <div className="sheet-textarea__field">
         <textarea
           className="sheet-textarea__input"

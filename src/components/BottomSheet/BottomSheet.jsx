@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import './BottomSheet.css'
 
 const BottomSheet = forwardRef(function BottomSheet({ children, variant = 'default', hidden = false, pinHidden = false }, ref) {
   return (

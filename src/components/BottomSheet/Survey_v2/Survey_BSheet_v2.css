@@ -1,0 +1,26 @@
+.bottom-sheet--v2 {
+  gap: 0;
+}
+.surveyv2__body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.surveyv2__row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.surveyv2__slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.surveyv2__error {
+  margin: 8px 0 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  color: red;
+}

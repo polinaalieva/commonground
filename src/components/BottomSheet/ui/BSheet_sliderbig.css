@@ -1,0 +1,97 @@
+/* СЛАЙДЕР BIG (Survey_v2) */
+
+.sheet-sliderbig {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.sheet-sliderbig__label {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #111;
+}
+
+.sheet-sliderbig__hitarea {
+  position: relative;
+  height: 40px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sheet-sliderbig__grad {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #ED4CBA 0%, #6C95C1 50%, #31D0AA 100%), rgba(0, 0, 0, 0.05);
+  outline: 1px solid rgba(17, 17, 17, 0.04);
+  outline-offset: -1px;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease;
+}
+
+.sheet-sliderbig__hitarea.is-active .sheet-sliderbig__grad {
+  opacity: 0.5;
+}
+
+.sheet-sliderbig__dots {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 19px;
+  box-sizing: border-box;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sheet-sliderbig__hitarea.is-active .sheet-sliderbig__dots {
+  opacity: 1;
+}
+
+.sheet-sliderbig__dot {
+  width: 2px;
+  height: 2px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.sheet-sliderbig__hint {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 11px;
+  color: #fff;
+  pointer-events: none;
+}
+
+.sheet-sliderbig__knob {
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  padding: 11px 10px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 18px;
+  border: 0.5px solid rgba(17, 17, 17, 0.10);
+  background: #fff;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25);
+}
