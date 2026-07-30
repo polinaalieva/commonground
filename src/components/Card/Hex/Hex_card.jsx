@@ -24,10 +24,9 @@ function formatDate(iso) {
 function getHexLabel(avgRating) {
   if (!avgRating) return null
   const v = Number(avgRating)
-  if (v >= 1 && v < 4) return "Doesn't fit people"
-  if (v >= 4 && v < 7) return "Sometimes fits people"
-  if (v >= 7 && v < 8) return "Mostly fits people"
-  if (v >= 8 && v <= 10) return "Fits people"
+  if (v >= 1 && v <= 3) return 'Negative Experience'
+  if (v >= 4 && v <= 6) return 'Mixed Experience'
+  if (v >= 7 && v <= 10) return 'Positive Experience'
   return null
 }
 

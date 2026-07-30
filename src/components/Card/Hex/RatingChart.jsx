@@ -28,8 +28,8 @@ export function RatingChart({ ratings }) {
         ))}
       </div>
       <div className="rc-labels">
-        <span>Doesn't fit</span>
-        <span>Fits me</span>
+        <span>Negative</span>
+        <span>Positive</span>
       </div>
     </div>
   )

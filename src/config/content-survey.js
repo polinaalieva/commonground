@@ -23,9 +23,9 @@ export const SURVEY_CONTENT = {
 
   // map popups
   map_labels: {
-    high: 'Fits me',
-    mid: 'Sometimes fits',
-    low: "Doesn't fit me",
+    high: 'Positive Experience',
+    mid: 'Mixed Experience',
+    low: 'Negative Experience',
   },
 
   empty_zone_tooltip: {
