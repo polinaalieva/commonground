@@ -1,3 +1,5 @@
+import { EVENTS } from './events'
+
 export const SOCIAL_PREFIXES = {
   reddit: 'Reddit',
   telegram: 'Telegram',
@@ -14,4 +16,9 @@ export function getSourceLabel(source) {
     if (lower.startsWith(prefix)) return label
   }
   return null
+}
+
+export function getEventParticipantLabel(city) {
+  const shortName = EVENTS[city]?.shortName
+  return shortName ? `${shortName} participant` : null
 }

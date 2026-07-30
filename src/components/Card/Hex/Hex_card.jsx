@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X, Sparkles, Forward } from 'lucide-react'
 import './Hex_card.css'
 import '../ui/Card_shared.css'
-import { getSourceLabel } from '../../../config/sources'
+import { getSourceLabel, getEventParticipantLabel } from '../../../config/sources'
 import { shareHex } from '../../../utils/share'
 import { useToast } from '../../Toast/useToast'
 import { Toast } from '../../Toast/Toast'
@@ -43,8 +43,11 @@ function getHexColor(avgRating) {
 
 function CommentBlock({ comment }) {
   const date = formatDate(comment.date)
-  const source = getSourceLabel(comment.source)
-  const authorLabel = source ? `via ${source}` : 'Local Contributor'
+  let authorLabel = getEventParticipantLabel(comment.city)
+  if (!authorLabel) {
+    const source = getSourceLabel(comment.source)
+    authorLabel = source ? `via ${source}` : 'Local Contributor'
+  }
 
   return (
     <div className="hc-comment-block">

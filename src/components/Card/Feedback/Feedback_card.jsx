@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X, Forward } from 'lucide-react'
 import './Feedback_card.css'
 import { FC_Voting } from './FC_Voting'
-import { getSourceLabel } from '../../../config/sources'
+import { getSourceLabel, getEventParticipantLabel } from '../../../config/sources'
 import { sharePoint } from '../../../utils/share'
 import { useToast } from '../../Toast/useToast'
 import { Toast } from '../../Toast/Toast'
@@ -47,10 +47,8 @@ export function Feedback_card({ pin, surveySheetRef, onDismiss }) {
   if (!pin) return null
 
   const date = formatDate(pin.original_date || pin.created_at)
-  let authorLabel
-  if (pin.city === 'wuf13') {
-    authorLabel = 'via WUF13'
-  } else {
+  let authorLabel = getEventParticipantLabel(pin.city)
+  if (!authorLabel) {
     const sourceLabel = getSourceLabel(pin.source)
     authorLabel = sourceLabel ? `via ${sourceLabel}` : 'Local Contributor'
   }

@@ -258,8 +258,9 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
+      const eventFilter = eventId ? '' : '&or=(source.is.null,source.neq.event)'
       const records = await supabaseFetch(
-        'feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)&order=created_at.desc&limit=1000',
+        `feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)${eventFilter}&order=created_at.desc&limit=1000`,
         { cache: 'no-store', signal: controller.signal }
       )
       clearTimeout(timeoutId)
@@ -476,6 +477,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         text: r.experience,
         date: r.original_date || r.created_at || null,
         source: r.source || null,
+        city: r.city || null,
       })
       hexMap[cell].comments.sort((a, b) => {
         const da = new Date(a.date || 0)

@@ -1,7 +1,7 @@
 export const MENU_CONTENT = {
   city: {
     about_btn: 'About map',
-    about_text: 'Common Ground\n\nA platform where people mark places and share how they experience them.',
+    about_text: 'Common Ground\n\nA shared map of how people experience places around them.',
     about_contact: {
       prefix: 'Find out more. Feel free to reach out on',
       links: [
@@ -12,11 +12,11 @@ export const MENU_CONTENT = {
   },
   event: {
     about_btn: 'About map',
-    about_text: 'Event CG\nInteractive map for your event. Ready in 1–3 days.\n\nPowered by Common Ground\nA platform where people mark places and share how they experience them. From city streets to event venues.',
-    about_contact: {
-      prefix: 'Find out more on',
+    about_text: 'An interactive map of the event\nSearch sessions and exhibitors, tap any spot on the map to get there\n\nPowered by Common Ground\nA shared map of how people experience places around them, from city streets to venues',
+     about_contact: {
+      prefix: 'Get in touch:',
       links: [
-        { text: 'eventcg.co', href: 'https://eventcg.co' },
+        { text: 'hi@commonground.page', href: 'mailto:hi@commonground.page' },
       ],
     },
   },
