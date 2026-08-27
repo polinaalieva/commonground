@@ -4,7 +4,21 @@ import './AboutModal.css'
 
 function AboutModal({ onClose, isEventMode = false }) {
   const content = MENU_CONTENT[isEventMode ? 'event' : 'city']
-  const { about_text, about_contact } = content
+  const { about_text, about_link, about_contact } = content
+
+  const renderAboutText = () => {
+    if (!about_link || !about_text.includes(about_link.match)) return about_text
+    const [before, after] = about_text.split(about_link.match)
+    return (
+      <>
+        {before}
+        <a href={about_link.href} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+          {about_link.match}
+        </a>
+        {after}
+      </>
+    )
+  }
 
   return (
     <div className="about-modal">
@@ -14,7 +28,7 @@ function AboutModal({ onClose, isEventMode = false }) {
 
       <div className="about-modal__body">
         <p className="about-modal__text" style={{ whiteSpace: 'pre-line', paddingTop: 0 }}>
-          {about_text}
+          {renderAboutText()}
         </p>
 
         <div className="about-modal__contact">
@@ -29,6 +43,19 @@ function AboutModal({ onClose, isEventMode = false }) {
               </span>
             ))}
           </p>
+
+          {about_contact.legal && (
+            <p className="about-modal__text" style={{ paddingTop: 0, color: 'rgba(17,17,17,0.6)', fontSize: 13 }}>
+              {about_contact.legal.map((link, i) => (
+                <span key={i}>
+                  {i > 0 && ' • '}
+                  <a href={link.href} target="_blank" rel="noreferrer" style={{ color: 'rgba(17,17,17,0.6)', textDecoration: 'none' }}>
+                    {link.text}
+                  </a>
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -1,0 +1,98 @@
+/* src/components/Landing/Footer.css */
+
+.footer {
+  display: flex;
+  padding: 40px 40px 20px 40px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  container-type: inline-size;
+  container-name: footer;
+}
+
+.footer-row-1,
+.footer-row-2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  align-self: stretch;
+}
+
+.footer-left {
+  display: flex;
+  width: 300px;
+  max-width: 390px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.footer-right {
+  display: flex;
+  width: 320px;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1 0 auto;
+  white-space: nowrap;
+}
+
+.footer .h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #111111;
+}
+
+.footer .h5 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: #111111;
+}
+
+.footer .text-small-grey {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #6b6b70;
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  opacity: 0.7;
+}
+
+@container footer (max-width: 900px) {
+  .footer-row-1 {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .footer-row-2 {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-left,
+  .footer-right {
+    width: 100%;
+  }
+}
