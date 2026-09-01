@@ -7,7 +7,7 @@ import AboutModal from '../../AboutModal/AboutModal'
 import EventAboutModal from '../../../events/components/EventAboutModal'
 import './TopBar.css'
 
-function TopBar({ variant, lang, isEventMode = false, eventConfig, onExitEvent, onInfoClick }) {
+function TopBar({ variant, lang, isEventMode = false, eventConfig, onExitEvent, onInfoClick, infoActive = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [eventAboutOpen, setEventAboutOpen] = useState(false)
@@ -68,6 +68,7 @@ function TopBar({ variant, lang, isEventMode = false, eventConfig, onExitEvent, 
           icon={<InfoIcon />}
           onClick={onInfoClick}
           ariaLabel="How it works"
+          active={infoActive}
         />
       )}
     </div>

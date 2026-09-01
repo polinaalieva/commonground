@@ -3,4 +3,5 @@
   flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
+  justify-content: center;   /* steps centred in the remaining height */
 }

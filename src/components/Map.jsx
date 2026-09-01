@@ -131,12 +131,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
     setDemoOpen(true)
   }
 
-  // Auto-show on the first visit to an event map.
+  // Auto-show on the first visit to an event map — 1s after load.
   useEffect(() => {
     if (source !== 'event' || !demoSeenKey) return
     let seen = false
     try { seen = localStorage.getItem(demoSeenKey) === '1' } catch { seen = false }
-    if (!seen) openDemo()
+    if (seen) return
+    const t = setTimeout(() => openDemo(), 1000)
+    return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, demoSeenKey])
 
@@ -776,6 +778,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         onExitEvent={() => navigate('/', { state: { fitBounds: cityConfig.bbox } })}
         onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
         onInfoClick={openDemo}
+        infoActive={demoOpen}
       />
 
       <Demo_card

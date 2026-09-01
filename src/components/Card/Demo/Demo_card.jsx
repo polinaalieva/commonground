@@ -4,7 +4,7 @@ import DemoHeader from './DemoHeader'
 import Gap from '../ui/Gap'
 import DemoStepAnimation from './DemoStepAnimation'
 import DemoStepper from './DemoStepper/DemoStepper'
-import DemoButtons from './DemoButtons'
+import DemoNav from './DemoNav'
 import EVENT_DEMO_STEPS from './demoSteps.config'
 import './Demo_card.css'
 
@@ -39,26 +39,28 @@ function Demo_card({ open, onClose, steps = EVENT_DEMO_STEPS, onLockMap, onUnloc
     <Card_Frame open={open} className="demo-card" ariaProps={{ 'aria-label': 'How it works' }}>
       <DemoHeader onClose={onClose} />
 
-      <Gap size={16} />
-
       <div className="demo-card__body">
-        <DemoStepAnimation file={activeStep.animation} label={activeStep.label} />
-        <DemoStepper
-          steps={steps}
-          currentStep={currentStep}
-          onStepChange={setCurrentStep}
-        />
+        <div className="demo-card__anim-col">
+          <DemoStepAnimation file={activeStep.animation} label={activeStep.label} />
+        </div>
+
+        <div className="demo-card__col">
+          <DemoStepper
+            steps={steps}
+            currentStep={currentStep}
+            onStepChange={setCurrentStep}
+          />
+          <DemoNav
+            canGoBack={currentStep > 0}
+            isLast={isLast}
+            onBack={() => setCurrentStep(s => Math.max(0, s - 1))}
+            onNext={() => setCurrentStep(s => Math.min(steps.length - 1, s + 1))}
+            onClose={onClose}
+          />
+        </div>
       </div>
 
-      <Gap size={32} />
-
-      <DemoButtons
-        canGoBack={currentStep > 0}
-        isLast={isLast}
-        onBack={() => setCurrentStep(s => Math.max(0, s - 1))}
-        onNext={() => setCurrentStep(s => Math.min(steps.length - 1, s + 1))}
-        onDone={onClose}
-      />
+      <Gap size={8} />
     </Card_Frame>
   )
 }

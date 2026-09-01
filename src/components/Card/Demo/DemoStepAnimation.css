@@ -5,8 +5,11 @@
   flex-shrink: 0;
   border-radius: 16px;
   box-shadow: 0 0 25px 0 rgba(0, 0, 0, 0.12);
-  background: #fff;
+  background: #E0E5E9;
   overflow: hidden;
+  /* force a clipping layer so the iframe corners stay rounded on remount (Safari) */
+  transform: translateZ(0);
+  isolation: isolate;
 }
 
 .demo-step-animation__frame {
@@ -14,15 +17,21 @@
   height: 240px;
   border: 0;
   display: block;
+  border-radius: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.demo-step-animation__frame.is-loaded {
+  opacity: 1;
 }
 
 /* blurred overlay shown while the next bundle loads */
 .demo-step-animation__veil {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #DDEBEA 0%, #EBE1EB 100%);
   opacity: 1;
   transition: opacity 0.25s ease;
 }

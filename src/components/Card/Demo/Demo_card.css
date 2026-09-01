@@ -1,9 +1,24 @@
 .demo-card__body {
   display: flex;
   flex-direction: row;
-  align-items: center;      /* stepper is centred against the animation height */
+  align-items: stretch;
   gap: 32px;
-  flex: 1 1 auto;
-  min-height: 0;
+  flex-shrink: 0;
 }
 
+/* left column: equal width, animation pinned right */
+.demo-card__anim-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* right column: equal width, content pinned left, nav at the bottom */
+.demo-card__col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}

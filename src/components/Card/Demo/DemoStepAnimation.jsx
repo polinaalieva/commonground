@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './DemoStepAnimation.css'
 
 /**
@@ -12,20 +12,21 @@ import './DemoStepAnimation.css'
  * @param {string} [label] - used for the iframe title / a11y
  */
 function DemoStepAnimation({ file, label }) {
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => { setLoaded(false) }, [file])
+  // which bundle has finished loading — `loaded` is derived, so it flips to
+  // false synchronously the moment `file` changes (no flash of raw iframe)
+  const [loadedFile, setLoadedFile] = useState(null)
+  const loaded = loadedFile === file
 
   return (
     <div className="demo-step-animation">
       <iframe
         key={file}
-        className="demo-step-animation__frame"
+        className={`demo-step-animation__frame ${loaded ? 'is-loaded' : ''}`}
         src={`/demo-animations/${file}`}
         title={label ? `${label} — animation` : 'Step animation'}
         loading="eager"
         scrolling="no"
-        onLoad={() => setLoaded(true)}
+        onLoad={() => setLoadedFile(file)}
       />
       <div
         className={`demo-step-animation__veil ${loaded ? 'is-hidden' : ''}`}
