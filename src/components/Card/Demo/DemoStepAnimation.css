@@ -1,0 +1,33 @@
+.demo-step-animation {
+  position: relative;
+  width: 136px;
+  height: 240px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  box-shadow: 0 0 25px 0 rgba(0, 0, 0, 0.12);
+  background: #fff;
+  overflow: hidden;
+}
+
+.demo-step-animation__frame {
+  width: 136px;
+  height: 240px;
+  border: 0;
+  display: block;
+}
+
+/* blurred overlay shown while the next bundle loads */
+.demo-step-animation__veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.demo-step-animation__veil.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}

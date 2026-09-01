@@ -1,0 +1,9 @@
+.demo-card__body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;      /* stepper is centred against the animation height */
+  gap: 32px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+

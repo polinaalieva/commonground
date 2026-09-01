@@ -17,6 +17,13 @@
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* small modifier — reuses all base styling (border, shadow, blur, states) */
+.map-btn--sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+}
+
 .map-btn--active {
   background: rgba(17, 17, 17, 0.07);
 }
@@ -32,5 +39,10 @@
     width: 42px;
     height: 42px;
     border-radius: 18px;
+  }
+  .map-btn--sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
   }
 }

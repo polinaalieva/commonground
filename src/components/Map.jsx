@@ -20,6 +20,7 @@ import { VenueLayer } from '../events/components/VenueLayer'
 import { EVENTS, buildZoneColorExpression } from '../config/events'
 import { EventMarker } from '../events/components/EventMarker/EventMarker'
 import { SearchCard } from '../events/components/SearchCard/SearchCard'
+import Demo_card from './Card/Demo/Demo_card'
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -118,6 +119,33 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   const [searchOpen, setSearchOpen] = useState(false)
   const [highlightedVenueCode, setHighlightedVenueCode] = useState(null)
   const [mapReady, setMapReady] = useState(false)
+
+  // Demo "How it works" card — independent state, not tied to any selection.
+  const [demoOpen, setDemoOpen] = useState(false)
+  const demoSeenKey = eventId ? `demo_seen_${eventId}` : null
+
+  function openDemo() {
+    if (demoSeenKey) {
+      try { localStorage.setItem(demoSeenKey, '1') } catch { /* private mode */ }
+    }
+    setDemoOpen(true)
+  }
+
+  // Auto-show on the first visit to an event map.
+  useEffect(() => {
+    if (source !== 'event' || !demoSeenKey) return
+    let seen = false
+    try { seen = localStorage.getItem(demoSeenKey) === '1' } catch { seen = false }
+    if (!seen) openDemo()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, demoSeenKey])
+
+  // Opening any other card / sheet dismisses the demo card.
+  useEffect(() => {
+    if (selectedPin || selectedHex || selectedVenue || searchOpen || mode !== 'view') {
+      setDemoOpen(false)
+    }
+  }, [selectedPin, selectedHex, selectedVenue, searchOpen, mode])
 
   const modeRef = useRef('view')
   const pageContentRef = useRef(pageContent)
@@ -375,6 +403,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         })
 
         map.current.on('click', (e) => {
+          setDemoOpen(false)
           const features = map.current.queryRenderedFeatures(e.point, { layers: ['cg-feedback-layer'] })
           if (features.length > 0) return
           if (modeRef.current === 'select') return
@@ -746,6 +775,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         eventConfig={source === 'event' ? cityConfig : undefined}
         onExitEvent={() => navigate('/', { state: { fitBounds: cityConfig.bbox } })}
         onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
+        onInfoClick={openDemo}
+      />
+
+      <Demo_card
+        open={demoOpen}
+        onClose={() => setDemoOpen(false)}
+        onLockMap={() => { if (map.current) disableMap() }}
+        onUnlockMap={() => { if (map.current) enableMap() }}
       />
 
       <Feedback_card

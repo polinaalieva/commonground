@@ -17,6 +17,7 @@ function MapUI({
   eventConfig,
   onExitEvent,
   onSearch,
+  onInfoClick,
 }) {
   return (
     <div className="map-ui">
@@ -26,6 +27,7 @@ function MapUI({
         isEventMode={source === 'event'}
         eventConfig={eventConfig}
         onExitEvent={onExitEvent}
+        onInfoClick={onInfoClick}
       />
       <MiddleBar
         onZoomIn={onZoomIn}

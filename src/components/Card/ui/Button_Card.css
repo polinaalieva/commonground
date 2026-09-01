@@ -1,0 +1,47 @@
+/* Ported verbatim from the duplicated .btn-primary / .btn-secondary in
+   Hex_card.css and Feedback_card.css. Those copies get removed when Hex/
+   Feedback/Event migrate onto Card_Frame + Button_Card (Sprint 4). */
+
+.btn-card {
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  border: none;
+}
+
+.btn-card--primary {
+  background: #111;
+  color: #fff;
+}
+
+.btn-card--primary:hover { opacity: 0.85; }
+.btn-card--primary:active { opacity: 0.7; }
+
+.btn-card--secondary {
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+}
+
+.btn-card--secondary:hover { opacity: 0.7; }
+
+.btn-card:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+@media (max-width: 430px) {
+  .btn-card {
+    font-size: 14px;
+    padding: 9px 14px;
+  }
+}

@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { Menu } from 'lucide-react'
 import MapButton from '../MapButton/MapButton'
+import InfoIcon from './InfoIcon'
 import MapMenu from '../../MapMenu/MapMenu'
 import AboutModal from '../../AboutModal/AboutModal'
 import EventAboutModal from '../../../events/components/EventAboutModal'
 import './TopBar.css'
 
-function TopBar({ variant, lang, isEventMode = false, eventConfig, onExitEvent }) {
+function TopBar({ variant, lang, isEventMode = false, eventConfig, onExitEvent, onInfoClick }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [eventAboutOpen, setEventAboutOpen] = useState(false)
@@ -60,6 +61,15 @@ function TopBar({ variant, lang, isEventMode = false, eventConfig, onExitEvent }
           />
         )}
       </div>
+
+      {isEventMode && (
+        <MapButton
+          size="sm"
+          icon={<InfoIcon />}
+          onClick={onInfoClick}
+          ariaLabel="How it works"
+        />
+      )}
     </div>
   )
 }

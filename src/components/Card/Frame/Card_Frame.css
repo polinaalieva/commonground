@@ -1,0 +1,63 @@
+/* =============================================
+   CARD FRAME — shared shell for Card/* family
+   position + blur + bottom-sheet(mobile) / floating(desktop) + enter anim
+   ============================================= */
+
+.card-frame {
+  position: fixed;
+  z-index: 45;
+  pointer-events: auto;
+
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid rgba(17, 17, 17, 0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+
+  display: flex;
+  flex-direction: column;
+
+  /* padding lives HERE, not in the card content */
+  padding: 16px 16px;
+
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ---- DESKTOP ---- */
+@media (min-width: 431px) {
+  .card-frame {
+    left: 20px;
+    bottom: 20px;
+    width: 390px;
+    max-height: calc(100svh - 60px - 20px - 16px);
+    overflow-y: auto;
+    transform: translateY(12px);
+  }
+  .card-frame--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- MOBILE ---- */
+@media (max-width: 430px) {
+  .card-frame {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 85svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+  }
+  .card-frame--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
