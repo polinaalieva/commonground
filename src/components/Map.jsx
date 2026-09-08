@@ -120,6 +120,19 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   const [highlightedVenueCode, setHighlightedVenueCode] = useState(null)
   const [mapReady, setMapReady] = useState(false)
 
+  // TODO (2026-09-09): убрать, когда починят Chrome iOS (баг с 152.0.7977.64).
+  // До первого тач-жеста страница рисуется смещённой вверх на высоту адресной
+  // строки; из JS состояние неотличимо от нормального. Свайп по карте не
+  // помогает — его съедает MapLibre. Прокладка отдаёт первый жест браузеру
+  // (страничный overscroll сбрасывает смещение) и тут же снимается.
+  const [gestureShim, setGestureShim] = useState(() => /CriOS/.test(navigator.userAgent))
+  useEffect(() => {
+    if (!gestureShim) return
+    const t = setTimeout(() => setGestureShim(false), 5000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Demo "How it works" card — independent state, not tied to any selection.
   const [demoOpen, setDemoOpen] = useState(false)
   const demoSeenKey = eventId ? `demo_seen_${eventId}` : null
@@ -743,6 +756,19 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   return (
     <div className="cg-map-outer">
       <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+
+      {gestureShim && (
+        <div
+          onTouchEnd={() => setGestureShim(false)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 90,
+            touchAction: 'pan-y',
+            background: 'transparent',
+          }}
+        />
+      )}
 
       <MapLoader visible={!mapReady || isLoading} />
       <CenterPin mapRef={map} mode={mode} ref={centerPinRef} />
