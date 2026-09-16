@@ -1,0 +1,9 @@
+.cg-landing {
+  & .landing-main { flex: 1 0 auto; width: 100%; max-width: 740px; padding: 58px 20px 64px; margin: 0 auto; }
+}
+
+@media (max-width: 450px) {
+  .cg-landing {
+    & .landing-main { padding: 48px 20px 72px; }
+  }
+}

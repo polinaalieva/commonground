@@ -1,0 +1,11 @@
+.cg-landing {
+  & .landing-urban h2 { margin-bottom: 24px; }
+  & .landing-urban-content { display: flex; align-items: center; gap: 50px; justify-content: space-between; }
+  & .landing-urban-content p + p { margin-top: 22px; }
+}
+
+@media (max-width: 450px) {
+  .cg-landing {
+    & .landing-urban-content { flex-direction: column; align-items: flex-start; gap: 24px; }
+  }
+}

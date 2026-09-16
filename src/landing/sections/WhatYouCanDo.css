@@ -1,0 +1,11 @@
+.cg-landing {
+  & .landing-features { margin-bottom: 72px; }
+  & .landing-features h2 { margin-bottom: 24px; }
+  & .landing-accordion-description { padding-bottom: 18px; }
+}
+
+@media (max-width: 450px) {
+  .cg-landing {
+    & .landing-features { margin-bottom: 76px; }
+  }
+}

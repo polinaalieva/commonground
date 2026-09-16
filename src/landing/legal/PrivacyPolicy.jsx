@@ -1,6 +1,6 @@
-import Header from '../../components/Landing/Header'
+import Header from '../sections/Header'
 import LegalPage from './LegalPage'
-import '../Home.css'
+import '../styles/landing.css'
 
 export default function PrivacyPolicyPage() {
   return (

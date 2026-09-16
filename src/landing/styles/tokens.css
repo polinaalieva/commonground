@@ -1,0 +1,108 @@
+.cg-landing {
+  /* Fonts */
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* Colors */
+  --color-black: #111111;
+  --color-white: #ffffff;
+  --color-bg: #FAFAFB;
+  --color-grey: #777777;
+  --color-grey-light: #AAAAAA;
+
+  /* Borders */
+  --color-border: rgba(17, 17, 17, 0.07);
+
+  /* Shadows */
+  --shadow-btn: 0px 0px 30px rgba(0, 0, 0, 0.12);
+  --shadow-card: 0px 0px 40px rgba(0, 0, 0, 0.12);
+  --shadow-header: 0px 0px 40px rgba(0, 0, 0, 0.08);
+  --shadow-footer: 0px 0px 140px rgba(0, 0, 0, 0.08);
+}
+
+.cg-landing, .cg-landing * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.cg-landing {
+  background: var(--color-bg);
+  color: var(--color-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+
+.cg-landing {
+/* Typography */
+.h1 {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--color-black);
+}
+
+.h2 {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-black);
+}
+
+.h3 {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-black);
+}
+
+.h4 {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-black);
+}
+
+
+.h5 {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-black);
+}
+
+.text-reg {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-black);
+}
+
+.text-reg-small {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-black);
+}
+
+.text-grey {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-grey);
+}
+
+.text-grey-bold {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-grey-light);
+}
+
+.text-small-grey {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-grey);
+}
+}

@@ -1,9 +1,9 @@
 // src/pages/Legal/LegalPage.jsx
-import { useEffect, useState } from 'react'
+import { createElement, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { supabaseFetch } from '../../config/supabase'
-import Footer from '../../components/Landing/Footer'
+import Footer from '../sections/Footer'
 import './Legal.css'
 
 const slugify = str =>
@@ -20,9 +20,7 @@ const textOf = node => {
   return ''
 }
 
-const heading = Tag => ({ children }) => (
-  <Tag id={slugify(textOf(children))}>{children}</Tag>
-)
+const heading = tag => ({ children }) => createElement(tag, { id: slugify(textOf(children)) }, children)
 
 const mdComponents = {
   h1: heading('h1'),
@@ -32,19 +30,22 @@ const mdComponents = {
 }
 
 export default function LegalPage({ domain, slug }) {
-  const [doc, setDoc] = useState(null)
-  const [error, setError] = useState(false)
+  const [result, setResult] = useState(null)
+  const key = `${domain}/${slug}`
+  const current = result?.key === key ? result : null
+  const doc = current?.doc
+  const error = current?.error
   const { hash } = useLocation()
 
   useEffect(() => {
-    setDoc(null)
-    setError(false)
+    let active = true
     supabaseFetch(
       `legal_documents?domain=eq.${domain}&slug=eq.${slug}&select=title,body_markdown,version,effective_date`
     )
-      .then(rows => setDoc(rows?.[0] ?? null))
-      .catch(() => setError(true))
-  }, [domain, slug])
+      .then(rows => { if (active) setResult({ key, doc: rows?.[0], error: !rows?.[0] }) })
+      .catch(() => { if (active) setResult({ key, error: true }) })
+    return () => { active = false }
+  }, [domain, slug, key])
 
   useEffect(() => {
     if (!doc || !hash) return
