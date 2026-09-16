@@ -6,7 +6,7 @@ export default function UrbanDecisionMakers() {
     <section className="landing-urban" aria-labelledby="landing-urban-title">
       <h2 className="h2" id="landing-urban-title">For urban decision-makers</h2>
       <div className="landing-urban-content">
-        <div>
+        <div className="landing-urban-text">
           <p className="text-reg">
             We’re exploring how continuously shared, location-based experiences
             can help better inform urban decisions.

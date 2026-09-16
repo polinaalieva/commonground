@@ -2,10 +2,13 @@
   & .landing-urban h2 { margin-bottom: 24px; }
   & .landing-urban-content { display: flex; align-items: center; gap: 50px; justify-content: space-between; }
   & .landing-urban-content p + p { margin-top: 22px; }
+  & .landing-urban-text { flex: 0 0 auto; width: 410px; max-width: 100%; }
+  & .landing-urban-content .btn { flex: 0 0 auto; width: fit-content; white-space: nowrap; }
 }
 
 @media (max-width: 450px) {
   .cg-landing {
     & .landing-urban-content { flex-direction: column; align-items: flex-start; gap: 24px; }
+    & .landing-urban-text { width: 100%; }
   }
 }
