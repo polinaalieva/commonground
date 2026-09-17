@@ -5,6 +5,8 @@
     { "source": "/qr", "destination": "/map", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/ru/about", "destination": "/about.html" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

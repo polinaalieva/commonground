@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-mobile-web-app-title" content="Common Ground">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/CG_Favicon_col_bg.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>About Common Ground — a shared map of how people experience places</title>
+    <meta name="description" content="Common Ground is a shared map where people mark places and share how they experience them, from city streets to event venues. Operated by Common Ground LLC, registered in the Republic of Armenia." />
+    <link rel="canonical" href="https://commonground.page/about" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Common Ground" />
+    <meta property="og:title" content="About Common Ground" />
+    <meta property="og:description" content="A shared map where people mark places and share how they experience them. From city streets to event venues." />
+    <meta property="og:url" content="https://commonground.page/about" />
+    <meta property="og:image" content="https://commonground.page/landing/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="About Common Ground" />
+    <meta name="twitter:description" content="A shared map where people mark places and share how they experience them." />
+    <meta name="twitter:image" content="https://commonground.page/landing/og-image.png" />
+    <style>
+      /* Styling for the no-JS rendering of this page. Mirrors the landing page so
+         the fallback reads as the same site. Every rule is scoped to .cg-static,
+         which React removes from #root when it mounts. */
+      body { margin: 0; background: #fff; }
+
+      .cg-static, .cg-static * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      .cg-static {
+        --black: #111111;
+        --grey: #777777;
+        --border: rgba(17, 17, 17, 0.07);
+        display: flex;
+        flex-direction: column;
+        min-height: 100svh;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: normal;
+        color: var(--black);
+        background: #fff;
+        -webkit-font-smoothing: antialiased;
+      }
+      .cg-static a { color: inherit; text-decoration: none; }
+      .cg-static a:hover { text-decoration: underline; }
+      .cg-static :focus-visible { outline: 2px solid #259d90; outline-offset: 5px; }
+
+      /* Header */
+      .cg-static .header {
+        display: flex; height: 60px; padding: 10px 20px 5px;
+        justify-content: space-between; align-items: center;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.7);
+      }
+      .cg-static .logo {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-size: 17px; font-weight: 800; line-height: 17px;
+        background: linear-gradient(145deg, #31D0AA 0%, #6C95C1 50%, #ED4BBA 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      }
+      .cg-static .header a:hover { text-decoration: none; }
+      .cg-static .header-link:hover { color: var(--grey); }
+
+      /* Layout */
+      .cg-static .main { flex: 1 0 auto; width: 100%; max-width: 740px; padding: 58px 20px 64px; margin: 0 auto; }
+      .cg-static section { margin-bottom: 72px; }
+      .cg-static section:last-child { margin-bottom: 0; }
+
+      /* Typography */
+      .cg-static h1 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 40px; font-weight: 800; }
+      .cg-static h2 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+      .cg-static h3 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 15px; font-weight: 800; }
+      .cg-static p + p { margin-top: 16px; }
+      .cg-static .grey { color: var(--grey); font-size: 13px; }
+
+      /* Hero */
+      .cg-static .hero h1 { margin-bottom: 48px; }
+      .cg-static .hero-intro { margin-bottom: 42px; }
+      .cg-static .hero-intro span { display: block; }
+
+      /* Button */
+      .cg-static .btn {
+        display: inline-flex; height: 40px; padding: 10px 20px; min-width: 200px;
+        justify-content: center; align-items: center;
+        border: 1px solid var(--border); border-radius: 17px; background: #fff;
+        font-weight: 700; box-shadow: 0 0 30px rgba(0, 0, 0, 0.12);
+      }
+      .cg-static .btn:hover { text-decoration: none; }
+
+      /* Rows (mirrors the landing accordion, always open) */
+      .cg-static .row { border-top: 1px solid var(--border); padding: 18px 0; }
+      .cg-static .rows { border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+      .cg-static .row p { margin-top: 10px; color: var(--grey); }
+
+      /* Company details */
+      .cg-static .facts { border-top: 1px solid var(--border); margin-top: 24px; }
+      .cg-static .facts div { display: flex; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+      .cg-static .facts dt { flex: 0 0 150px; font-weight: 700; }
+      .cg-static .facts dd { color: var(--grey); }
+
+      /* Footer */
+      .cg-static .footer {
+        display: grid; grid-template-columns: 1fr auto auto; column-gap: 48px; row-gap: 20px;
+        padding: 44px; background: #fff; box-shadow: 0 0 140px rgba(0, 0, 0, 0.08);
+        font-size: 10px; color: var(--grey);
+      }
+      .cg-static .footer h3 { font-size: 10px; font-weight: 700; color: var(--black); margin-bottom: 18px; }
+      .cg-static .footer-brand { max-width: 330px; }
+      .cg-static .footer-brand .name { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: var(--black); display: inline-block; margin-bottom: 18px; }
+      .cg-static .footer-contact a, .cg-static .footer-social a { display: block; }
+      .cg-static .footer-legal { grid-column: 2 / 4; }
+
+      @media (max-width: 450px) {
+        .cg-static h1 { font-size: 30px; }
+        .cg-static .main { padding: 48px 20px 72px; }
+        .cg-static .facts div { display: block; }
+        .cg-static .facts dt { margin-bottom: 4px; }
+        .cg-static .footer { padding: 40px 28px; grid-template-columns: minmax(0,1fr) auto; column-gap: 24px; row-gap: 28px; }
+        .cg-static .footer-brand, .cg-static .footer-legal, .cg-static .footer-copyright { grid-column: 1 / -1; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- The markup below is what crawlers and other clients without JavaScript
+         see. In a browser, React mounts into #root and replaces it with the
+         landing page. -->
+    <div id="root">
+      <div class="cg-static">
+        <header class="header">
+          <a class="logo" href="/map">Common Ground</a>
+          <a class="header-link" href="/map">Explore map</a>
+        </header>
+
+        <main class="main">
+          <section class="hero">
+            <h1>A shared map of how people experience places</h1>
+            <p class="hero-intro">
+              <span>Share your experience</span>
+              <span>Explore others</span>
+              <span>Understand cities better</span>
+            </p>
+            <a class="btn" href="/map">Explore map</a>
+          </section>
+
+          <section>
+            <h2>What can you do?</h2>
+            <div class="rows">
+              <div class="row">
+                <h3>Share your experience</h3>
+                <p>Leave feedback about a place directly on the map.</p>
+              </div>
+              <div class="row">
+                <h3>Explore other experiences</h3>
+                <p>See what people say about places, neighborhoods, and the city around you.</p>
+              </div>
+              <div class="row">
+                <h3>Understand areas better</h3>
+                <p>Learn how different neighborhoods and parts of the city are experienced by people.</p>
+              </div>
+              <div class="row">
+                <h3>Compare places</h3>
+                <p>Explore differences between areas based on people’s experiences.</p>
+              </div>
+            </div>
+            <p>
+              Common Ground is a public platform where people mark places on a map and share
+              their subjective experience of a space — from city streets to event venues.
+            </p>
+          </section>
+
+          <section>
+            <h2>For urban decision-makers</h2>
+            <p>
+              We’re exploring how continuously shared, location-based experiences
+              can help better inform urban decisions.
+            </p>
+            <p>Have a project, problem or idea? We’d love to hear about it.</p>
+            <p><a href="mailto:urban@commonground.page">urban@commonground.page</a></p>
+          </section>
+
+          <section>
+            <h2>Who we are</h2>
+            <p>
+              Common Ground is developed and operated by Common Ground LLC, a company
+              registered in the Republic of Armenia. Common Ground LLC also operates
+              EventCG, our event-mapping service.
+            </p>
+            <dl class="facts">
+              <div><dt>Legal entity</dt><dd>Common Ground LLC</dd></div>
+              <div><dt>Registration</dt><dd>Republic of Armenia, registration number 999.110.1594958, tax ID 02337455</dd></div>
+              <div><dt>Registered address</dt><dd>1 Masis St, Shengavit, Yerevan 0061, Armenia</dd></div>
+              <div><dt>Email</dt><dd><a href="mailto:hi@commonground.page">hi@commonground.page</a></dd></div>
+              <div><dt>Phone</dt><dd><a href="tel:+37498789349">+374 98 789349</a></dd></div>
+              <div><dt>Website</dt><dd><a href="https://commonground.page/">commonground.page</a></dd></div>
+            </dl>
+          </section>
+        </main>
+
+        <footer class="footer">
+          <div class="footer-brand">
+            <span class="name">Common Ground</span>
+            <p>A shared map where people mark places and share how they experience them. From city streets to event venues.</p>
+          </div>
+          <div class="footer-contact">
+            <h3>Contact us</h3>
+            <a href="tel:+37498789349">+374 98 789349</a>
+            <a href="mailto:hi@commonground.page">hi@commonground.page</a>
+          </div>
+          <div class="footer-social">
+            <h3>Follow us</h3>
+            <a href="https://www.linkedin.com/company/121073922/" rel="noopener noreferrer">LinkedIn</a>
+          </div>
+          <p class="footer-copyright">© 2026 Common Ground LLC</p>
+          <div class="footer-legal">
+            <a href="/legal/terms-of-use">Terms of Service</a>
+            <span> · </span>
+            <a href="/legal/privacy-policy">Privacy Policy</a>
+            <span> · </span>
+            <a href="/legal/content-rules">Content Rules</a>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
