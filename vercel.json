@@ -1,6 +1,8 @@
 {
   "redirects": [
-    { "source": "/qr", "destination": "/", "permanent": false }
+    { "source": "/", "destination": "/map", "permanent": false },
+    { "source": "/ru", "destination": "/ru/map", "permanent": false },
+    { "source": "/qr", "destination": "/map", "permanent": false }
   ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
