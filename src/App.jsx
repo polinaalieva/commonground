@@ -3,7 +3,6 @@ import Home from './landing/Home.jsx'
 import City from './pages/City.jsx'
 import EventPage from './events/pages/EventPage'
 import Dev from './pages/Dev.jsx'
-import QRPage from './pages/QRpage/QRPage'
 import TermsOfUse from './landing/legal/TermsOfUse.jsx'
 import PrivacyPolicy from './landing/legal/PrivacyPolicy.jsx'
 import ContentRules from './landing/legal/ContentRules.jsx'
@@ -40,8 +39,6 @@ function App() {
       <Route path="/ru/:city" element={<City />} />
 
       {/* Остальное */}
-      <Route path="/qr" element={<QRPage />} />
-      <Route path="/ru/qr" element={<QRPage />} />
       <Route path="/dev" element={<Dev />} />
     </Routes>
     
