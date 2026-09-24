@@ -1,6 +1,7 @@
 import TopBar from './TopBar/TopBar'
 import MiddleBar from './MiddleBar/MiddleBar'
 import BottomBar from './BottomBar/BottomBar'
+import FloorSwitcher from './FloorSwitcher/FloorSwitcher'
 import './MapUI.css'
 
 function MapUI({
@@ -19,6 +20,9 @@ function MapUI({
   onSearch,
   onInfoClick,
   infoActive,
+  floors = [],
+  currentFloor,
+  onFloorChange,
 }) {
   return (
     <div className="map-ui">
@@ -31,6 +35,9 @@ function MapUI({
         onInfoClick={onInfoClick}
         infoActive={infoActive}
       />
+      {source === 'event' && floors.length > 1 && (
+        <FloorSwitcher floors={floors} current={currentFloor} onChange={onFloorChange} />
+      )}
       <MiddleBar
         onZoomIn={onZoomIn}
         onZoomOut={onZoomOut}

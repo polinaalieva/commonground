@@ -1,3 +1,11 @@
+// углы плана DW! Brasília: top-left, top-right, bottom-right, bottom-left
+const TBR26_PLAN_CORNERS = [
+  [-47.95428204716544, -15.82627570046853],
+  [-47.95282120449338, -15.82649977301081],
+  [-47.95301915455409, -15.827694309932193],
+  [-47.95447999722615, -15.827470237389912],
+]
+
 export const EVENTS = {
   wuf13: {
     name: 'World Urban Forum 13',
@@ -57,7 +65,53 @@ export const EVENTS = {
         [2.1422313456499102, 41.37943883449626],
       ]
     }
-  }
+  },
+  '26-03-tbr': {
+    name: 'DW! Brasília',
+    shortName: 'DW!B',
+    description: '', // TODO: описание для окна About
+    markerImage: '/events/TBr26-logo.png',
+    location: 'Brasília, Brazil',
+    // вход в ивент: маркер на общей карте и старт карты события
+    center: [-47.95360383586143, -15.827000870234729],
+    zoom: 17,
+    bearing: 9.1, // план на экране стоит ровно
+    // TODO: границы примерные (±~1 км от входа) — сузить по плану площадки
+    bbox: [[-47.9636, -15.8370], [-47.9436, -15.8170]],
+    minZoom: 15,
+    maxBounds: [
+      [-47.9636, -15.8370],
+      [-47.9436, -15.8170],
+    ],
+    zoneColors: {}, // TODO: цвета зон из CSV
+    serviceColor: '#6B7280',
+    // оба этажа в одном контуре здания
+    floors: [
+      { level: 2, url: '/floorplans/TBr26_2Fl.png', coordinates: TBR26_PLAN_CORNERS },
+      { level: 1, url: '/floorplans/TBr26_1Fl.png', coordinates: TBR26_PLAN_CORNERS },
+    ],
+    defaultFloor: 1,
+  },
+}
+
+// Этажи события сверху вниз. Старый одиночный floorplan — один план без уровня
+export function getEventFloors(config) {
+  if (config?.floors?.length) return [...config.floors].sort((a, b) => b.level - a.level)
+  if (config?.floorplan) return [{ level: null, ...config.floorplan }]
+  return []
+}
+
+// null — этажей нет, показываем всё
+export function getDefaultFloor(config) {
+  const levels = getEventFloors(config).map(f => f.level).filter(l => l != null)
+  if (!levels.length) return null
+  if (levels.includes(config.defaultFloor)) return config.defaultFloor
+  return levels.includes(1) ? 1 : levels[levels.length - 1]
+}
+
+// Точка без этажа (null) видна на всех этажах
+export function isOnFloor(floor, currentFloor) {
+  return currentFloor == null || floor == null || Number(floor) === currentFloor
 }
 
 export function buildZoneColorExpression(zoneColors, fallback = '#cccccc') {

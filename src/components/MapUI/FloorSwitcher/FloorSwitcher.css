@@ -1,0 +1,81 @@
+/* ── Container: по аналогии со Switcher, но вертикальный ── */
+.floor-switcher {
+  --slot-w: 42px;
+  --slot-h: 36px;
+  position: absolute;
+  left: 20px;
+  top: 35%;               /* на одной высоте с кнопками зума (MiddleBar) */
+  transform: translateY(-50%);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 15px;
+  background: linear-gradient(rgba(238, 238, 238, 0.20), rgba(238, 238, 238, 0.20)), rgba(0, 0, 0, 0.10);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* ── Sliding white pill ───────────────────────── */
+.floor-switcher__pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--slot-h);
+  border-radius: 15px;
+  background: #fff;
+  border: 1px solid rgba(17, 17, 17, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.07), 0 0 10px rgba(0, 0, 0, 0.10);
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+/* ── Floor slots (above pill) ─────────────────── */
+.floor-switcher__slot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--slot-w);
+  height: var(--slot-h);
+  flex-shrink: 0;
+}
+
+.floor-switcher__label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.40);
+  transition: color 0.2s ease;
+}
+
+.floor-switcher__label--active {
+  background: linear-gradient(145deg, #31D0AA 0%, #6C95C1 50%, #ED4BBA 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── MOBILE ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .floor-switcher {
+    --slot-w: 49px;
+    --slot-h: 42px;
+    border-radius: 18px;
+  }
+
+  .floor-switcher__pill {
+    border-radius: 18px;
+  }
+
+  .floor-switcher__label {
+    font-size: 14px;
+  }
+}

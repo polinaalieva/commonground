@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { maplibregl } from '../../config/map'
-import { EVENTS } from '../../config/events'
+import { EVENTS, getEventFloors, isOnFloor } from '../../config/events'
 import { VENUE_ICONS } from '../../config/venueIcons'
 
 export function VenueLayer({
@@ -13,8 +13,37 @@ export function VenueLayer({
   onSelect,
   selectedVenue,
   highlightedVenueCode,
+  currentFloor = null,
+  onFloorChange,
 }) {
   const renderedRef = useRef(false)
+  const markersRef = useRef([]) // { el, floor }
+  const currentFloorRef = useRef(currentFloor)
+
+  function floorplanId(level) {
+    return `floorplan-${level ?? 'main'}`
+  }
+
+  function applyFloor() {
+    const level = currentFloorRef.current
+    markersRef.current.forEach(({ el, floor }) => {
+      // flex, а не '' — иначе цифра/иконка съезжает из центра кружка
+      el.style.display = isOnFloor(floor, level) ? 'flex' : 'none'
+    })
+    if (!map.current) return
+    getEventFloors(EVENTS[eventId]).forEach(f => {
+      const layerId = `${floorplanId(f.level)}-layer`
+      if (!map.current.getLayer(layerId)) return
+      map.current.setLayoutProperty(layerId, 'visibility', isOnFloor(f.level, level) ? 'visible' : 'none')
+    })
+  }
+
+  // Смена этажа: показываем план этого этажа и его точки (+ точки без этажа)
+  useEffect(() => {
+    currentFloorRef.current = currentFloor
+    applyFloor()
+  }, [currentFloor])
+
   const selectedMarkerElRef = useRef(null)
   const markerElsByCode = useRef({})
 
@@ -44,6 +73,11 @@ export function VenueLayer({
     el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)'
     selectedMarkerElRef.current = el
   }
+
+  // План рисуем сразу, не дожидаясь точек: слой монтируется после load карты
+  useEffect(() => {
+    if (map.current) renderFloorplan()
+  }, [])
 
   useEffect(() => {
     if (!eventVenues.length || renderedRef.current) return
@@ -113,27 +147,30 @@ export function VenueLayer({
     return el
   }
 
+  // Все этажи грузим сразу и переключаем видимостью — смена этажа без задержки
   function renderFloorplan() {
-  const floorplan = EVENTS[eventId]?.floorplan
-  if (!floorplan) return
-  if (map.current.getSource('floorplan')) return
+    getEventFloors(EVENTS[eventId]).forEach(f => {
+      if (!f.url || !f.coordinates) return // этаж без картинки плана — только фильтр точек
+      const id = floorplanId(f.level)
+      if (map.current.getSource(id)) return
 
-  map.current.addSource('floorplan', {
-    type: 'image',
-    url: floorplan.url,
-    coordinates: floorplan.coordinates,
-  })
+      map.current.addSource(id, {
+        type: 'image',
+        url: f.url,
+        coordinates: f.coordinates,
+      })
 
-  map.current.addLayer({
-    id: 'floorplan-layer',
-    type: 'raster',
-    source: 'floorplan',
-    paint: { 'raster-opacity': 0.85 },
-  })
-}
+      map.current.addLayer({
+        id: `${id}-layer`,
+        type: 'raster',
+        source: id,
+        paint: { 'raster-opacity': 0.85 },
+        layout: { visibility: isOnFloor(f.level, currentFloorRef.current) ? 'visible' : 'none' },
+      })
+    })
+  }
 
 function renderVenues(data) {
-  renderFloorplan()
   const zoneColors = EVENTS[eventId]?.zoneColors || {}
   const serviceColor = EVENTS[eventId]?.serviceColor || '#6B7280'
     const allMarkerEls = []
@@ -182,6 +219,8 @@ map.current.on('zoom', applyMarkerSizes)
         .addTo(map.current)
 
       allMarkerEls.push({ el, isService })
+      markersRef.current.push({ el, floor: v.floor })
+      if (!isOnFloor(v.floor, currentFloorRef.current)) el.style.display = 'none'
       if (v.code) markerElsByCode.current[v.code] = el
 
       marker.getElement().addEventListener('click', e => {
@@ -198,6 +237,7 @@ map.current.on('zoom', applyMarkerSizes)
           type: v.type,
           zone: v.zone,
           number: v.number,
+          floor: v.floor,
         })
       })
     })
@@ -208,12 +248,14 @@ map.current.on('zoom', applyMarkerSizes)
     if (venueCode) {
       const venue = data.find(v => v.code === venueCode)
       if (venue) {
+        onFloorChange?.(venue.floor)
         onSelect({
           id: venue.id,
           code: venue.code,
           type: venue.type,
           zone: venue.zone,
           number: venue.number,
+          floor: venue.floor,
         })
         const raw =
           typeof venue.coordinates === 'string'
