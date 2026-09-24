@@ -1,106 +1,153 @@
-// углы плана DW! Brasília: top-left, top-right, bottom-right, bottom-left
-const TBR26_PLAN_CORNERS = [
-  [-47.95428204716544, -15.82627570046853],
-  [-47.95282120449338, -15.82649977301081],
-  [-47.95301915455409, -15.827694309932193],
-  [-47.95447999722615, -15.827470237389912],
-]
+import { useEffect, useState } from 'react'
+import { SUPABASE_URL, supabaseFetch } from './supabase'
 
+// Настройки событий — в Supabase, таблица events (для людей — Notion «Event maps»).
 // Код события: короткое-имя-месяц-год (wuf-11-26). Он же в URL /event/<код>,
-// в таблицах event_<код>_venues/_sessions/_orgs и в feedback_map.event_id
-export const EVENTS = {
-  'wuf-11-26': {
-    name: 'World Urban Forum 13',
-    shortName: 'WUF13',
-    description: 'WUF13 brings together urban leaders, practitioners, and researchers to shape the future of sustainable cities. This map lets participants mark places across the venue and share how they experience them.',
-    markerImage: '/events/wuf13.png',
-    location: 'Baku, Azerbaijan',
-    dates: ['2026-11-01', '2026-11-07'],
-    bbox: [[49.910, 40.425], [49.930, 40.438]],
-    center: [49.920, 40.431],
-    zoom: 15,
-    minZoom: 14,
-    maxBounds: [[49.900, 40.420], [49.940, 40.445]],
-    zoneColors: {
-      'Area A': '#4A90E2',
-      'Urban Expo': '#F5A623',
-      'Area B': '#7ED321',
-    },
-    serviceColor: '#6B7280',
-    
-  floorplan: {url: '/floorplans/wuf13-v2.png',
-      coordinates: [
-        [49.91300582305555, 40.43617368340293],
-        [49.92681429980005, 40.43617368340293],
-        [49.92681429980005, 40.4253899164859],
-        [49.91300582305555, 40.4253899164859],
-      ]
-    }
-  },
-  'uis-09-27': {
-    name: 'Urban Intelligence Summit 2027',
-    shortName: 'UIS27',
-        description: 'An event bringing together people shaping the future of cities through data, technology, design, and new approaches to understanding urban life.',
-    markerImage: '/events/uis27.png',
-    location: 'Barcelona, Spain',
-    dates: ['2027-09-13', '2027-09-15'],
-    center: [2.142519076132203, 41.379661064465864],
-    zoom: 20,
-    bearing: 45,
-    bbox: [[2.1418, 41.3790], [2.1433, 41.3803]],
-    minZoom: 17,
-    maxBounds: [
-      [2.1418, 41.3790],
-      [2.1433, 41.3803],
-    ],
-    zoneColors: {
-      'Zone A': '#00DBB0',
-      'Expo Area': '#03A1EA',
-    },
-    serviceColor: '#6B7280',
-    floorplan: {
-      url: '/floorplans/uis27_planv.png',
-      coordinates: [
-        [2.1422313456499102, 41.379862061414904],
-        [2.1427886690649496, 41.379862061414904],
-        [2.1427886690649496, 41.37943883449626],
-        [2.1422313456499102, 41.37943883449626],
-      ]
-    }
-  },
-  'dwb-09-26': {
-    name: 'DW! Brasília',
-    shortName: 'DW!B',
-    description: '', // TODO: описание для окна About
-    markerImage: '/events/TBr26-logo.png',
-    location: 'Brasília, Brazil',
-    // вход в ивент: маркер на общей карте и старт карты события
-    center: [-47.95360383586143, -15.827000870234729],
-    zoom: 17,
-    bearing: 9.1, // план на экране стоит ровно
-    // TODO: границы примерные (±~1 км от входа) — сузить по плану площадки
-    bbox: [[-47.9636, -15.8370], [-47.9436, -15.8170]],
-    minZoom: 15,
-    maxBounds: [
-      [-47.9636, -15.8370],
-      [-47.9436, -15.8170],
-    ],
-    zoneColors: {}, // TODO: цвета зон из CSV
-    serviceColor: '#6B7280',
-    // оба этажа в одном контуре здания
-    floors: [
-      { level: 2, url: '/floorplans/TBr26_2Fl.png', coordinates: TBR26_PLAN_CORNERS },
-      { level: 1, url: '/floorplans/TBr26_1Fl.png', coordinates: TBR26_PLAN_CORNERS },
-    ],
-    defaultFloor: 1,
-  },
+// в таблицах event_<код>_venues/_sessions/_orgs и в feedback_map.event_id.
+// Картинки — Storage, бакет events: <код>/logo.png, <код>/floors/<этаж>.png (без этажей — plan.png)
+
+const SERVICE_COLOR = '#6B7280'
+
+export function eventAssetUrl(code, path) {
+  return `${SUPABASE_URL}/storage/v1/object/public/events/${code}/${path}`
 }
 
-// Этажи события сверху вниз. Старый одиночный floorplan — один план без уровня
-export function getEventFloors(config) {
-  if (config?.floors?.length) return [...config.floors].sort((a, b) => b.level - a.level)
-  if (config?.floorplan) return [{ level: null, ...config.floorplan }]
+// "широта, долгота" (как копируется из Google Maps) → [lng, lat]
+function parseEntrance(text) {
+  const [lat, lng] = String(text ?? '').split(',').map(s => Number(s.trim()))
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lng, lat] : null
+}
+
+// По зоне на строку: "Area A: #4A90E2" → { 'Area A': '#4A90E2' }
+function parseZones(text) {
+  const zones = {}
+  String(text ?? '').split('\n').forEach(line => {
+    const i = line.lastIndexOf(':')
+    if (i <= 0) return
+    const name = line.slice(0, i).trim()
+    const color = line.slice(i + 1).trim()
+    if (name && color) zones[name] = color
+  })
+  return zones
+}
+
+// plan — JSON из экспорта координат /draw: { floors: [...] } или { coordinates }
+function planFloors(code, plan) {
+  if (plan?.floors?.length) {
+    return plan.floors.map(f => ({
+      level: f.level,
+      coordinates: f.coordinates,
+      url: eventAssetUrl(code, `floors/${f.level}.png`),
+    }))
+  }
+  if (plan?.coordinates) {
+    return [{ level: null, coordinates: plan.coordinates, url: eventAssetUrl(code, 'floors/plan.png') }]
+  }
   return []
+}
+
+// Границы карты — по плану и входу: bbox с небольшим запасом, maxBounds пошире
+function computeBounds(points) {
+  if (!points.length) return {}
+  const lngs = points.map(p => p[0])
+  const lats = points.map(p => p[1])
+  const [minLng, maxLng, minLat, maxLat] = [Math.min(...lngs), Math.max(...lngs), Math.min(...lats), Math.max(...lats)]
+  const mPerLat = 111320
+  const mPerLng = 111320 * Math.cos(((minLat + maxLat) / 2) * Math.PI / 180)
+  const size = Math.max((maxLng - minLng) * mPerLng, (maxLat - minLat) * mPerLat)
+  const pad = m => [
+    [minLng - m / mPerLng, minLat - m / mPerLat],
+    [maxLng + m / mPerLng, maxLat + m / mPerLat],
+  ]
+  return { bbox: pad(Math.max(size * 0.2, 50)), maxBounds: pad(Math.max(size, 500)) }
+}
+
+// Строка таблицы events → объект, с которым работает карта
+function normalizeEvent(row) {
+  const plan = row.plan || {}
+  const floors = planFloors(row.code, plan)
+  const entrance = parseEntrance(row.entrance)
+  const points = [...floors.flatMap(f => f.coordinates), ...(entrance ? [entrance] : [])]
+  const zoom = Number(row.zoom) || 16
+
+  return {
+    code: row.code,
+    name: row.name,
+    shortName: row.short_name,
+    description: row.description,
+    location: row.location,
+    dates: [row.starts_on, row.ends_on],
+    markerImage: eventAssetUrl(row.code, 'logo.png'),
+    center: entrance ?? points[0] ?? [0, 0],
+    zoom,
+    minZoom: Math.max(zoom - 3, 12),
+    bearing: Number(row.bearing ?? plan.bearing ?? 0),
+    ...computeBounds(points),
+    zoneColors: parseZones(row.zones),
+    serviceColor: SERVICE_COLOR,
+    floors,
+    defaultFloor: plan.defaultFloor ?? null,
+  }
+}
+
+// ── Загрузка: один запрос на всё приложение ──
+
+let eventsPromise = null
+const eventsByCode = {}
+
+export function loadEvents() {
+  if (!eventsPromise) {
+    eventsPromise = supabaseFetch('events?select=*&order=starts_on.asc')
+      .then(rows => {
+        const list = rows.map(normalizeEvent)
+        list.forEach(e => { eventsByCode[e.code] = e })
+        return list
+      })
+      .catch(err => {
+        eventsPromise = null // следующая попытка загрузит заново
+        throw err
+      })
+  }
+  return eventsPromise
+}
+
+// Синхронно, если события уже загружены (подписи в карточках отзывов)
+export function getLoadedEvent(code) {
+  return eventsByCode[code] ?? null
+}
+
+export function useEvents() {
+  const [events, setEvents] = useState([])
+  useEffect(() => {
+    let alive = true
+    loadEvents()
+      .then(list => { if (alive) setEvents(list) })
+      .catch(e => console.error('Failed to load events', e))
+    return () => { alive = false }
+  }, [])
+  return events
+}
+
+// status: 'loading' | 'ready' | 'error'; event: null — такого события нет
+export function useEvent(code) {
+  const [state, setState] = useState({ code: null, status: 'loading', event: null })
+  useEffect(() => {
+    let alive = true
+    loadEvents()
+      .then(list => {
+        if (alive) setState({ code, status: 'ready', event: list.find(e => e.code === code) ?? null })
+      })
+      .catch(() => { if (alive) setState({ code, status: 'error', event: null }) })
+    return () => { alive = false }
+  }, [code])
+  return state.code === code ? state : { code, status: 'loading', event: null }
+}
+
+// ── Этажи ──
+
+// Этажи события сверху вниз; план без этажей — один элемент с level: null
+export function getEventFloors(config) {
+  return [...(config?.floors ?? [])].sort((a, b) => (b.level ?? 0) - (a.level ?? 0))
 }
 
 // null — этажей нет, показываем всё
@@ -114,16 +161,4 @@ export function getDefaultFloor(config) {
 // Точка без этажа (null) видна на всех этажах
 export function isOnFloor(floor, currentFloor) {
   return currentFloor == null || floor == null || Number(floor) === currentFloor
-}
-
-// Старые коды событий → новые: ссылки и QR-коды, разосланные до переименования
-export const LEGACY_EVENT_IDS = {
-  wuf13: 'wuf-11-26',
-  uis27: 'uis-09-27',
-  '26-03-tbr': 'dwb-09-26',
-}
-
-export function buildZoneColorExpression(zoneColors, fallback = '#cccccc') {
-  const pairs = Object.entries(zoneColors).flat()
-  return ['match', ['get', 'zone'], ...pairs, fallback]
 }

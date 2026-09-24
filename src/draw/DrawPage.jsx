@@ -1039,13 +1039,10 @@ function DrawPage() {
     // углы: top-left, top-right, bottom-right, bottom-left
     data = { coordinates: cornersOf(plan), bearing: bearingOf(plan) }
   } else {
-    // готовый блок для events.js
+    // готовый JSON для колонки plan в Supabase; картинки — Storage events/<код>/floors/<этаж>.png
     const floorsOut = [...floorsRef.current].sort((a, b) => a - b)
       .filter(level => plans[String(level)])
-      .map(level => {
-        const plan = plans[String(level)]
-        return { level, url: `/floorplans/${plan.name || ''}`, coordinates: cornersOf(plan) }
-      })
+      .map(level => ({ level, coordinates: cornersOf(plans[String(level)]) }))
     if (!floorsOut.length) return
     const main = plans['1'] ?? plans[String(floorsOut[0].level)]
     data = {

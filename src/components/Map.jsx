@@ -17,7 +17,8 @@ import MapLoader from './ui/MapLoader'
 import { supabaseFetch } from '../config/supabase'
 import { Event_card } from './Card/Event/Event_card'
 import { VenueLayer } from '../events/components/VenueLayer'
-import { EVENTS, buildZoneColorExpression, getEventFloors, getDefaultFloor, isOnFloor } from '../config/events'
+import { isOnFloor, useEvents } from '../config/events'
+import { useEventFloors } from '../events/hooks/useEventFloors'
 import { EventMarker } from '../events/components/EventMarker/EventMarker'
 import { SearchCard } from '../events/components/SearchCard/SearchCard'
 import Demo_card from './Card/Demo/Demo_card'
@@ -118,19 +119,15 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   const [showHexTooltip, setShowHexTooltip] = useState(false)
   const [selectedVenue, setSelectedVenue] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [highlightedVenueCode, setHighlightedVenueCode] = useState(null)
+  const [highlightedVenueId, setHighlightedVenueId] = useState(null)
   const [mapReady, setMapReady] = useState(false)
-  const eventFloorLevels = source === 'event'
-    ? getEventFloors(cityConfig).map(f => f.level).filter(l => l != null)
-    : []
-  const [currentFloor, setCurrentFloor] = useState(() => source === 'event' ? getDefaultFloor(cityConfig) : null)
-
   // карточка точки с другого этажа закрывается вместе со сменой этажа
-  function changeFloor(level) {
-    if (level == null || eventFloorLevels.length === 0) return
-    setCurrentFloor(level)
-    setSelectedVenue(v => (v && !isOnFloor(v.floor, level) ? null : v))
-  }
+  const { floorLevels, currentFloor, changeFloor } = useEventFloors(
+    source === 'event' ? cityConfig : null,
+    level => setSelectedVenue(v => (v && !isOnFloor(v.floor, level) ? null : v)),
+  )
+  // маркеры событий на общей карте
+  const allEvents = useEvents()
 
   // TODO (2026-09-09): убрать, когда починят Chrome iOS (баг с 152.0.7977.64).
   // До первого тач-жеста страница рисуется смещённой вверх на высоту адресной
@@ -186,7 +183,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
     if (map.current?.getLayer('cg-hex-selected-layer')) {
       map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
     }
-    setHighlightedVenueCode(null)
+    setHighlightedVenueId(null)
     setSearchOpen(false)
     setSelectedVenue(venue)
   }
@@ -821,7 +818,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
         onInfoClick={openDemo}
         infoActive={demoOpen}
-        floors={eventFloorLevels}
+        floors={floorLevels}
         currentFloor={currentFloor}
         onFloorChange={changeFloor}
       />
@@ -887,7 +884,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
                 : { left: 420 }
               map.current?.flyTo({ center: coords, zoom: 22, essential: true, padding })
             }
-            setHighlightedVenueCode(venue.code)
+            setHighlightedVenueId(venue.id)
           }}
         />
       )}
@@ -898,21 +895,21 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         onDismiss={() => setSelectedVenue(null)}
       />
 
-      {source !== 'event' && Object.entries(EVENTS).map(([id, config]) => (
-  <EventMarker key={id} mapRef={map} eventId={id} eventConfig={config} />
+      {source !== 'event' && allEvents.map(event => (
+  <EventMarker key={event.code} mapRef={map} eventId={event.code} eventConfig={event} />
 ))}
 
       {mapReady && source === 'event' && (
         <VenueLayer
           map={map}
           eventVenues={eventVenues}
-          eventId={eventId}
           onSelect={handleVenueSelect}
           onDeselect={() => setSelectedVenue(null)}
           selectedVenue={selectedVenue}
-          highlightedVenueCode={highlightedVenueCode}
+          highlightedVenueId={highlightedVenueId}
           currentFloor={currentFloor}
           onFloorChange={changeFloor}
+          eventConfig={cityConfig}
         />
       )}
     </div>

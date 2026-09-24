@@ -28,8 +28,9 @@ export function shareHex(cellId, zoom) {
   return doShare({ text, url })
 }
 
-export function shareVenue(venueCode, eventId) {
+// по id: коды точек не уникальны (у сервисных — 10 × «Restrooms»)
+export function shareVenue(venueId, eventId) {
   const text = 'Check out this venue'
-  const url = `https://commonground.page/event/${eventId}?venue=${encodeURIComponent(venueCode)}&utm_source=venue_share`
+  const url = `https://commonground.page/event/${eventId}?venue=${encodeURIComponent(venueId)}&utm_source=venue_share`
   return doShare({ text, url })
 }

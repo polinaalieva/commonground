@@ -47,7 +47,7 @@ export function Feedback_card({ pin, surveySheetRef, onDismiss }) {
   if (!pin) return null
 
   const date = formatDate(pin.original_date || pin.created_at)
-  let authorLabel = getEventParticipantLabel(pin.event_id, pin.city)
+  let authorLabel = getEventParticipantLabel(pin.event_id)
   if (!authorLabel) {
     const sourceLabel = getSourceLabel(pin.source)
     authorLabel = sourceLabel ? `via ${sourceLabel}` : 'Local Contributor'

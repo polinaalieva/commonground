@@ -3,18 +3,18 @@
 import { useEffect, useRef } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { maplibregl } from '../../config/map'
-import { EVENTS, getEventFloors, isOnFloor } from '../../config/events'
+import { getEventFloors, isOnFloor } from '../../config/events'
 import { VENUE_ICONS } from '../../config/venueIcons'
 
 export function VenueLayer({
   map,
   eventVenues = [],
-  eventId,
   onSelect,
   selectedVenue,
-  highlightedVenueCode,
+  highlightedVenueId,
   currentFloor = null,
   onFloorChange,
+  eventConfig,
 }) {
   const renderedRef = useRef(false)
   const markersRef = useRef([]) // { el, floor }
@@ -31,7 +31,7 @@ export function VenueLayer({
       el.style.display = isOnFloor(floor, level) ? 'flex' : 'none'
     })
     if (!map.current) return
-    getEventFloors(EVENTS[eventId]).forEach(f => {
+    getEventFloors(eventConfig).forEach(f => {
       const layerId = `${floorplanId(f.level)}-layer`
       if (!map.current.getLayer(layerId)) return
       map.current.setLayoutProperty(layerId, 'visibility', isOnFloor(f.level, level) ? 'visible' : 'none')
@@ -45,26 +45,34 @@ export function VenueLayer({
   }, [currentFloor])
 
   const selectedMarkerElRef = useRef(null)
-  const markerElsByCode = useRef({})
+  // по id, а не по code: у сервисных точек коды повторяются (10 × «Restrooms»)
+  const markerElsById = useRef({})
 
   useEffect(() => {
     if (!selectedVenue) {
       resetSelectedMarker()
       return
     }
-    const el = markerElsByCode.current[selectedVenue.code]
+    const el = markerElsById.current[selectedVenue.id]
     if (!el || el === selectedMarkerElRef.current) return
     resetSelectedMarker()
     applyHighlight(el)
   }, [selectedVenue])
 
   useEffect(() => {
-    if (!highlightedVenueCode) return
-    const el = markerElsByCode.current[highlightedVenueCode]
+    if (!highlightedVenueId) return
+    const el = markerElsById.current[highlightedVenueId]
     if (!el || el === selectedMarkerElRef.current) return
     resetSelectedMarker()
     applyHighlight(el)
-  }, [highlightedVenueCode])
+  }, [highlightedVenueId])
+
+  function getMarkerSize() {
+    const zoom = map.current.getZoom()
+    if (zoom < 16) return { size: 12, icon: 9, font: 5 }
+    if (zoom < 18) return { size: 18, icon: 11, font: 7 }
+    return { size: 32, icon: 18, font: 12 }
+  }
 
   function applyHighlight(el) {
     el.style.width = '34px'
@@ -90,10 +98,12 @@ export function VenueLayer({
     renderVenues(eventVenues)
   }, [eventVenues])
 
+  // обратно к размеру по текущему зуму, как у остальных точек
   function resetSelectedMarker() {
     if (!selectedMarkerElRef.current) return
-    selectedMarkerElRef.current.style.width = '25px'
-    selectedMarkerElRef.current.style.height = '25px'
+    const { size } = getMarkerSize()
+    selectedMarkerElRef.current.style.width = `${size}px`
+    selectedMarkerElRef.current.style.height = `${size}px`
     selectedMarkerElRef.current.style.border = '2px solid white'
     selectedMarkerElRef.current.style.boxShadow = '0 2px 6px rgba(0,0,0,0.25)'
     selectedMarkerElRef.current = null
@@ -147,7 +157,7 @@ export function VenueLayer({
 
   // Все этажи грузим сразу и переключаем видимостью — смена этажа без задержки
   function renderFloorplan() {
-    getEventFloors(EVENTS[eventId]).forEach(f => {
+    getEventFloors(eventConfig).forEach(f => {
       if (!f.url || !f.coordinates) return // этаж без картинки плана — только фильтр точек
       const id = floorplanId(f.level)
       if (map.current.getSource(id)) return
@@ -169,16 +179,9 @@ export function VenueLayer({
   }
 
 function renderVenues(data) {
-  const zoneColors = EVENTS[eventId]?.zoneColors || {}
-  const serviceColor = EVENTS[eventId]?.serviceColor || '#6B7280'
+  const zoneColors = eventConfig?.zoneColors || {}
+  const serviceColor = eventConfig?.serviceColor || '#6B7280'
     const allMarkerEls = []
-
-function getMarkerSize() {
-  const zoom = map.current.getZoom()
-  if (zoom < 16) return { size: 12, icon: 9, font: 5 }
-  if (zoom < 18) return { size: 18, icon: 11, font: 7 }
-  return { size: 32, icon: 18, font: 12 }
-}
 
 function applyMarkerSizes() {
   const { size, icon, font } = getMarkerSize()
@@ -219,16 +222,11 @@ map.current.on('zoom', applyMarkerSizes)
       allMarkerEls.push({ el, isService })
       markersRef.current.push({ el, floor: v.floor })
       if (!isOnFloor(v.floor, currentFloorRef.current)) el.style.display = 'none'
-      if (v.code) markerElsByCode.current[v.code] = el
+      markerElsById.current[v.id] = el
 
       marker.getElement().addEventListener('click', e => {
         e.stopPropagation()
-        resetSelectedMarker()
-        el.style.width = '34px'
-        el.style.height = '34px'
-        el.style.border = '4px solid white'
-        el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)'
-        selectedMarkerElRef.current = el
+        // выделение ставит эффект по selectedVenue.id
         onSelect({
           id: v.id,
           code: v.code,
@@ -240,11 +238,11 @@ map.current.on('zoom', applyMarkerSizes)
       })
     })
 
-    // ── Deep link: ?venue=CODE ──
+    // ── Deep link: ?venue=<id> (старые ссылки с кодом тоже находим) ──
     const params = new URLSearchParams(window.location.search)
-    const venueCode = params.get('venue')
-    if (venueCode) {
-      const venue = data.find(v => v.code === venueCode)
+    const venueParam = params.get('venue')
+    if (venueParam) {
+      const venue = data.find(v => v.id === venueParam) ?? data.find(v => v.code === venueParam)
       if (venue) {
         onFloorChange?.(venue.floor)
         onSelect({

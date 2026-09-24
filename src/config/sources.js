@@ -1,4 +1,4 @@
-import { EVENTS, LEGACY_EVENT_IDS } from './events'
+import { getLoadedEvent } from './events'
 
 export const SOCIAL_PREFIXES = {
   reddit: 'Reddit',
@@ -18,9 +18,7 @@ export function getSourceLabel(source) {
   return null
 }
 
-// eventId — отзыв с карты события; city — отзыв со страницы события на карте мира
-// (например /wuf13): там в city лежит старый код события
-export function getEventParticipantLabel(eventId, city) {
-  const shortName = EVENTS[eventId ?? LEGACY_EVENT_IDS[city]]?.shortName
+export function getEventParticipantLabel(eventId) {
+  const shortName = getLoadedEvent(eventId)?.shortName
   return shortName ? `${shortName} participant` : null
 }

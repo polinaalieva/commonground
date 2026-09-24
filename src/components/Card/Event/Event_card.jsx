@@ -122,7 +122,7 @@ export function Event_card({ venue, eventId, onDismiss }) {
   const isService = venue.type?.startsWith('service_')
 
   async function handleShare() {
-    const result = await shareVenue(venue.code, eventId)
+    const result = await shareVenue(venue.id, eventId)
     if (result) showToast(result)
   }
 
