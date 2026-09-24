@@ -6,6 +6,12 @@ import { maplibregl } from '../../config/map'
 import { getEventFloors, isOnFloor } from '../../config/events'
 import { VENUE_ICONS } from '../../config/venueIcons'
 
+// Смена этажа — «лифт»: план плавно сменяется, точки уезжают/приезжают по вертикали.
+// Длительность — как у «таблетки» в FloorSwitcher
+const FLOOR_ANIM_MS = 250
+const FLOOR_SHIFT_PX = 10
+const PLAN_OPACITY = 0.85
+
 export function VenueLayer({
   map,
   eventVenues = [],
@@ -19,6 +25,8 @@ export function VenueLayer({
   const renderedRef = useRef(false)
   const markersRef = useRef([]) // { el, floor }
   const currentFloorRef = useRef(currentFloor)
+  const prevFloorRef = useRef(currentFloor)
+  const animTokens = useRef(new WeakMap()) // отменяет устаревшие таймеры при быстрых переключениях
 
   function floorplanId(level) {
     return `floorplan-${level ?? 'main'}`
@@ -26,16 +34,66 @@ export function VenueLayer({
 
   function applyFloor() {
     const level = currentFloorRef.current
+    const prev = prevFloorRef.current
+    prevFloorRef.current = level
+
+    // Едем вверх — мир уходит вниз (+y), вниз — наоборот
+    const dir = prev == null || level == null || prev === level ? 0 : (level > prev ? 1 : -1)
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const shift = reduceMotion ? 0 : dir * FLOOR_SHIFT_PX
+
     markersRef.current.forEach(({ el, floor }) => {
-      // flex, а не '' — иначе цифра/иконка съезжает из центра кружка
-      el.style.display = isOnFloor(floor, level) ? 'flex' : 'none'
+      const visible = isOnFloor(floor, level)
+      if (visible === (el.style.display !== 'none')) return
+      if (dir === 0) {
+        // flex, а не '' — иначе цифра/иконка съезжает из центра кружка
+        el.style.display = visible ? 'flex' : 'none'
+      } else if (visible) {
+        showMarker(el, -shift)
+      } else {
+        hideMarker(el, shift)
+      }
     })
+
     if (!map.current) return
     getEventFloors(eventConfig).forEach(f => {
       const layerId = `${floorplanId(f.level)}-layer`
       if (!map.current.getLayer(layerId)) return
-      map.current.setLayoutProperty(layerId, 'visibility', isOnFloor(f.level, level) ? 'visible' : 'none')
+      map.current.setPaintProperty(layerId, 'raster-opacity', isOnFloor(f.level, level) ? PLAN_OPACITY : 0)
     })
+  }
+
+  // opacity маркеров переписывает сама maplibre на каждом движении карты,
+  // поэтому гасим через filter, а сдвигаем через translate (transform тоже её)
+  function hideMarker(el, toShift) {
+    const token = {}
+    animTokens.current.set(el, token)
+    el.style.transition = `filter ${FLOOR_ANIM_MS}ms ease-in, translate ${FLOOR_ANIM_MS}ms ease-in`
+    el.style.filter = 'opacity(0)'
+    el.style.translate = `0 ${toShift}px`
+    setTimeout(() => {
+      if (animTokens.current.get(el) !== token) return
+      el.style.display = 'none'
+      el.style.transition = ''
+      el.style.filter = ''
+      el.style.translate = ''
+    }, FLOOR_ANIM_MS)
+  }
+
+  function showMarker(el, fromShift) {
+    const token = {}
+    animTokens.current.set(el, token)
+    el.style.transition = 'none'
+    el.style.display = 'flex'
+    el.style.filter = 'opacity(0)'
+    el.style.translate = `0 ${fromShift}px`
+    el.getBoundingClientRect() // зафиксировать стартовое положение до перехода
+    el.style.transition = `filter ${FLOOR_ANIM_MS}ms ease-out, translate ${FLOOR_ANIM_MS}ms ease-out`
+    el.style.filter = ''
+    el.style.translate = ''
+    setTimeout(() => {
+      if (animTokens.current.get(el) === token) el.style.transition = ''
+    }, FLOOR_ANIM_MS)
   }
 
   // Смена этажа: показываем план этого этажа и его точки (+ точки без этажа)
@@ -172,8 +230,11 @@ export function VenueLayer({
         id: `${id}-layer`,
         type: 'raster',
         source: id,
-        paint: { 'raster-opacity': 0.85 },
-        layout: { visibility: isOnFloor(f.level, currentFloorRef.current) ? 'visible' : 'none' },
+        // все этажи в слое всегда, переключаем прозрачностью — так работает плавная смена
+        paint: {
+          'raster-opacity': isOnFloor(f.level, currentFloorRef.current) ? PLAN_OPACITY : 0,
+          'raster-opacity-transition': { duration: FLOOR_ANIM_MS, delay: 0 },
+        },
       })
     })
   }
