@@ -6,8 +6,10 @@ const TBR26_PLAN_CORNERS = [
   [-47.95447999722615, -15.827470237389912],
 ]
 
+// Код события: короткое-имя-месяц-год (wuf-11-26). Он же в URL /event/<код>,
+// в таблицах event_<код>_venues/_sessions/_orgs и в feedback_map.event_id
 export const EVENTS = {
-  wuf13: {
+  'wuf-11-26': {
     name: 'World Urban Forum 13',
     shortName: 'WUF13',
     description: 'WUF13 brings together urban leaders, practitioners, and researchers to shape the future of sustainable cities. This map lets participants mark places across the venue and share how they experience them.',
@@ -35,7 +37,7 @@ export const EVENTS = {
       ]
     }
   },
-  uis27: {
+  'uis-09-27': {
     name: 'Urban Intelligence Summit 2027',
     shortName: 'UIS27',
         description: 'An event bringing together people shaping the future of cities through data, technology, design, and new approaches to understanding urban life.',
@@ -66,7 +68,7 @@ export const EVENTS = {
       ]
     }
   },
-  '26-03-tbr': {
+  'dwb-09-26': {
     name: 'DW! Brasília',
     shortName: 'DW!B',
     description: '', // TODO: описание для окна About
@@ -112,6 +114,13 @@ export function getDefaultFloor(config) {
 // Точка без этажа (null) видна на всех этажах
 export function isOnFloor(floor, currentFloor) {
   return currentFloor == null || floor == null || Number(floor) === currentFloor
+}
+
+// Старые коды событий → новые: ссылки и QR-коды, разосланные до переименования
+export const LEGACY_EVENT_IDS = {
+  wuf13: 'wuf-11-26',
+  uis27: 'uis-09-27',
+  '26-03-tbr': 'dwb-09-26',
 }
 
 export function buildZoneColorExpression(zoneColors, fallback = '#cccccc') {

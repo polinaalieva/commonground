@@ -42,7 +42,7 @@ function getHexColor(avgRating) {
 
 function CommentBlock({ comment }) {
   const date = formatDate(comment.date)
-  let authorLabel = getEventParticipantLabel(comment.city)
+  let authorLabel = getEventParticipantLabel(comment.event_id, comment.city)
   if (!authorLabel) {
     const source = getSourceLabel(comment.source)
     authorLabel = source ? `via ${source}` : 'Local Contributor'

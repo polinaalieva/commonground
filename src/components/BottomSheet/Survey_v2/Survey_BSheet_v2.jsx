@@ -43,7 +43,7 @@ function cityCountry(features = []) {
 }
 
 const Survey_BSheet_v2 = forwardRef(function Survey_BSheet_v2(
-  { city, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onEnableMap, onClose, pinSelected, bottomSheetRef },
+  { city, eventId, source, variant, lang, pageContent, getCenter, onStartSelect, onMapMoveEnd, onEnableMap, onClose, pinSelected, bottomSheetRef },
   ref
 ) {
   const [open, setOpen] = useState(false)
@@ -132,7 +132,9 @@ const Survey_BSheet_v2 = forwardRef(function Survey_BSheet_v2(
         headers: { Prefer: 'return=minimal', 'Content-Profile': 'public' },
         body: JSON.stringify({
           country_name: countryName,
-          city: city || null,
+          // отзыв с карты события: код события в event_id, city — только для городских карт
+          city: eventId ? null : (city || null),
+          event_id: eventId || null,
           source: source || null,
           lat: c.lat,
           lng: c.lng,

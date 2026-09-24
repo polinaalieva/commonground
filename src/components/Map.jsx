@@ -50,6 +50,7 @@ function toGeoJSON(records) {
         properties: {
           id: r.id,
           city: r.city ?? null,
+          event_id: r.event_id ?? null,
           source: r.source ?? null,
           place_rate: rating,
           experience,
@@ -312,9 +313,10 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      const eventFilter = eventId ? '' : '&or=(source.is.null,source.neq.event)'
+      // отзывы события — по event_id; на общей карте — только отзывы без события
+      const eventFilter = eventId ? `&event_id=eq.${encodeURIComponent(eventId)}` : '&event_id=is.null'
       const records = await supabaseFetch(
-        `feedback_map?select=id,city,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)${eventFilter}&order=created_at.desc&limit=1000`,
+        `feedback_map?select=id,city,event_id,source,lat,lng,place_rate,experience,created_at,original_date,metric_type&or=(visibility.is.null,visibility.neq.hidden)${eventFilter}&order=created_at.desc&limit=1000`,
         { cache: 'no-store', signal: controller.signal }
       )
       clearTimeout(timeoutId)
@@ -418,6 +420,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
             original_date: props.original_date || null,
             source: props.source || null,
             city: props.city || null,
+            event_id: props.event_id || null,
           })
         })
 
@@ -497,6 +500,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
             original_date: record.original_date || null,
             source: record.source || null,
             city: record.city || null,
+            event_id: record.event_id || null,
           })
           const pinPadding = window.innerWidth <= 430
             ? { bottom: Math.round(window.innerHeight * 0.55) }
@@ -533,6 +537,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         date: r.original_date || r.created_at || null,
         source: r.source || null,
         city: r.city || null,
+        event_id: r.event_id || null,
       })
       hexMap[cell].comments.sort((a, b) => {
         const da = new Date(a.date || 0)
@@ -852,6 +857,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         ref={surveySheetRef}
         bottomSheetRef={bottomSheetRef}
         city={city}
+        eventId={source === 'event' ? eventId : null}
         source={source}
         variant={variant}
         lang={lang}
