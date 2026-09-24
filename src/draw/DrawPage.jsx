@@ -24,6 +24,12 @@ function DrawPage() {
   const [panel, setPanel] = useState({ code: '', number: '', zone: '', type: '' })
   const [scaleX, setScaleX] = useState(1)
   const [scaleY, setScaleY] = useState(1)
+  const [rotation, setRotation] = useState(0)
+  const [mapBearing, setMapBearing] = useState(0)
+  // для обработчиков маркеров, которые создаются один раз и не видят свежий state
+  const transformRef = useRef({ sx: 1, sy: 1, rot: 0 })
+  const historyRef = useRef([])
+  const historyTimeout = useRef(null)
   const shapeMeta = useRef({})
   const pendingCoordsRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -53,6 +59,32 @@ function DrawPage() {
     setSearchResults([])
   }
 
+  const [coordQuery, setCoordQuery] = useState('')
+  const [coordError, setCoordError] = useState(false)
+  const coordMarkerRef = useRef(null)
+
+  // Принимает "55.7558, 37.6173" или "55.7558 37.6173" (широта, долгота)
+  function handleCoordSearch() {
+    const parts = coordQuery.trim().replace(/[;,]/g, ' ').split(/\s+/).map(Number)
+    const [lat, lng] = parts
+    if (parts.length !== 2 || !Number.isFinite(lat) || !Number.isFinite(lng)
+      || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      setCoordError(true)
+      return
+    }
+    setCoordError(false)
+    map.current.flyTo({ center: [lng, lat], zoom: 17 })
+    if (coordMarkerRef.current) coordMarkerRef.current.setLngLat([lng, lat])
+    else coordMarkerRef.current = new maplibregl.Marker().setLngLat([lng, lat]).addTo(map.current)
+  }
+
+  function clearCoordSearch() {
+    setCoordQuery('')
+    setCoordError(false)
+    coordMarkerRef.current?.remove()
+    coordMarkerRef.current = null
+  }
+
   useEffect(() => {
     if (map.current) return
 
@@ -65,6 +97,10 @@ function DrawPage() {
       bearing: 0,
       pitchWithRotate: false,
       dragRotate: false,
+    })
+
+    map.current.on('rotate', () => {
+      setMapBearing(Math.round(map.current.getBearing() * 10) / 10)
     })
 
     map.current.on('load', () => {
@@ -83,6 +119,7 @@ function DrawPage() {
         controls: { polygon: true, trash: true, point: true },
       })
       map.current.addControl(draw.current)
+      pushHistory()
 
       map.current.on('draw.create', (e) => {
         const id = e.features[0].id
@@ -90,6 +127,12 @@ function DrawPage() {
         setSelectedId(id)
         setPanel({ code: '', number: '', zone: '', type: '' })
         updateShapeCount()
+        pushHistory()
+      })
+
+      map.current.on('draw.update', () => {
+        updateLabels()
+        pushHistory()
       })
 
       map.current.on('draw.selectionchange', (e) => {
@@ -106,9 +149,125 @@ function DrawPage() {
       map.current.on('draw.delete', () => {
         setSelectedId(null)
         updateShapeCount()
+        updateLabels()
+        pushHistory()
       })
     })
   }, [])
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      const tag = e.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      // e.code, а не e.key — чтобы работало и на русской раскладке
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+        return
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!draw.current) return
+        // выделенный шейп удаляет сам draw; во время рисования клавиша тоже его
+        if (draw.current.getSelectedIds().length) return
+        if (draw.current.getMode().startsWith('draw_')) return
+        if (locked || !imageUrlRef.current) return
+        e.preventDefault()
+        removePlan()
+        pushHistory()
+      }
+    }
+    // capture: успеваем проверить выделение до того, как draw удалит шейп
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [locked, opacity])
+
+  function takeSnapshot() {
+    return {
+      features: structuredClone(draw.current.getAll()),
+      meta: structuredClone(shapeMeta.current),
+      plan: imageUrlRef.current && baseCornersRef.current ? {
+        url: imageUrlRef.current,
+        base: baseCornersRef.current.map(c => [...c]),
+        transform: { ...transformRef.current },
+      } : null,
+    }
+  }
+
+  // Запоминаем состояние после каждого законченного действия
+  function pushHistory() {
+    clearTimeout(historyTimeout.current)
+    historyTimeout.current = null
+    if (!draw.current) return
+    const snap = takeSnapshot()
+    const history = historyRef.current
+    const last = history[history.length - 1]
+    if (last && JSON.stringify(last) === JSON.stringify(snap)) return
+    history.push(snap)
+    if (history.length > 100) history.shift()
+  }
+
+  // Для слайдеров: одна запись на всё движение, а не на каждый шаг
+  function pushHistoryDebounced() {
+    clearTimeout(historyTimeout.current)
+    historyTimeout.current = setTimeout(pushHistory, 400)
+  }
+
+  function undo() {
+    if (historyTimeout.current) pushHistory()
+    const history = historyRef.current
+    if (history.length < 2) return
+    history.pop()
+    restoreSnapshot(history[history.length - 1])
+  }
+
+  function restoreSnapshot(snap) {
+    draw.current.set(structuredClone(snap.features))
+    shapeMeta.current = structuredClone(snap.meta)
+    setSelectedId(null)
+    updateShapeCount()
+    updateLabels()
+
+    if (!snap.plan) {
+      removePlan()
+      return
+    }
+    if (snap.plan.url !== imageUrlRef.current) {
+      removeOverlay()
+      imageUrlRef.current = snap.plan.url
+    }
+    baseCornersRef.current = snap.plan.base.map(c => [...c])
+    setTransform(snap.plan.transform)
+    if (!centerMarkerRef.current) {
+      addControlMarkers(cornersRef.current)
+      setMarkersVisible(!locked)
+    }
+    setHasImage(true)
+  }
+
+  function removeOverlay() {
+    if (map.current.getLayer('overlay-image-layer')) map.current.removeLayer('overlay-image-layer')
+    if (map.current.getSource('overlay-image')) map.current.removeSource('overlay-image')
+  }
+
+  // object URL картинки не освобождаем — он нужен, чтобы вернуть план по cmd+Z
+  function removePlan() {
+    removeOverlay()
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+    centerMarkerRef.current?.remove()
+    centerMarkerRef.current = null
+    imageUrlRef.current = null
+    cornersRef.current = null
+    baseCornersRef.current = null
+    transformRef.current = { sx: 1, sy: 1, rot: 0 }
+    setScaleX(1)
+    setScaleY(1)
+    setRotation(0)
+    setHasImage(false)
+    setLocked(false)
+  }
 
   function updateShapeCount() {
     const all = draw.current?.getAll()
@@ -120,6 +279,7 @@ function DrawPage() {
     shapeMeta.current[selectedId] = { ...panel }
     updateLabels()
     setSelectedId(null)
+    pushHistory()
   }
 
   function updateLabels() {
@@ -185,38 +345,93 @@ function DrawPage() {
     ]
   }
 
-  function applyScale(sx, sy) {
-    if (!baseCornersRef.current) return
-    const base = baseCornersRef.current
-    const center = getCenter(base)
+  function normalizeDeg(deg) {
+    return (((deg + 180) % 360) + 360) % 360 - 180
+  }
 
+  // Поворот по часовой стрелке вокруг center. Считаем в локальных метрах
+  // (долготу умножаем на cos(широты)), иначе план при повороте перекашивается.
+  function rotateAround(points, center, deg) {
+    const k = Math.cos(center[1] * Math.PI / 180)
+    const t = deg * Math.PI / 180
+    const cos = Math.cos(t)
+    const sin = Math.sin(t)
+    return points.map(([lng, lat]) => {
+      const x = (lng - center[0]) * k
+      const y = lat - center[1]
+      return [
+        center[0] + (x * cos + y * sin) / k,
+        center[1] + (-x * sin + y * cos),
+      ]
+    })
+  }
+
+  // base — план без поворота и без W/H; на карте — base × масштаб × поворот
+  function transformCorners(base, sx, sy, rot) {
+    const center = getCenter(base)
     const scaled = base.map(c => [
       center[0] + (c[0] - center[0]) * sx,
       center[1] + (c[1] - center[1]) * sy,
     ])
+    return rotateAround(scaled, center, rot)
+  }
 
-    cornersRef.current = scaled
+  function applyTransform() {
+    if (!baseCornersRef.current) return
+    const { sx, sy, rot } = transformRef.current
+    const corners = transformCorners(baseCornersRef.current, sx, sy, rot)
+
+    cornersRef.current = corners
     updateImageOverlay()
 
     // обновляем маркеры
     if (centerMarkerRef.current) {
-      centerMarkerRef.current.setLngLat(getCenter(scaled))
+      centerMarkerRef.current.setLngLat(getCenter(corners))
     }
     if (markersRef.current[0]) {
-      markersRef.current[0].setLngLat(scaled[2])
+      markersRef.current[0].setLngLat(corners[2])
     }
+  }
+
+  function setTransform(patch) {
+    transformRef.current = { ...transformRef.current, ...patch }
+    setScaleX(transformRef.current.sx)
+    setScaleY(transformRef.current.sy)
+    setRotation(transformRef.current.rot)
+    applyTransform()
+  }
+
+  // Загружаем углы (возможно, уже повёрнутые): угол берём по верхней грани
+  function loadCorners(corners) {
+    const center = getCenter(corners)
+    const k = Math.cos(center[1] * Math.PI / 180)
+    const dx = (corners[1][0] - corners[0][0]) * k
+    const dy = corners[1][1] - corners[0][1]
+    const rot = normalizeDeg(Math.atan2(-dy, dx) * 180 / Math.PI)
+    baseCornersRef.current = rotateAround(corners, center, -rot)
+    setTransform({ sx: 1, sy: 1, rot })
   }
 
   function handleScaleX(e) {
-    const val = parseFloat(e.target.value)
-    setScaleX(val)
-    applyScale(val, scaleY)
+    setTransform({ sx: parseFloat(e.target.value) })
+    pushHistoryDebounced()
   }
 
   function handleScaleY(e) {
+    setTransform({ sy: parseFloat(e.target.value) })
+    pushHistoryDebounced()
+  }
+
+  function handleRotation(e) {
     const val = parseFloat(e.target.value)
-    setScaleY(val)
-    applyScale(scaleX, val)
+    if (!Number.isFinite(val)) return
+    setTransform({ rot: normalizeDeg(val) })
+    pushHistoryDebounced()
+  }
+
+  function handleAlignMap() {
+    const target = mapBearing === 0 ? transformRef.current.rot : 0
+    map.current.easeTo({ bearing: target, duration: 600 })
   }
 
   function updateImageOverlay() {
@@ -235,8 +450,14 @@ function DrawPage() {
         type: 'raster',
         source: 'overlay-image',
         paint: { 'raster-opacity': opacity },
-      })
+      }, beforeLayerId())
     }
+  }
+
+  // план кладём под шейпы и подписи, даже если их нарисовали раньше
+  function beforeLayerId() {
+    return map.current.getStyle().layers
+      .find(l => l.id.startsWith('gl-draw') || l.id === 'labels-layer')?.id
   }
 
   function setMarkersVisible(visible) {
@@ -290,21 +511,16 @@ function DrawPage() {
       const newDist = Math.sqrt(newDx * newDx + newDy * newDy)
       const scale = oldDist !== 0 ? newDist / oldDist : 1
 
-      cornersRef.current = cornersRef.current.map(c => [
-        center[0] + (c[0] - center[0]) * scale,
-        center[1] + (c[1] - center[1]) * scale,
+      // равномерный скейл применяем к базе — поворот и W/H сохраняются
+      const baseCenter = getCenter(baseCornersRef.current)
+      baseCornersRef.current = baseCornersRef.current.map(c => [
+        baseCenter[0] + (c[0] - baseCenter[0]) * scale,
+        baseCenter[1] + (c[1] - baseCenter[1]) * scale,
       ])
-
-      // обновляем базу после ручного скейла маркером
-      baseCornersRef.current = cornersRef.current.map(c => [...c])
-      setScaleX(1)
-      setScaleY(1)
-
-      updateImageOverlay()
-      centerMarkerRef.current?.setLngLat(getCenter(cornersRef.current))
-      scaleMarker.setLngLat(cornersRef.current[2])
+      applyTransform()
     })
 
+    scaleMarker.on('dragend', pushHistory)
     markersRef.current.push(scaleMarker)
 
     const moveEl = makeDot('#4A90E2', 20)
@@ -319,14 +535,11 @@ function DrawPage() {
       const oldCenter = getCenter(cornersRef.current)
       const dx = newCenter[0] - oldCenter[0]
       const dy = newCenter[1] - oldCenter[1]
-      cornersRef.current = cornersRef.current.map(c => [c[0] + dx, c[1] + dy])
-      baseCornersRef.current = cornersRef.current.map(c => [...c])
-      setScaleX(1)
-      setScaleY(1)
-      updateImageOverlay()
-      scaleMarker.setLngLat(cornersRef.current[2])
+      baseCornersRef.current = baseCornersRef.current.map(c => [c[0] + dx, c[1] + dy])
+      applyTransform()
     })
 
+    moveMarker.on('dragend', pushHistory)
     centerMarkerRef.current = moveMarker
   }
 
@@ -355,15 +568,12 @@ function DrawPage() {
         ]
       })()
 
-      cornersRef.current = corners
-      baseCornersRef.current = corners.map(c => [...c])
-      setScaleX(1)
-      setScaleY(1)
-
-      updateImageOverlay()
-      addControlMarkers(corners)
+      removeOverlay()
+      loadCorners(corners)
+      addControlMarkers(cornersRef.current)
       setHasImage(true)
       setLocked(false)
+      pushHistory()
 
       if (pending) {
         map.current.fitBounds([
@@ -432,12 +642,9 @@ function DrawPage() {
       const parsed = JSON.parse(clean)
       const coords = parsed.coordinates
       if (!Array.isArray(coords) || coords.length !== 4) return 'Неверный формат: нужен массив из 4 точек'
-      cornersRef.current = coords
-      baseCornersRef.current = coords.map(c => [...c])
-      setScaleX(1)
-      setScaleY(1)
-      updateImageOverlay()
-      addControlMarkers(coords)
+      loadCorners(coords)
+      addControlMarkers(cornersRef.current)
+      pushHistory()
       map.current.fitBounds([
         [Math.min(...coords.map(c => c[0])), Math.min(...coords.map(c => c[1]))],
         [Math.max(...coords.map(c => c[0])), Math.max(...coords.map(c => c[1]))],
@@ -465,7 +672,9 @@ function DrawPage() {
       corners[1], // top-right
       corners[2], // bottom-right
       corners[3], // bottom-left
-    ]
+    ],
+    // bearing карты события, при котором план стоит на экране ровно
+    bearing: Math.round(transformRef.current.rot * 10) / 10,
   }, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -531,6 +740,7 @@ function DrawPage() {
     })
     updateShapeCount()
     updateLabels()
+    pushHistory()
   }
 }
     reader.readAsText(file)
@@ -634,6 +844,15 @@ function DrawPage() {
                 <span style={{ fontSize: 11, color: '#333', minWidth: 30 }}>
                   {Math.round(scaleY * 100)}%
                 </span>
+
+                <span style={{ fontSize: 11, color: '#666' }}>↻</span>
+                <input type="range" min="-180" max="180" step="0.1" value={rotation}
+                  onChange={handleRotation} style={{ width: 100, cursor: 'pointer' }} />
+                <input type="number" min="-180" max="180" step="0.1"
+                  value={Math.round(rotation * 10) / 10}
+                  onChange={handleRotation}
+                  style={{ ...inputStyle, width: 64, padding: '2px 4px', fontSize: 11 }} />
+                <span style={{ fontSize: 11, color: '#666' }}>°</span>
               </>
             )}
 
@@ -644,6 +863,9 @@ function DrawPage() {
               border: '1px solid #333', borderRadius: 4,
             }}>
               {locked ? '🔒' : '🔓'}
+            </button>
+            <button onClick={handleAlignMap} style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 12 }}>
+              {mapBearing === 0 ? 'Карту по плану' : 'Карту на север'}
             </button>
             {!locked && (
               <span style={{ fontSize: 11, color: '#666' }}>🔵 двигать · ⚪ масштаб</span>
@@ -695,6 +917,33 @@ function DrawPage() {
             </div>
           )}
         </div>
+
+        {/* Поиск по координатам */}
+        <div style={{ position: 'relative', width: '100%' }}>
+          <input
+            type="text"
+            placeholder="Координаты: 55.7558, 37.6173"
+            value={coordQuery}
+            onChange={e => { setCoordQuery(e.target.value); setCoordError(false) }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleCoordSearch()
+              if (e.key === 'Escape') clearCoordSearch()
+            }}
+            style={{ ...inputStyle, paddingRight: 28, borderColor: coordError ? '#e53935' : undefined }}
+          />
+          {coordQuery && (
+            <button
+              onClick={clearCoordSearch}
+              style={{
+                position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#999',
+              }}
+            >✕</button>
+          )}
+        </div>
+        {coordError && (
+          <span style={{ fontSize: 11, color: '#e53935' }}>Формат: широта, долгота</span>
+        )}
 
         <div style={{ width: '100%', height: 1, background: '#ddd', margin: '4px 0' }} />
 
