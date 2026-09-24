@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { maplibregl, MAP_STYLE } from '../config/map'
 import MaplibreDraw from 'maplibre-gl-draw'
+import { RotateCw, Scaling } from 'lucide-react'
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css'
+
+// Этаж — число (1, 2, … подвал -1). Пусто = null: этаж не задан,
+// в событии с этажами такая точка видна на всех этажах
+function emptyMeta() {
+  return { code: '', number: '', zone: '', type: '', floor: '' }
+}
 
 function DrawPage() {
   const mapContainer = useRef(null)
@@ -21,7 +28,7 @@ function DrawPage() {
   const [locked, setLocked] = useState(false)
   const [shapeCount, setShapeCount] = useState(0)
   const [selectedId, setSelectedId] = useState(null)
-  const [panel, setPanel] = useState({ code: '', number: '', zone: '', type: '' })
+  const [panel, setPanel] = useState(emptyMeta())
   const [scaleX, setScaleX] = useState(1)
   const [scaleY, setScaleY] = useState(1)
   const [rotation, setRotation] = useState(0)
@@ -30,7 +37,23 @@ function DrawPage() {
   const transformRef = useRef({ sx: 1, sy: 1, rot: 0 })
   const historyRef = useRef([])
   const historyTimeout = useRef(null)
+  const [tool, setTool] = useState(null) // null | 'stretch' | 'rotate'
+  const [hasPin, setHasPin] = useState(false)
+  const toolRef = useRef(null)
+  const pinRef = useRef(null)
+  const pinMarkerRef = useRef(null)
+  const toolDragRef = useRef(null)
+  const spaceRef = useRef(false)
   const shapeMeta = useRef({})
+  // Этажи: список уровней (числа) и текущий; null — план без этажей
+  const [floors, setFloors] = useState([])
+  const [currentFloor, setCurrentFloor] = useState(null)
+  const floorsRef = useRef([])
+  const currentFloorRef = useRef(null)
+  // планы по этажам { '1': plan, '2': plan, '_': plan }; активный живёт в рабочих ref-ах
+  const plansRef = useRef({})
+  const planNameRef = useRef(null)
+  const drawFiltersRef = useRef({})
   const pendingCoordsRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -117,15 +140,18 @@ function DrawPage() {
       draw.current = new MaplibreDraw({
         displayControlsDefault: false,
         controls: { polygon: true, trash: true, point: true },
+        userProperties: true, // floor в свойствах шейпа — по нему прячем другие этажи
       })
       map.current.addControl(draw.current)
       pushHistory()
 
       map.current.on('draw.create', (e) => {
         const id = e.features[0].id
-        shapeMeta.current[id] = { code: '', number: '', zone: '', type: '' }
+        const meta = { ...emptyMeta(), floor: currentFloorRef.current == null ? '' : String(currentFloorRef.current) }
+        shapeMeta.current[id] = meta
+        draw.current.setFeatureProperty(id, 'floor', meta.floor)
         setSelectedId(id)
-        setPanel({ code: '', number: '', zone: '', type: '' })
+        setPanel(meta)
         updateShapeCount()
         pushHistory()
       })
@@ -141,9 +167,9 @@ function DrawPage() {
           return
         }
         const id = e.features[0].id
-        const meta = shapeMeta.current[id] || { code: '', number: '', zone: '', type: '' }
+        const meta = { ...emptyMeta(), ...shapeMeta.current[id] }
         setSelectedId(id)
-        setPanel({ ...meta })
+        setPanel(meta)
       })
 
       map.current.on('draw.delete', () => {
@@ -167,6 +193,21 @@ function DrawPage() {
         return
       }
 
+      if (toolRef.current && e.key === 'Escape') {
+        exitTool()
+        return
+      }
+
+      // пробел во время «растянуть» — пропорционально
+      if (toolRef.current && e.code === 'Space') {
+        e.preventDefault()
+        if (!spaceRef.current) {
+          spaceRef.current = true
+          if (toolDragRef.current?.last) applyToolDrag(toolDragRef.current.last)
+        }
+        return
+      }
+
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (!draw.current) return
         // выделенный шейп удаляет сам draw; во время рисования клавиша тоже его
@@ -178,20 +219,27 @@ function DrawPage() {
         pushHistory()
       }
     }
+    function onKeyUp(e) {
+      if (e.code !== 'Space' || !spaceRef.current) return
+      spaceRef.current = false
+      if (toolDragRef.current?.last) applyToolDrag(toolDragRef.current.last)
+    }
+
     // capture: успеваем проверить выделение до того, как draw удалит шейп
     window.addEventListener('keydown', onKeyDown, true)
-    return () => window.removeEventListener('keydown', onKeyDown, true)
+    window.addEventListener('keyup', onKeyUp, true)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true)
+      window.removeEventListener('keyup', onKeyUp, true)
+    }
   }, [locked, opacity])
 
   function takeSnapshot() {
     return {
       features: structuredClone(draw.current.getAll()),
       meta: structuredClone(shapeMeta.current),
-      plan: imageUrlRef.current && baseCornersRef.current ? {
-        url: imageUrlRef.current,
-        base: baseCornersRef.current.map(c => [...c]),
-        transform: { ...transformRef.current },
-      } : null,
+      plans: structuredClone(allPlans()),
+      floors: [...floorsRef.current],
     }
   }
 
@@ -222,28 +270,149 @@ function DrawPage() {
     restoreSnapshot(history[history.length - 1])
   }
 
+  // Отмена не переключает этаж: остаёмся на текущем, если он ещё существует
   function restoreSnapshot(snap) {
     draw.current.set(structuredClone(snap.features))
     shapeMeta.current = structuredClone(snap.meta)
+    plansRef.current = structuredClone(snap.plans)
+    setFloorList(snap.floors)
+    const cur = currentFloorRef.current
+    setFloor(snap.floors.includes(cur) ? cur : (snap.floors[0] ?? null))
     setSelectedId(null)
     updateShapeCount()
-    updateLabels()
+    showPlan(plansRef.current[floorKey()])
+  }
 
-    if (!snap.plan) {
+  // ── Этажи ──
+
+  function floorKey() {
+    return currentFloorRef.current == null ? '_' : String(currentFloorRef.current)
+  }
+
+  function activePlan() {
+    return imageUrlRef.current && baseCornersRef.current ? {
+      url: imageUrlRef.current,
+      name: planNameRef.current,
+      base: baseCornersRef.current.map(c => [...c]),
+      transform: { ...transformRef.current },
+    } : null
+  }
+
+  function allPlans() {
+    return { ...plansRef.current, [floorKey()]: activePlan() }
+  }
+
+  function showPlan(plan) {
+    if (!plan) {
       removePlan()
       return
     }
-    if (snap.plan.url !== imageUrlRef.current) {
+    if (plan.url !== imageUrlRef.current) {
       removeOverlay()
-      imageUrlRef.current = snap.plan.url
+      imageUrlRef.current = plan.url
     }
-    baseCornersRef.current = snap.plan.base.map(c => [...c])
-    setTransform(snap.plan.transform)
+    planNameRef.current = plan.name
+    baseCornersRef.current = plan.base.map(c => [...c])
+    setTransform(plan.transform)
     if (!centerMarkerRef.current) {
       addControlMarkers(cornersRef.current)
-      setMarkersVisible(!locked)
+      setMarkersVisible(!locked && !toolRef.current)
     }
     setHasImage(true)
+  }
+
+  function setFloorList(list) {
+    floorsRef.current = [...list].sort((a, b) => b - a)
+    setFloors(floorsRef.current)
+  }
+
+  function setFloor(level) {
+    currentFloorRef.current = level
+    setCurrentFloor(level)
+    applyFloorFilter()
+    updateLabels()
+  }
+
+  function isOnCurrentFloor(floor) {
+    const level = currentFloorRef.current
+    return level == null || floor == null || floor === '' || String(floor) === String(level)
+  }
+
+  // Прячем шейпы других этажей фильтром на слоях draw (их нельзя и выделить)
+  function applyFloorFilter() {
+    if (!draw.current) return // слои draw появляются после load
+    const level = currentFloorRef.current
+    const floorFilter = level == null ? null : ['any',
+      ['!has', 'user_floor'],
+      ['==', 'user_floor', ''],
+      ['==', 'user_floor', String(level)],
+    ]
+    map.current.getStyle().layers.forEach(l => {
+      if (!l.id.startsWith('gl-draw')) return
+      if (!(l.id in drawFiltersRef.current)) drawFiltersRef.current[l.id] = l.filter ?? null
+      const own = drawFiltersRef.current[l.id]
+      const parts = [own, floorFilter].filter(Boolean)
+      map.current.setFilter(l.id, parts.length > 1 ? ['all', ...parts] : (parts[0] ?? null))
+    })
+  }
+
+  function switchFloor(level) {
+    if (level === currentFloorRef.current) return
+    exitTool()
+    plansRef.current[floorKey()] = activePlan()
+    draw.current.changeMode('simple_select', { featureIds: [] })
+    setSelectedId(null)
+    setFloor(level)
+    showPlan(plansRef.current[floorKey()])
+  }
+
+  function addFloor(direction) {
+    const list = floorsRef.current
+    plansRef.current[floorKey()] = activePlan()
+
+    // первый этаж: текущий план становится 1-м
+    if (!list.length) {
+      plansRef.current['1'] = plansRef.current._ ?? null
+      delete plansRef.current._
+      setFloorList([1])
+      setFloor(1)
+      pushHistory()
+      return
+    }
+
+    const max = Math.max(...list)
+    const min = Math.min(...list)
+    const level = direction > 0
+      ? (max === -1 ? 1 : max + 1)
+      : (min === 1 ? -1 : min - 1)
+
+    // новый этаж встаёт на место текущего — здание то же
+    const template = activePlan()
+    setFloorList([...list, level])
+    switchFloor(level)
+    pushHistory()
+    if (template) {
+      const { sx, sy, rot } = template.transform
+      pendingCoordsRef.current = transformCorners(template.base, sx, sy, rot)
+    }
+    fileInputRef.current.click()
+  }
+
+  function removeFloor() {
+    const level = currentFloorRef.current
+    if (level == null) return
+    const hasShapes = draw.current.getAll().features
+      .some(f => String(shapeMeta.current[f.id]?.floor ?? '') === String(level))
+    if (imageUrlRef.current || hasShapes) {
+      alert('На этаже есть план или шейпы — сначала удали их')
+      return
+    }
+    delete plansRef.current[String(level)]
+    const rest = floorsRef.current.filter(l => l !== level)
+    setFloorList(rest)
+    setFloor(rest[0] ?? null)
+    showPlan(plansRef.current[floorKey()])
+    pushHistory()
   }
 
   function removeOverlay() {
@@ -253,6 +422,7 @@ function DrawPage() {
 
   // object URL картинки не освобождаем — он нужен, чтобы вернуть план по cmd+Z
   function removePlan() {
+    exitTool()
     removeOverlay()
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
@@ -276,7 +446,15 @@ function DrawPage() {
 
   function handlePanelSave() {
     if (!selectedId) return
-    shapeMeta.current[selectedId] = { ...panel }
+    const floorNum = parseInt(panel.floor, 10)
+    const meta = { ...panel, floor: Number.isInteger(floorNum) ? String(floorNum) : '' }
+    shapeMeta.current[selectedId] = meta
+    // add с тем же id обновляет шейп и перерисовывает — нужно, чтобы сработал фильтр этажа
+    const feature = draw.current.get(selectedId)
+    if (feature) {
+      feature.properties = { ...feature.properties, floor: meta.floor }
+      draw.current.add(feature)
+    }
     updateLabels()
     setSelectedId(null)
     pushHistory()
@@ -315,7 +493,7 @@ function DrawPage() {
 
     const features = all.features.map(f => {
       const meta = shapeMeta.current[f.id] || {}
-      if (!meta.number) return null
+      if (!meta.number || !isOnCurrentFloor(meta.floor)) return null
 
       let center
       if (f.geometry.type === 'Point') {
@@ -403,14 +581,189 @@ function DrawPage() {
 
   // Загружаем углы (возможно, уже повёрнутые): угол берём по верхней грани
   function loadCorners(corners) {
+    setFromCorners(corners, 1, 1)
+  }
+
+  // Раскладываем готовые углы обратно в base + масштаб W/H + поворот
+  function setFromCorners(corners, sx, sy) {
     const center = getCenter(corners)
     const k = Math.cos(center[1] * Math.PI / 180)
     const dx = (corners[1][0] - corners[0][0]) * k
     const dy = corners[1][1] - corners[0][1]
     const rot = normalizeDeg(Math.atan2(-dy, dx) * 180 / Math.PI)
-    baseCornersRef.current = rotateAround(corners, center, -rot)
-    setTransform({ sx: 1, sy: 1, rot })
+    baseCornersRef.current = rotateAround(corners, center, -rot).map(c => [
+      center[0] + (c[0] - center[0]) / sx,
+      center[1] + (c[1] - center[1]) / sy,
+    ])
+    setTransform({ sx, sy, rot })
   }
+
+  // ── Инструменты «растянуть» / «повернуть» вокруг булавки ──
+
+  function selectTool(name) {
+    if (toolRef.current === name) {
+      exitTool()
+      return
+    }
+    toolRef.current = name
+    setTool(name)
+    setMarkersVisible(false)
+    map.current.getCanvas().style.cursor = 'crosshair'
+  }
+
+  function exitTool() {
+    toolRef.current = null
+    setTool(null)
+    setPin(null)
+    if (map.current) map.current.getCanvas().style.cursor = ''
+    if (cornersRef.current) setMarkersVisible(true)
+  }
+
+  function setPin(lngLat) {
+    pinRef.current = lngLat
+    setHasPin(!!lngLat)
+    if (!lngLat) {
+      pinMarkerRef.current?.remove()
+      pinMarkerRef.current = null
+      return
+    }
+    if (!pinMarkerRef.current) {
+      const el = document.createElement('div')
+      el.style.cssText = `
+        width: 14px; height: 14px; background: #e53935;
+        border: 2px solid #fff; border-radius: 50%;
+        box-shadow: 0 0 0 1px #333; pointer-events: none;
+      `
+      pinMarkerRef.current = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map.current)
+    } else {
+      pinMarkerRef.current.setLngLat(lngLat)
+    }
+  }
+
+  function eventLngLat(e) {
+    const rect = map.current.getCanvas().getBoundingClientRect()
+    const p = map.current.unproject([e.clientX - rect.left, e.clientY - rect.top])
+    return [p.lng, p.lat]
+  }
+
+  function isInsidePlan(e) {
+    if (!cornersRef.current) return false
+    const rect = map.current.getCanvas().getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const poly = cornersRef.current.map(c => map.current.project(c))
+    let inside = false
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const a = poly[i]
+      const b = poly[j]
+      if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside
+    }
+    return inside
+  }
+
+  // Считаем в метрах вокруг булавки (как и поворот — иначе перекос)
+  function applyToolDrag(current) {
+    const d = toolDragRef.current
+    const pin = pinRef.current
+    if (!d || !pin) return
+    const k = Math.cos(pin[1] * Math.PI / 180)
+    const toLocal = p => [(p[0] - pin[0]) * k, p[1] - pin[1]]
+    const fromLocal = ([x, y]) => [pin[0] + x / k, pin[1] + y]
+    const a = toLocal(d.start)
+    const b = toLocal(current)
+
+    if (toolRef.current === 'rotate') {
+      const delta = Math.atan2(b[1], b[0]) - Math.atan2(a[1], a[0])
+      const corners = rotateAround(d.startCorners, pin, -delta * 180 / Math.PI)
+      setFromCorners(corners, transformRef.current.sx, transformRef.current.sy)
+      return
+    }
+
+    // растягиваем вдоль собственных осей плана
+    const t = d.startRot * Math.PI / 180
+    const u = [Math.cos(t), -Math.sin(t)]
+    const v = [Math.sin(t), Math.cos(t)]
+    const dot = (p, q) => p[0] * q[0] + p[1] * q[1]
+    const len = Math.hypot(a[0], a[1])
+    if (len === 0) return
+
+    let fu, fv
+    if (spaceRef.current) {
+      fu = fv = Math.hypot(b[0], b[1]) / len
+    } else {
+      // если тянем точку, лежащую на одной оси с булавкой, другую ось не трогаем
+      const au = dot(a, u)
+      const av = dot(a, v)
+      fu = Math.abs(au) < len * 0.05 ? 1 : dot(b, u) / au
+      fv = Math.abs(av) < len * 0.05 ? 1 : dot(b, v) / av
+    }
+    fu = Math.max(fu, 0.05)
+    fv = Math.max(fv, 0.05)
+
+    const corners = d.startCorners.map(q => {
+      const l = toLocal(q)
+      const qu = dot(l, u) * fu
+      const qv = dot(l, v) * fv
+      return fromLocal([u[0] * qu + v[0] * qv, u[1] * qu + v[1] * qv])
+    })
+    setFromCorners(corners, 1, 1)
+  }
+
+  // Слушаем мышь в capture-фазе: если жест наш, карта и draw его не видят
+  useEffect(() => {
+    const container = mapContainer.current
+
+    function onMouseDown(e) {
+      if (!toolRef.current || e.button !== 0) return
+      if (e.target !== map.current.getCanvas() || !isInsidePlan(e)) return
+      e.stopPropagation()
+      e.preventDefault()
+      toolDragRef.current = {
+        start: eventLngLat(e),
+        startCorners: cornersRef.current.map(c => [...c]),
+        startRot: transformRef.current.rot,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+        last: null,
+      }
+      window.addEventListener('mousemove', onMouseMove, true)
+      window.addEventListener('mouseup', onMouseUp, true)
+    }
+
+    function onMouseMove(e) {
+      const d = toolDragRef.current
+      if (!d) return
+      e.stopPropagation()
+      if (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 4) return
+      d.moved = true
+      d.last = eventLngLat(e)
+      applyToolDrag(d.last)
+    }
+
+    function onMouseUp(e) {
+      const d = toolDragRef.current
+      window.removeEventListener('mousemove', onMouseMove, true)
+      window.removeEventListener('mouseup', onMouseUp, true)
+      toolDragRef.current = null
+      if (!d) return
+      e.stopPropagation()
+      if (!d.moved) setPin(d.start) // просто клик — ставим/переставляем булавку
+      else if (pinRef.current) pushHistory()
+    }
+
+    // клик по плану не должен выделять шейпы под ним
+    function onClick(e) {
+      if (toolRef.current && e.target === map.current?.getCanvas() && isInsidePlan(e)) e.stopPropagation()
+    }
+
+    container.addEventListener('mousedown', onMouseDown, true)
+    container.addEventListener('click', onClick, true)
+    return () => {
+      container.removeEventListener('mousedown', onMouseDown, true)
+      container.removeEventListener('click', onClick, true)
+    }
+  }, [])
 
   function handleScaleX(e) {
     setTransform({ sx: parseFloat(e.target.value) })
@@ -471,6 +824,7 @@ function DrawPage() {
 
   function handleLockToggle() {
     const newLocked = !locked
+    if (newLocked) exitTool()
     setLocked(newLocked)
     setMarkersVisible(!newLocked)
   }
@@ -550,6 +904,7 @@ function DrawPage() {
 
     const url = URL.createObjectURL(file)
     imageUrlRef.current = url
+    planNameRef.current = file.name
 
     const img = new Image()
     img.onload = () => {
@@ -589,7 +944,7 @@ function DrawPage() {
     try {
       const clean = coordInput.replace(/[""«»]/g, '"').replace(/['']/g, "'").trim()
       const parsed = JSON.parse(clean)
-      const coords = parsed.coordinates
+      const coords = pickCoords(parsed)
       if (!Array.isArray(coords) || coords.length !== 4) { alert('Неверный формат'); return }
       pendingCoordsRef.current = coords
       fileInputRef.current.click()
@@ -620,10 +975,11 @@ function DrawPage() {
           : f.geometry.coordinates[0]
       )
       const geomType = f.geometry.type === 'Point' ? 'point' : 'polygon'
-      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${meta.zone || ''}","${meta.type || ''}","${geomType}","${coords}"`
+      const floor = Number.isInteger(parseInt(meta.floor, 10)) ? parseInt(meta.floor, 10) : ''
+      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${meta.zone || ''}","${meta.type || ''}",${floor},"${geomType}","${coords}"`
     })
 
-    const csv = ['id,code,number,zone,type,geometry_type,coordinates', ...rows].join('\n')
+    const csv = ['id,code,number,zone,type,floor,geometry_type,coordinates', ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -640,7 +996,7 @@ function DrawPage() {
         .replace(/[‘’]/g, "'")
         .trim()
       const parsed = JSON.parse(clean)
-      const coords = parsed.coordinates
+      const coords = pickCoords(parsed)
       if (!Array.isArray(coords) || coords.length !== 4) return 'Неверный формат: нужен массив из 4 точек'
       loadCorners(coords)
       addControlMarkers(cornersRef.current)
@@ -663,19 +1019,42 @@ function DrawPage() {
   }
 
 
+  // JSON с этажами: берём этаж текущего уровня, иначе первый
+  function pickCoords(parsed) {
+    if (!Array.isArray(parsed.floors)) return parsed.coordinates
+    const floor = parsed.floors.find(f => f.level === currentFloorRef.current) ?? parsed.floors[0]
+    return floor?.coordinates
+  }
+
   function handleExportCorners() {
-  if (!cornersRef.current) return
-  const corners = cornersRef.current
-  const json = JSON.stringify({
-    coordinates: [
-      corners[0], // top-left
-      corners[1], // top-right
-      corners[2], // bottom-right
-      corners[3], // bottom-left
-    ],
-    // bearing карты события, при котором план стоит на экране ровно
-    bearing: Math.round(transformRef.current.rot * 10) / 10,
-  }, null, 2)
+  const plans = allPlans()
+  const cornersOf = p => transformCorners(p.base, p.transform.sx, p.transform.sy, p.transform.rot)
+  // bearing карты события, при котором план стоит на экране ровно
+  const bearingOf = p => Math.round(p.transform.rot * 10) / 10
+  let data
+
+  if (!floorsRef.current.length) {
+    const plan = plans._
+    if (!plan) return
+    // углы: top-left, top-right, bottom-right, bottom-left
+    data = { coordinates: cornersOf(plan), bearing: bearingOf(plan) }
+  } else {
+    // готовый блок для events.js
+    const floorsOut = [...floorsRef.current].sort((a, b) => a - b)
+      .filter(level => plans[String(level)])
+      .map(level => {
+        const plan = plans[String(level)]
+        return { level, url: `/floorplans/${plan.name || ''}`, coordinates: cornersOf(plan) }
+      })
+    if (!floorsOut.length) return
+    const main = plans['1'] ?? plans[String(floorsOut[0].level)]
+    data = {
+      floors: floorsOut,
+      defaultFloor: floorsOut.some(f => f.level === 1) ? 1 : floorsOut[0].level,
+      bearing: bearingOf(main),
+    }
+  }
+  const json = JSON.stringify(data, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -719,13 +1098,14 @@ function DrawPage() {
           geometry: geomType === 'point'
             ? { type: 'Point', coordinates: coords }
             : { type: 'Polygon', coordinates: [coords] },
-          properties: {},
+          properties: { floor: get('floor') },
         },
         meta: {
           code: get('code'),
           number: get('number'),
           zone: get('zone'),
           type: get('type'),
+          floor: get('floor'),
         }
       }
     } catch {
@@ -754,6 +1134,24 @@ function DrawPage() {
     fontSize: 13,
     width: '100%',
     boxSizing: 'border-box',
+  }
+
+  function floorButtonStyle(active) {
+    return {
+      minWidth: 28, padding: '4px 6px', cursor: 'pointer', fontSize: 12,
+      background: active ? '#333' : '#fff',
+      color: active ? '#fff' : '#333',
+      border: '1px solid #333', borderRadius: 4,
+    }
+  }
+
+  function toolButtonStyle(active) {
+    return {
+      padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+      background: active ? '#333' : '#fff',
+      color: active ? '#fff' : '#333',
+      border: '1px solid #333', borderRadius: 4,
+    }
   }
 
   const labelStyle = {
@@ -792,6 +1190,28 @@ function DrawPage() {
         </button>
         <input ref={fileInputRef} type="file" accept="image/*"
           style={{ display: 'none' }} onChange={handleImageUpload} />
+
+        {/* Этажи */}
+        {floors.length === 0 ? (
+          (hasImage || shapeCount > 0) && (
+            <button onClick={() => addFloor(1)} title="Сделать текущий план 1-м этажом"
+              style={{ padding: '6px 10px', cursor: 'pointer' }}>
+              + этажи
+            </button>
+          )
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#666' }}>Этаж</span>
+            <button onClick={() => addFloor(1)} title="Добавить этаж выше" style={floorButtonStyle(false)}>+↑</button>
+            {floors.map(level => (
+              <button key={level} onClick={() => switchFloor(level)} style={floorButtonStyle(level === currentFloor)}>
+                {level}
+              </button>
+            ))}
+            <button onClick={() => addFloor(-1)} title="Добавить этаж ниже (подвал)" style={floorButtonStyle(false)}>+↓</button>
+            <button onClick={removeFloor} title="Удалить пустой этаж" style={floorButtonStyle(false)}>✕</button>
+          </div>
+        )}
 
         {showCoordInput && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -868,7 +1288,23 @@ function DrawPage() {
               {mapBearing === 0 ? 'Карту по плану' : 'Карту на север'}
             </button>
             {!locked && (
-              <span style={{ fontSize: 11, color: '#666' }}>🔵 двигать · ⚪ масштаб</span>
+              <>
+                <button onClick={() => selectTool('stretch')} title="Растянуть от булавки (пробел — пропорционально)"
+                  style={toolButtonStyle(tool === 'stretch')}>
+                  <Scaling size={16} />
+                </button>
+                <button onClick={() => selectTool('rotate')} title="Повернуть вокруг булавки"
+                  style={toolButtonStyle(tool === 'rotate')}>
+                  <RotateCw size={16} />
+                </button>
+                <span style={{ fontSize: 11, color: '#666' }}>
+                  {!tool && '🔵 двигать · ⚪ масштаб'}
+                  {tool && !hasPin && 'кликни по плану — поставить булавку'}
+                  {tool && hasPin && (tool === 'stretch'
+                    ? 'тяни план · пробел — пропорционально · клик — переставить булавку · Esc — выйти'
+                    : 'тяни план · клик — переставить булавку · Esc — выйти')}
+                </span>
+              </>
             )}
           </>
         )}
@@ -966,7 +1402,7 @@ function DrawPage() {
   </>
 )}
 
-{hasImage && (
+{(hasImage || floors.length > 0) && (
   <button onClick={handleExportCorners} style={{
     padding: '6px 10px', cursor: 'pointer',
     background: '#1a6b3c', color: '#fff', border: 'none', borderRadius: 4,
@@ -1022,6 +1458,13 @@ function DrawPage() {
             <input style={inputStyle} placeholder="напр. session, expo, service_cafe"
               value={panel.type}
               onChange={e => setPanel(p => ({ ...p, type: e.target.value }))} />
+          </div>
+
+          <div>
+            <span style={labelStyle}>Floor — этаж (подвал: -1, пусто — на всех)</span>
+            <input style={inputStyle} type="number" step="1" placeholder="не задан"
+              value={panel.floor}
+              onChange={e => setPanel(p => ({ ...p, floor: e.target.value }))} />
           </div>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
