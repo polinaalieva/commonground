@@ -85,11 +85,9 @@ export function VenueLayer({
 
     renderedRef.current = true
 
-    if (map.current.isStyleLoaded()) {
-      renderVenues(eventVenues)
-    } else {
-      map.current.once('load', () => renderVenues(eventVenues))
-    }
+    // Слой монтируется после load карты (mapReady). isStyleLoaded() тут не годится:
+    // пока грузятся картинки планов, он false, а 'load' второй раз уже не придёт
+    renderVenues(eventVenues)
   }, [eventVenues])
 
   function resetSelectedMarker() {
