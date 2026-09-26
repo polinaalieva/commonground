@@ -46,6 +46,25 @@ function planFloors(code, plan) {
   return []
 }
 
+// overlays — картинки поверх карты (логотип, надпись), по 4 углам, как план.
+// Колонка overlays: [{ "file": "logo.png", "coordinates": [TL, TR, BR, BL], "opacity": 1 }]
+// Файлы — Storage: events/<код>/overlays/<file>
+function parseOverlays(code, raw) {
+  let list = raw
+  if (typeof list === 'string') {
+    try { list = JSON.parse(list) } catch { return [] }
+  }
+  if (!Array.isArray(list)) return []
+  return list
+    .filter(o => o?.file && Array.isArray(o.coordinates) && o.coordinates.length === 4)
+    .map((o, i) => ({
+      id: `overlay-${i}`,
+      url: eventAssetUrl(code, `overlays/${o.file}`),
+      coordinates: o.coordinates,
+      opacity: Number(o.opacity ?? 1),
+    }))
+}
+
 // Границы карты — по плану и входу: bbox с небольшим запасом, maxBounds пошире
 function computeBounds(points) {
   if (!points.length) return {}
@@ -89,6 +108,9 @@ function normalizeEvent(row) {
     serviceColor: SERVICE_COLOR,
     floors,
     defaultFloor: plan.defaultFloor ?? null,
+    overlays: parseOverlays(row.code, row.overlays),
+    // зум, с которого все кластеры точно раскрыты; пусто — каждый раскрывается сам, когда пины помещаются
+    clusterZoom: row.cluster_zoom == null || row.cluster_zoom === '' ? null : Number(row.cluster_zoom),
   }
 }
 

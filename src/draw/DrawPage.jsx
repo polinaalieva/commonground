@@ -7,7 +7,7 @@ import 'maplibre-gl-draw/dist/mapbox-gl-draw.css'
 // Этаж — число (1, 2, … подвал -1). Пусто = null: этаж не задан,
 // в событии с этажами такая точка видна на всех этажах
 function emptyMeta() {
-  return { code: '', number: '', zone: '', type: '', floor: '' }
+  return { code: '', number: '', zone: '', type: '', cluster: '', floor: '' }
 }
 
 function DrawPage() {
@@ -976,10 +976,10 @@ function DrawPage() {
       )
       const geomType = f.geometry.type === 'Point' ? 'point' : 'polygon'
       const floor = Number.isInteger(parseInt(meta.floor, 10)) ? parseInt(meta.floor, 10) : ''
-      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${meta.zone || ''}","${meta.type || ''}",${floor},"${geomType}","${coords}"`
+      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${meta.zone || ''}","${meta.type || ''}","${meta.cluster || ''}",${floor},"${geomType}","${coords}"`
     })
 
-    const csv = ['id,code,number,zone,type,floor,geometry_type,coordinates', ...rows].join('\n')
+    const csv = ['id,code,number,zone,type,cluster,floor,geometry_type,coordinates', ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -1102,6 +1102,7 @@ function DrawPage() {
           number: get('number'),
           zone: get('zone'),
           type: get('type'),
+          cluster: get('cluster'),
           floor: get('floor'),
         }
       }
@@ -1455,6 +1456,13 @@ function DrawPage() {
             <input style={inputStyle} placeholder="напр. session, expo, service_cafe"
               value={panel.type}
               onChange={e => setPanel(p => ({ ...p, type: e.target.value }))} />
+          </div>
+
+          <div>
+            <span style={labelStyle}>Cluster — группа, при отдалении сворачивается в одну капсулу</span>
+            <input style={inputStyle} placeholder="напр. Expo A (пусто — без группы)"
+              value={panel.cluster ?? ''}
+              onChange={e => setPanel(p => ({ ...p, cluster: e.target.value }))} />
           </div>
 
           <div>

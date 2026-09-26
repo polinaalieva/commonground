@@ -100,6 +100,7 @@ export function VenueLayer({
   useEffect(() => {
     currentFloorRef.current = currentFloor
     applyFloor()
+    scheduleClusters()
   }, [currentFloor])
 
   const selectedMarkerElRef = useRef(null)
@@ -125,25 +126,223 @@ export function VenueLayer({
     applyHighlight(el)
   }, [highlightedVenueId])
 
+  // Размер пина считаем от стартового зума события, а не от абсолютного:
+  // одинаково работает и для зала (зум 20), и для города (зум 14).
+  // rel = на сколько приблизились/отдалились от старта; между точками — плавно
+  const SIZE_STEPS = [
+    // rel,  пин, иконка, шрифт (0 — номер скрыт, пин-точка)
+    [-3,     8,   0,  0],
+    [-1.5,  12,   8,  0],
+    [-1,    18,  10,  8],
+    [0,     22,  12,  9],
+    [2,     30,  16, 12],
+  ]
+
   function getMarkerSize() {
-    const zoom = map.current.getZoom()
-    if (zoom < 16) return { size: 12, icon: 9, font: 5 }
-    if (zoom < 18) return { size: 18, icon: 11, font: 7 }
-    return { size: 32, icon: 18, font: 12 }
+    const rel = map.current.getZoom() - (eventConfig?.zoom ?? 16)
+    const first = SIZE_STEPS[0]
+    const last = SIZE_STEPS[SIZE_STEPS.length - 1]
+    if (rel <= first[0]) return { size: first[1], icon: first[2], font: first[3] }
+    if (rel >= last[0]) return { size: last[1], icon: last[2], font: last[3] }
+    const i = SIZE_STEPS.findIndex(s => s[0] >= rel)
+    const [z0, s0, i0, f0] = SIZE_STEPS[i - 1]
+    const [z1, s1, i1, f1] = SIZE_STEPS[i]
+    const t = (rel - z0) / (z1 - z0)
+    const lerp = (a, b) => Math.round(a + (b - a) * t)
+    // шрифт не интерполируем с нуля: либо номер читаемый, либо его нет
+    const font = f0 === 0 || f1 === 0 ? (t < 0.5 ? f0 : f1) : lerp(f0, f1)
+    return { size: lerp(s0, s1), icon: lerp(i0, i1), font }
   }
 
   function applyHighlight(el) {
-    el.style.width = '34px'
-    el.style.height = '34px'
+    const { size } = getMarkerSize()
+    const big = Math.max(size + 10, 30)
+    el.style.width = `${big}px`
+    el.style.height = `${big}px`
+    el.style.fontSize = el.dataset.service ? '' : '11px'
+    const svg = el.querySelector('svg')
+    if (svg) { svg.setAttribute('width', 16); svg.setAttribute('height', 16); svg.style.display = '' }
     el.style.border = '4px solid white'
     el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)'
     selectedMarkerElRef.current = el
+    scheduleClusters()
   }
 
-  // План рисуем сразу, не дожидаясь точек: слой монтируется после load карты
-  useEffect(() => {
-    if (map.current) renderFloorplan()
+  // ── Кластеры ──
+  // Кластер задаётся вручную: колонка cluster у точки (напр. «Expo A»).
+  // Пока пины группы налезают друг на друга, группа показывается одной капсулой
+  // «Название · число»; как только пины помещаются — капсула раскрывается.
+  // Точки без cluster всегда видны пинами. Выбранный пин в капсулу не прячется.
+  const clusterItemsRef = useRef([]) // { el, floor, coords, zone, isService, cluster }
+  const clusterMarkersRef = useRef([])
+  const clusterFrameRef = useRef(null)
+  const clusterOpenZoomRef = useRef({}) // cluster → зум, с которого показываем пины
+  const CLUSTER_GAP = 2         // столько px воздуха нужно пинам, чтобы стоять отдельно
+  const CLUSTER_OVERLAP_OK = 0.1 // раскрываем, когда налезают не больше 10% пинов группы
+  const CLUSTER_MIXED_COLOR = '#6B7280'
+
+  function scheduleClusters() {
+    if (clusterFrameRef.current) return
+    clusterFrameRef.current = requestAnimationFrame(() => {
+      clusterFrameRef.current = null
+      updateClusters()
+    })
+  }
+
+  function markerSizeAt(zoom) {
+    const rel = zoom - (eventConfig?.zoom ?? 16)
+    const first = SIZE_STEPS[0]
+    const last = SIZE_STEPS[SIZE_STEPS.length - 1]
+    if (rel <= first[0]) return first[1]
+    if (rel >= last[0]) return last[1]
+    const i = SIZE_STEPS.findIndex(s => s[0] >= rel)
+    const [z0, s0] = SIZE_STEPS[i - 1]
+    const [z1, s1] = SIZE_STEPS[i]
+    return s0 + (s1 - s0) * (rel - z0) / (z1 - z0)
+  }
+
+  // Для каждой группы один раз считаем зум, с которого её пины помещаются.
+  // Расстояние до ближайшего соседа удваивается с каждым уровнем зума.
+  function computeClusterOpenZooms() {
+    const refZoom = map.current.getZoom()
+    const byCluster = {}
+    clusterItemsRef.current.forEach(it => {
+      if (!it.cluster) return
+      ;(byCluster[it.cluster] ??= []).push(map.current.project(it.coords))
+    })
+    const maxZoom = map.current.getMaxZoom()
+    const result = {}
+    Object.entries(byCluster).forEach(([name, pts]) => {
+      const nn = pts.map((a, i) => {
+        let d = Infinity
+        pts.forEach((b, j) => { if (i !== j) d = Math.min(d, Math.hypot(a.x - b.x, a.y - b.y)) })
+        return d
+      })
+      let z = map.current.getMinZoom()
+      for (; z < maxZoom; z += 0.1) {
+        const need = markerSizeAt(z) + CLUSTER_GAP
+        const k = 2 ** (z - refZoom)
+        const overlapping = nn.filter(d => d * k < need).length
+        if (overlapping <= nn.length * CLUSTER_OVERLAP_OK) break
+      }
+      // cluster_zoom из настроек события — потолок: с него раскрыты все группы
+      const cap = Number.isFinite(eventConfig?.clusterZoom) ? eventConfig.clusterZoom : maxZoom
+      result[name] = Math.min(z, cap, maxZoom)
+    })
+    clusterOpenZoomRef.current = result
+  }
+
+  function updateClusters() {
+    if (!map.current) return
+    clusterMarkersRef.current.forEach(m => m.remove())
+    clusterMarkersRef.current = []
+
+    const zoom = map.current.getZoom()
+    const level = currentFloorRef.current
+    const groups = {}
+    clusterItemsRef.current.forEach(it => {
+      it.el.style.visibility = ''
+      if (!it.cluster || !isOnFloor(it.floor, level)) return
+      ;(groups[it.cluster] ??= []).push(it)
+    })
+
+    Object.entries(groups).forEach(([name, members]) => {
+      const openZoom = clusterOpenZoomRef.current[name] ?? 0
+      if (zoom >= openZoom || members.length < 2) return
+      const hidden = members.filter(it => it.el !== selectedMarkerElRef.current)
+      hidden.forEach(it => { it.el.style.visibility = 'hidden' })
+      addCluster(name, members, openZoom)
+    })
+  }
+
+  function addCluster(name, members, openZoom) {
+    const size = markerSizeAt(map.current.getZoom())
+    // цвет — по зоне точек (сервисы не в счёт); несколько зон или одни сервисы — серый
+    const zones = new Set(members.filter(it => !it.isService).map(it => it.zone))
+    const color = zones.size === 0
+      ? (eventConfig?.serviceColor || '#6B7280')
+      : zones.size === 1
+        ? ((eventConfig?.zoneColors || {})[[...zones][0]] || CLUSTER_MIXED_COLOR)
+        : CLUSTER_MIXED_COLOR
+
+    // капсула: высота как у пина (не меньше 20), ширина по тексту, скругление — половина высоты
+    const h = Math.max(Math.round(size), 20)
+    const el = document.createElement('div')
+    el.style.cssText = `
+      height: ${h}px;
+      min-width: ${h * 2}px;
+      padding: 0 ${Math.round(h / 2)}px;
+      border-radius: ${h / 2}px;
+      background: ${color};
+      border: 2px solid white;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      font-family: Inter, system-ui, sans-serif;
+      font-size: ${Math.max(Math.round(h * 0.45), 9)}px;
+      font-weight: 700;
+      color: white;
+      line-height: 1;
+    `
+    el.textContent = `${name} · ${members.length}`
+
+    const lng = members.reduce((s, it) => s + it.coords[0], 0) / members.length
+    const lat = members.reduce((s, it) => s + it.coords[1], 0) / members.length
+
+    el.addEventListener('click', e => {
+      e.stopPropagation()
+      zoomIntoCluster(members, openZoom)
+    })
+
+    clusterMarkersRef.current.push(
+      new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map.current)
+    )
+  }
+
+  // Показываем группу на весь экран, но не мельче зума, на котором она раскрывается
+  function zoomIntoCluster(members, openZoom) {
+    const bounds = new maplibregl.LngLatBounds()
+    members.forEach(it => bounds.extend(it.coords))
+    const fit = map.current.cameraForBounds(bounds, { padding: 60, maxZoom: map.current.getMaxZoom() })
+    const target = Math.min(Math.max(fit?.zoom ?? 0, openZoom + 0.05), map.current.getMaxZoom())
+    map.current.easeTo({ center: fit?.center ?? bounds.getCenter(), zoom: target, duration: 500 })
+  }
+
+  // при уходе со страницы события убираем капсулы с карты
+  useEffect(() => () => {
+    // обнуляем, иначе scheduleClusters решит, что кадр ещё в очереди, и больше не сработает
+    // (в dev React StrictMode вызывает эту очистку сразу после монтирования)
+    if (clusterFrameRef.current) cancelAnimationFrame(clusterFrameRef.current)
+    clusterFrameRef.current = null
+    clusterMarkersRef.current.forEach(m => m.remove())
+    clusterMarkersRef.current = []
   }, [])
+
+  // План рисуем сразу, не дожидаясь точек: слой монтируется после load карты.
+  // Картинки-оверлеи — раньше плана, чтобы план лежал поверх них
+  useEffect(() => {
+    if (!map.current) return
+    renderOverlays()
+    renderFloorplan()
+  }, [])
+
+  // Декоративные картинки по 4 углам (логотип, надпись); видны на всех этажах
+  function renderOverlays() {
+    ;(eventConfig?.overlays ?? []).forEach(o => {
+      if (map.current.getSource(o.id)) return
+      map.current.addSource(o.id, { type: 'image', url: o.url, coordinates: o.coordinates })
+      map.current.addLayer({
+        id: `${o.id}-layer`,
+        type: 'raster',
+        source: o.id,
+        paint: { 'raster-opacity': o.opacity, 'raster-fade-duration': 0 },
+      })
+    })
+  }
 
   useEffect(() => {
     if (!eventVenues.length || renderedRef.current) return
@@ -156,15 +355,28 @@ export function VenueLayer({
     renderVenues(eventVenues)
   }, [eventVenues])
 
+  // размер одного пина; на мелком масштабе номер/иконка прячутся, остаётся цветная точка
+  function sizeMarker(el, { size, icon, font }) {
+    el.style.width = `${size}px`
+    el.style.height = `${size}px`
+    el.style.borderWidth = size < 12 ? '1px' : '2px'
+    const svg = el.querySelector('svg')
+    if (svg) {
+      svg.setAttribute('width', icon)
+      svg.setAttribute('height', icon)
+      svg.style.display = icon ? '' : 'none'
+    }
+    if (!el.dataset.service) el.style.fontSize = `${font}px`
+  }
+
   // обратно к размеру по текущему зуму, как у остальных точек
   function resetSelectedMarker() {
     if (!selectedMarkerElRef.current) return
-    const { size } = getMarkerSize()
-    selectedMarkerElRef.current.style.width = `${size}px`
-    selectedMarkerElRef.current.style.height = `${size}px`
+    sizeMarker(selectedMarkerElRef.current, getMarkerSize())
     selectedMarkerElRef.current.style.border = '2px solid white'
     selectedMarkerElRef.current.style.boxShadow = '0 2px 6px rgba(0,0,0,0.25)'
     selectedMarkerElRef.current = null
+    scheduleClusters()
   }
 
   function makeServiceMarkerEl(type, color) {
@@ -182,6 +394,7 @@ export function VenueLayer({
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     `
+    el.dataset.service = '1'
     if (IconComponent) {
       el.innerHTML = renderToStaticMarkup(
         <IconComponent size={14} color="white" stroke={1.5} />
@@ -245,23 +458,16 @@ function renderVenues(data) {
     const allMarkerEls = []
 
 function applyMarkerSizes() {
-  const { size, icon, font } = getMarkerSize()
-  allMarkerEls.forEach(({ el, isService }) => {
+  const s = getMarkerSize()
+  allMarkerEls.forEach(({ el }) => {
     if (el === selectedMarkerElRef.current) return
-    el.style.width = `${size}px`
-    el.style.height = `${size}px`
-    const svg = el.querySelector('svg')
-    if (svg) {
-      svg.setAttribute('width', icon)
-      svg.setAttribute('height', icon)
-    }
-    if (!isService) {
-      el.style.fontSize = `${font}px`
-    }
+    sizeMarker(el, s)
   })
 }
 
 map.current.on('zoom', applyMarkerSizes)
+map.current.on('zoom', scheduleClusters)
+map.current.on('rotate', scheduleClusters)
 
     data.forEach(v => {
       const coords =
@@ -280,7 +486,9 @@ map.current.on('zoom', applyMarkerSizes)
         .setLngLat(coords)
         .addTo(map.current)
 
+      sizeMarker(el, getMarkerSize())
       allMarkerEls.push({ el, isService })
+      clusterItemsRef.current.push({ el, floor: v.floor, coords, zone: v.zone, isService, cluster: v.cluster || null })
       markersRef.current.push({ el, floor: v.floor })
       if (!isOnFloor(v.floor, currentFloorRef.current)) el.style.display = 'none'
       markerElsById.current[v.id] = el
@@ -298,6 +506,9 @@ map.current.on('zoom', applyMarkerSizes)
         })
       })
     })
+
+    computeClusterOpenZooms()
+    scheduleClusters()
 
     // ── Deep link: ?venue=<id> (старые ссылки с кодом тоже находим) ──
     const params = new URLSearchParams(window.location.search)
