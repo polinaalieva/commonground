@@ -67,7 +67,9 @@ function normalizeEvent(row) {
   const plan = row.plan || {}
   const floors = planFloors(row.code, plan)
   const entrance = parseEntrance(row.entrance)
-  const points = [...floors.flatMap(f => f.coordinates), ...(entrance ? [entrance] : [])]
+  // plan.extent — углы области без картинки плана (событие по всему городу): [[lng, lat], [lng, lat]]
+  const extent = Array.isArray(plan.extent) ? plan.extent : []
+  const points = [...floors.flatMap(f => f.coordinates), ...extent, ...(entrance ? [entrance] : [])]
   const zoom = Number(row.zoom) || 16
 
   return {

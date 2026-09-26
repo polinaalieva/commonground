@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { latLngToCell, cellToLatLng } from 'h3-js'
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
-const SUPABASE_SERVICE_KEY = process.env.VITE_SUPABASE_SERVICE_KEY
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
