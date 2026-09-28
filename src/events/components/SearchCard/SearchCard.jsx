@@ -41,6 +41,8 @@ export function SearchCard({ eventId, venues = [], onDismiss, onShowOnMap }) {
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 30)
     loadOrgs()
+    // сессии грузим сразу: от них зависит, показывать ли переключатель Locations / Sessions
+    loadSessions()
     return () => clearTimeout(t)
   }, [])
 
@@ -115,9 +117,17 @@ export function SearchCard({ eventId, venues = [], onDismiss, onShowOnMap }) {
     return null
   }
 
+  // нет сессий (таблица пустая или её нет) — только список точек, без переключателя
+  const hasSessions = Array.isArray(sessions) && sessions.length > 0
+
   return (
     <div className={`hc-card ${visible ? 'hc-card--visible' : ''}`}>
       <div className="hc-header">
+        {sessions === null ? (
+          <div /> // пока грузится — пусто, чтобы переключатель не мелькал
+        ) : !hasSessions ? (
+          <span className="hc-rating">Locations</span>
+        ) : (
         <div className="sc-tab-switcher">
           <button
             className={`sc-tab${tab === 'locations' ? ' sc-tab--active' : ''}`}
@@ -132,6 +142,7 @@ export function SearchCard({ eventId, venues = [], onDismiss, onShowOnMap }) {
             Sessions
           </button>
         </div>
+        )}
         <button className="sheet-header__btn" onClick={onDismiss} aria-label="Close">
           <X size={14} />
         </button>

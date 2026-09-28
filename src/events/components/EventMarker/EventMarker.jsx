@@ -56,7 +56,7 @@ export function EventMarker({ mapRef, eventId, eventConfig }) {
     wrapper.addEventListener('click', () => navigate(`/event/${eventId}`))
 
     const marker = new maplibregl.Marker({ element: wrapper, anchor: 'center' })
-      .setLngLat(eventConfig.center)
+      .setLngLat(eventConfig.entrance ?? eventConfig.center) // маркер — на входе, даже если карта стартует из центра рамки
       .addTo(map)
 
     map.on('zoom', update)

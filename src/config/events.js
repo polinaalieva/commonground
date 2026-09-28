@@ -99,9 +99,14 @@ function normalizeEvent(row) {
     location: row.location,
     dates: [row.starts_on, row.ends_on],
     markerImage: eventAssetUrl(row.code, 'logo.png'),
-    center: entrance ?? points[0] ?? [0, 0],
+    // вход — место маркера события на общей карте
+    entrance,
+    // событие на весь город (plan.extent) стартует из центра рамки; иначе — со входа
+    center: extent.length === 2
+      ? [(extent[0][0] + extent[1][0]) / 2, (extent[0][1] + extent[1][1]) / 2]
+      : entrance ?? points[0] ?? [0, 0],
     zoom,
-    minZoom: Math.max(zoom - 3, 12),
+    minZoom: Math.max(zoom - 3, 8), // порог 8: у событий на весь город (зум 11–12) тоже можно отдалиться
     bearing: Number(row.bearing ?? plan.bearing ?? 0),
     ...computeBounds(points),
     zoneColors: parseZones(row.zones),
