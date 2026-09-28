@@ -96,6 +96,7 @@ function normalizeEvent(row) {
     name: row.name,
     shortName: row.short_name,
     description: row.description,
+    link: row.link || null,
     location: row.location,
     dates: [row.starts_on, row.ends_on],
     markerImage: eventAssetUrl(row.code, 'logo.png'),

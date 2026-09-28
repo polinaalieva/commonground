@@ -51,7 +51,7 @@ function MapMenu({ onClose, onAboutOpen, onEventAboutOpen, isEventMode = false, 
       {isEventMode && eventConfig?.description && (
         <div className="map-menu__row map-menu__row--home">
           <button className="map-menu__home-btn" onClick={() => { onClose(); onEventAboutOpen() }}>
-            About {eventConfig.shortName}
+            About {eventConfig.name || eventConfig.shortName}
           </button>
         </div>
       )}

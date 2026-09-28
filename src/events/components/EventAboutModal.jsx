@@ -15,6 +15,18 @@ function EventAboutModal({ onClose, eventConfig }) {
         <p className="about-modal__text" style={{ paddingTop: 6 }}>
           {eventConfig.description}
         </p>
+        {eventConfig.link && (
+          <p className="about-modal__text" style={{ paddingTop: 10 }}>
+            <a
+              href={eventConfig.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}
+            >
+              Event website ↗
+            </a>
+          </p>
+        )}
       </div>
     </div>
   )
