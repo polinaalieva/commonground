@@ -135,6 +135,40 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   // помогает — его съедает MapLibre. Прокладка отдаёт первый жест браузеру
   // (страничный overscroll сбрасывает смещение) и тут же снимается.
   const [gestureShim, setGestureShim] = useState(() => /CriOS/.test(navigator.userAgent))
+  // Ивент: расширяем рамку прокрутки, чтобы в неё влезли все точки (старт остаётся по plan)
+  useEffect(() => {
+    if (source !== 'event' || !mapReady || !map.current || !eventVenues.length) return
+    const pts = []
+    const walk = a => {
+      if (!Array.isArray(a)) return
+      if (a.length >= 2 && typeof a[0] === 'number' && typeof a[1] === 'number') pts.push(a)
+      else a.forEach(walk)
+    }
+    for (const v of eventVenues) {
+      let c = v.coordinates
+      if (typeof c === 'string') { try { c = JSON.parse(c) } catch { continue } }
+      walk(c)
+    }
+    if (!pts.length) return
+    let [minLng, minLat] = [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1]))]
+    let [maxLng, maxLat] = [Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))]
+    const base = cityConfig.maxBounds
+    // все точки уже внутри рамки из plan — ничего не трогаем (WUF, ивенты с планом)
+    if (base && pts.every(([x, y]) => x >= base[0][0] && x <= base[1][0] && y >= base[0][1] && y <= base[1][1])) return
+    if (base) {
+      minLng = Math.min(minLng, base[0][0]); minLat = Math.min(minLat, base[0][1])
+      maxLng = Math.max(maxLng, base[1][0]); maxLat = Math.max(maxLat, base[1][1])
+    }
+    // запас ~10% размера, минимум ~2 км
+    const padLng = Math.max((maxLng - minLng) * 0.1, 0.02)
+    const padLat = Math.max((maxLat - minLat) * 0.1, 0.02)
+    const bounds = [
+      [Math.max(minLng - padLng, -180), Math.max(minLat - padLat, -85)],
+      [Math.min(maxLng + padLng, 180), Math.min(maxLat + padLat, 85)],
+    ]
+    map.current.setMaxBounds(bounds)
+  }, [source, mapReady, eventVenues, cityConfig.maxBounds])
+
   useEffect(() => {
     if (!gestureShim) return
     const t = setTimeout(() => setGestureShim(false), 5000)

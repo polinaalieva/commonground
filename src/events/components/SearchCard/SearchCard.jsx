@@ -91,8 +91,8 @@ export function SearchCard({ eventId, venues = [], onDismiss, onShowOnMap }) {
     if (!q) return true
     const orgName = orgsByVenueCode[v.code] || ''
     return (
+      (v.number || '').toString().toLowerCase().includes(q) ||
       (v.name || '').toLowerCase().includes(q) ||
-      (v.code || '').toLowerCase().includes(q) ||
       orgName.toLowerCase().includes(q)
     )
   })
@@ -166,14 +166,19 @@ export function SearchCard({ eventId, venues = [], onDismiss, onShowOnMap }) {
               <div key={zone}>
                 <p className="hc-comment-author" style={{ marginBottom: 8 }}>{zone}</p>
                 {zoneVenues.map(venue => {
-                  const orgName = orgsByVenueCode[venue.code]
+                  // number · name · org name — пустые и повторяющиеся части пропускаем
+                  const parts = []
+                  for (const p of [venue.number, venue.name, orgsByVenueCode[venue.code]]) {
+                    const t = (p ?? '').toString().trim()
+                    if (t && !parts.some(x => x.toLowerCase() === t.toLowerCase())) parts.push(t)
+                  }
+                  if (!parts.length) parts.push(venue.code)
                   return (
-                    <div key={venue.code} className="sc-venue-row">
+                    <div key={venue.id ?? venue.code} className="sc-venue-row">
                       <span className="hc-comment">
-                        {venue.type === 'expo' && orgName
-                          ? <>{venue.code} <span className="sc-dot">·</span> {orgName}</>
-                          : (venue.name || venue.code)
-                        }
+                        {parts.map((t, i) => (
+                          <span key={i}>{i > 0 && <> <span className="sc-dot">·</span> </>}{t}</span>
+                        ))}
                       </span>
                       <button className="sc-show-btn" onClick={() => onShowOnMap(venue)}>
                         Show on map

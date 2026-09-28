@@ -65,8 +65,9 @@ function parseOverlays(code, raw) {
     }))
 }
 
-// Границы карты — по плану и входу: bbox с небольшим запасом, maxBounds пошире
-function computeBounds(points) {
+// Границы карты — по плану и входу: bbox с небольшим запасом, maxBounds пошире.
+// maxBounds не меньше экрана на минимальном зуме, иначе рамка, а не minZoom, ограничивает отдаление
+function computeBounds(points, minZoom) {
   if (!points.length) return {}
   const lngs = points.map(p => p[0])
   const lats = points.map(p => p[1])
@@ -78,7 +79,11 @@ function computeBounds(points) {
     [minLng - m / mPerLng, minLat - m / mPerLat],
     [maxLng + m / mPerLng, maxLat + m / mPerLat],
   ]
-  return { bbox: pad(Math.max(size * 0.2, 50)), maxBounds: pad(Math.max(size, 500)) }
+  // метров на пиксель на minZoom × половина широкого экрана (2560 px)
+  const midLat = (minLat + maxLat) / 2
+  const screenHalf = minZoom == null ? 0
+    : (156543.03 * Math.cos(midLat * Math.PI / 180) / 2 ** minZoom) * 2560 / 2
+  return { bbox: pad(Math.max(size * 0.2, 50)), maxBounds: pad(Math.max(size, 500, screenHalf)) }
 }
 
 // Строка таблицы events → объект, с которым работает карта
@@ -109,7 +114,7 @@ function normalizeEvent(row) {
     zoom,
     minZoom: Math.max(zoom - 3, 8), // порог 8: у событий на весь город (зум 11–12) тоже можно отдалиться
     bearing: Number(row.bearing ?? plan.bearing ?? 0),
-    ...computeBounds(points),
+    ...computeBounds(points, Math.max(zoom - 3, 8)),
     zoneColors: parseZones(row.zones),
     serviceColor: SERVICE_COLOR,
     floors,

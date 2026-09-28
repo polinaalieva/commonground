@@ -13,6 +13,66 @@ function truncate(text, max = 240) {
   return text.length > max ? text.slice(0, max) + '...' : text
 }
 
+// Кнопка действия точки: venues.action_type / action_label / action_value (+ place_id / address для карты)
+const ACTIONS = {
+  directions: { label: 'Directions' },
+  url: { label: 'Open' },
+  tel: { label: 'Call' },
+  email: { label: 'Email' },
+}
+
+// центр точки/полигона: среднее всех пар [lng, lat]
+function venueCenter(coordinates) {
+  let c = coordinates
+  if (typeof c === 'string') { try { c = JSON.parse(c) } catch { return null } }
+  const pts = []
+  const walk = a => {
+    if (!Array.isArray(a)) return
+    if (a.length >= 2 && typeof a[0] === 'number' && typeof a[1] === 'number') pts.push(a)
+    else a.forEach(walk)
+  }
+  walk(c)
+  if (!pts.length) return null
+  return [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length]
+}
+
+function getVenueAction(venue) {
+  const type = venue?.action_type?.trim()
+  const def = ACTIONS[type]
+  if (!def) return null
+  const value = venue.action_value?.trim()
+  let href = null
+  if (type === 'directions') {
+    // открыть место в Google Maps: place_id → адрес → координаты точки
+    const placeId = venue.place_id?.trim()
+    const address = venue.address?.trim()
+    const c = venueCenter(venue.coordinates)
+    const base = 'https://www.google.com/maps/search/?api=1'
+    if (placeId) {
+      const q = address || venue.name || (c ? `${c[1]},${c[0]}` : 'place')
+      href = `${base}&query=${encodeURIComponent(q)}&query_place_id=${encodeURIComponent(placeId)}`
+    } else if (address) {
+      href = `${base}&query=${encodeURIComponent(address)}`
+    } else if (c) {
+      href = `${base}&query=${encodeURIComponent(`${c[1]},${c[0]}`)}`
+    }
+  } else if (value) {
+    href = type === 'tel' ? `tel:${value.replace(/\s+/g, '')}`
+      : type === 'email' ? `mailto:${value}`
+      : value
+  }
+  if (!href) return null
+  return { href, label: venue.action_label?.trim() || def.label, external: type === 'directions' || type === 'url' }
+}
+
+// «7 · Design House»: номер и название точки, пустые части пропускаем
+export function venueTitle(venue) {
+  const parts = [venue?.number, venue?.name].map(x => (x ?? '').toString().trim()).filter(Boolean)
+  return [...new Set(parts)].join(' · ')
+}
+
+const same = (a, b) => (a ?? '').toString().trim().toLowerCase() === (b ?? '').toString().trim().toLowerCase()
+
 function formatDate(iso) {
   if (!iso) return ''
   const d = new Date(iso)
@@ -48,7 +108,7 @@ function SessionBlock({ session, showDivider }) {
           href={session.link}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 13, color: '#4A90E2', marginTop: 6, display: 'block' }}
+          className="hc-learn-more"
         >
           Learn more
         </a>
@@ -57,10 +117,12 @@ function SessionBlock({ session, showDivider }) {
   )
 }
 
-function OrgBlock({ org }) {
+function OrgBlock({ org, venueName }) {
+  // имя экспонента показываем, только если оно не повторяет название точки
+  const showName = org.name?.trim() && !same(org.name, venueName)
   return (
     <div className="hc-comment-block">
-      <p className="hc-comment-author">{org.name}</p>
+      {showName && <p className="hc-comment-author">{org.name}</p>}
       {org.description && (
         <p className="hc-comment">{truncate(org.description)}</p>
       )}
@@ -69,7 +131,7 @@ function OrgBlock({ org }) {
           href={org.link}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 13, color: '#4A90E2', marginTop: 6, display: 'block' }}
+          className="hc-learn-more"
         >
           Learn more
         </a>
@@ -120,6 +182,7 @@ export function Event_card({ venue, eventId, onDismiss }) {
   if (!venue) return null
 
   const isService = venue.type?.startsWith('service_')
+  const action = getVenueAction(venue)
 
   async function handleShare() {
     const result = await shareVenue(venue.id, eventId)
@@ -130,7 +193,7 @@ export function Event_card({ venue, eventId, onDismiss }) {
     <div className={`hc-card ${visible ? 'hc-card--visible' : ''}`}>
       <div className="hc-header">
         <div>
-          <span className="hc-rating">{venue.code || venue.number || venue.type}</span>
+          <span className="hc-rating">{venueTitle(venue) || venue.code || venue.type}</span>
           {venue.zone && (
             <div className="hc-comment-date" style={{ marginTop: 2, marginBottom: 0 }}>
               {venue.zone}
@@ -151,7 +214,7 @@ export function Event_card({ venue, eventId, onDismiss }) {
             <SessionBlock key={s.id ?? i} session={s} showDivider={i < data.length - 1} />
           ))}
           {!loading && data && venue.type === 'expo' && data[0] && (
-            <OrgBlock org={data[0]} />
+            <OrgBlock org={data[0]} venueName={venue.name} />
           )}
           {!loading && data !== null && data.length === 0 && (
             <p className="hc-comment" style={{ color: 'rgba(17,17,17,0.4)' }}>No content yet</p>
@@ -159,9 +222,19 @@ export function Event_card({ venue, eventId, onDismiss }) {
         </div>
       )}
 
-      <div className="hc-card-actions" style={{ justifyContent: 'flex-end' }}>
+      <div className="hc-card-actions" style={{ justifyContent: action ? 'space-between' : 'flex-end' }}>
+        {action && (
+          <a
+            className="btn-secondary"
+            href={action.href}
+            {...(action.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+          >
+            {action.label}
+          </a>
+        )}
         <button className="btn-primary" onClick={handleShare}>
-          <Forward size={16} /> Share location
+          Share <Forward size={16} />
         </button>
       </div>
 

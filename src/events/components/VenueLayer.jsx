@@ -503,6 +503,13 @@ map.current.on('rotate', scheduleClusters)
           zone: v.zone,
           number: v.number,
           floor: v.floor,
+          coordinates: v.coordinates,
+          address: v.address,
+          place_id: v.place_id,
+          name: v.name,
+          action_type: v.action_type,
+          action_label: v.action_label,
+          action_value: v.action_value,
         })
       })
     })
@@ -524,6 +531,13 @@ map.current.on('rotate', scheduleClusters)
           zone: venue.zone,
           number: venue.number,
           floor: venue.floor,
+          coordinates: venue.coordinates,
+          address: venue.address,
+          place_id: venue.place_id,
+          name: venue.name,
+          action_type: venue.action_type,
+          action_label: venue.action_label,
+          action_value: venue.action_value,
         })
         const raw =
           typeof venue.coordinates === 'string'

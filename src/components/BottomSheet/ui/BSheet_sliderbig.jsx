@@ -41,7 +41,7 @@ const ArrowsIcon = () => (
   </svg>
 )
 
-function BSheet_sliderbig ({ label, value, onChange, hint = 'Adjust to choose experience' }) {
+function BSheet_sliderbig ({ label, value, onChange, hint = 'Choose experience' }) {
   const gradRef = useRef(null)
   const draggingRef = useRef(false)
   const rafRef = useRef(null)

@@ -7,7 +7,7 @@ import 'maplibre-gl-draw/dist/mapbox-gl-draw.css'
 // Этаж — число (1, 2, … подвал -1). Пусто = null: этаж не задан,
 // в событии с этажами такая точка видна на всех этажах
 function emptyMeta() {
-  return { code: '', number: '', zone: '', type: '', cluster: '', floor: '' }
+  return { code: '', number: '', name: '', zone: '', type: '', cluster: '', floor: '' }
 }
 
 function DrawPage() {
@@ -976,10 +976,10 @@ function DrawPage() {
       )
       const geomType = f.geometry.type === 'Point' ? 'point' : 'polygon'
       const floor = Number.isInteger(parseInt(meta.floor, 10)) ? parseInt(meta.floor, 10) : ''
-      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${meta.zone || ''}","${meta.type || ''}","${meta.cluster || ''}",${floor},"${geomType}","${coords}"`
+      return `${i + 1},"${meta.code || ''}","${meta.number || ''}","${(meta.name || '').replace(/"/g, '""')}","${meta.zone || ''}","${meta.type || ''}","${meta.cluster || ''}",${floor},"${geomType}","${coords}"`
     })
 
-    const csv = ['id,code,number,zone,type,cluster,floor,geometry_type,coordinates', ...rows].join('\n')
+    const csv = ['id,code,number,name,zone,type,cluster,floor,geometry_type,coordinates', ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -1079,11 +1079,24 @@ function DrawPage() {
     const coordStart = line.indexOf('"[')
     const coordEnd = line.lastIndexOf(']"') + 2
     const coordsRaw = line.slice(coordStart + 1, coordEnd - 1)
-    const before = line.slice(0, coordStart - 1).split(',')
+    // поля до coordinates; учитываем кавычки, чтобы запятые в name не ломали колонки
+    const before = []
+    {
+      const head = line.slice(0, coordStart - 1)
+      let cur = '', inQ = false
+      for (let k = 0; k < head.length; k++) {
+        const ch = head[k]
+        if (ch === '"') {
+          if (inQ && head[k + 1] === '"') { cur += '"'; k++ } else inQ = !inQ
+        } else if (ch === ',' && !inQ) { before.push(cur); cur = '' }
+        else cur += ch
+      }
+      before.push(cur)
+    }
 
     const get = (name) => {
       const i = headers.indexOf(name)
-      return i >= 0 ? before[i]?.replace(/"/g, '').trim() : ''
+      return i >= 0 ? (before[i] ?? '').trim() : ''
     }
 
     try {
@@ -1100,6 +1113,7 @@ function DrawPage() {
         meta: {
           code: get('code'),
           number: get('number'),
+          name: get('name'),
           zone: get('zone'),
           type: get('type'),
           cluster: get('cluster'),
@@ -1442,6 +1456,13 @@ function DrawPage() {
             <input style={inputStyle} placeholder="напр. 12 или A3"
               value={panel.number}
               onChange={e => setPanel(p => ({ ...p, number: e.target.value }))} />
+          </div>
+
+          <div>
+            <span style={labelStyle}>Name — название места (поиск, шапка карточки)</span>
+            <input style={inputStyle} placeholder="напр. Design House"
+              value={panel.name ?? ''}
+              onChange={e => setPanel(p => ({ ...p, name: e.target.value }))} />
           </div>
 
           <div>
