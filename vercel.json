@@ -2,7 +2,8 @@
   "redirects": [
     { "source": "/", "destination": "/map", "permanent": false },
     { "source": "/ru", "destination": "/ru/map", "permanent": false },
-    { "source": "/qr", "destination": "/map", "permanent": false }
+    { "source": "/qr", "destination": "/map", "permanent": false },
+    { "source": "/event/uis27", "destination": "/event/uis-09-27", "permanent": true }
   ],
   "rewrites": [
     { "source": "/about", "destination": "/about.html" },
