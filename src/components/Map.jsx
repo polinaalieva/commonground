@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { maplibregl, MAP_STYLE, MAP_STYLE_EVENT } from '../config/map'
+import { maplibregl, MAP_STYLE_CG } from '../config/map'
+import { addOrientationLayers } from '../config/orientationLayers'
+import { createCityMarkers, hidePointsBelowCityZoom } from './CityMarkers/cityMarkers'
 import './Map.css'
 import Survey_BSheet from './BottomSheet/Survey_v2/Survey_BSheet_v2'
 import { Feedback_card } from './Card/Feedback/Feedback_card'
@@ -22,6 +24,40 @@ import { useEventFloors } from '../events/hooks/useEventFloors'
 import { EventMarker } from '../events/components/EventMarker/EventMarker'
 import { SearchCard } from '../events/components/SearchCard/SearchCard'
 import Demo_card from './Card/Demo/Demo_card'
+
+// Кольцо для точек без коммента: один круг с radial-gradient
+// (как в Figma: 0% прозрачно → 50% цвет · RING_PEAK_ALPHA → 100% прозрачно)
+const RING_PREFIX = 'cg-ring-'
+const RING_SIZE = 15          // диаметр кольца в px
+const RING_PEAK_ALPHA = 0.35  // непрозрачность на пике градиента
+const RING_PIXEL_RATIO = 4    // рисуем в 4x, чтобы было чётко на ретине
+function makeRingImage(color) {
+  const px = Math.round(RING_SIZE * RING_PIXEL_RATIO)
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = px
+  const ctx = canvas.getContext('2d')
+  // нормализуем любой css-цвет в #rrggbb
+  ctx.fillStyle = '#9ca3af'
+  ctx.fillStyle = color
+  const hex = ctx.fillStyle.startsWith('#') ? ctx.fillStyle : '#9ca3af'
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16)
+  const rgba = (a) => `rgba(${r}, ${g}, ${b}, ${a})`
+  const c = px / 2
+  const grad = ctx.createRadialGradient(c, c, 0, c, c, c)
+  grad.addColorStop(0, rgba(0))
+  grad.addColorStop(0.5, rgba(RING_PEAK_ALPHA))
+  grad.addColorStop(1, rgba(0))
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, px, px)
+  return ctx.getImageData(0, 0, px, px)
+}
+
+// Все слои точек фидбека — прятать/показывать вместе
+const FEEDBACK_LAYERS = ['cg-feedback-layer', 'cg-feedback-ring', 'cg-feedback-core']
+function setFeedbackVisibility(m, v) {
+  FEEDBACK_LAYERS.forEach((id) => { if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v) })
+}
+
 
 const RATING_COLORS = {
     1: "#ED4B9E", 2: "#CF60A0", 3: "#BF6AA0", 4: "#AC78A2",
@@ -99,6 +135,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
   const dataLoadedRef = useRef(false)
   const emptyTooltipShownRef = useRef(false)
   const allPointsRef = useRef([])
+  const cityMarkersRef = useRef(null) // городские маркеры на отдалении (только общая карта)
   const hexModeRef = useRef(false)
 
   function getHexResolution() {
@@ -254,7 +291,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: source === 'event' ? MAP_STYLE_EVENT : MAP_STYLE,
+      style: MAP_STYLE_CG,
       center: cityConfig.center,
       zoom: cityConfig.zoom,
       ...(source === 'event' && { bearing: cityConfig.bearing ?? 0, pitch: 0, pitchWithRotate: false }),
@@ -268,6 +305,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
     new maplibregl.AttributionControl({ compact: true }),
     'top-right'
   )
+      addOrientationLayers(map.current)
+      if (source !== 'event') cityMarkersRef.current = createCityMarkers(map.current)
       loadData()
       setMapReady(true)
       if (city === 'map') setTimeout(() => requestGeoAuto(), 500)
@@ -275,6 +314,8 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
 
     return () => {
       if (geoWatchId.current) navigator.geolocation.clearWatch(geoWatchId.current)
+      cityMarkersRef.current?.destroy()
+      cityMarkersRef.current = null
     }
   }, [cityConfig])
 
@@ -353,6 +394,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       clearTimeout(timeoutId)
       console.log('sample record:', records[0])
       allPointsRef.current = records
+      cityMarkersRef.current?.update(records)
       const geojson = toGeoJSON(records)
       console.log('sample feature props:', geojson.features[0]?.properties)
 
@@ -366,53 +408,88 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
           promoteId: 'id',
         })
 
+        // Точки фидбека — мягкие «нефизические» пятна без чётких границ.
+        // Всё на WebGL (circle + symbol), без DOM — телефоны не страдают.
+        //  1) cg-feedback-layer — внешний круг (circle), он же зона клика/hover
+        //  2) cg-feedback-ring  — кольцо-градиент у точек без коммента (symbol-картинка)
+        //  3) cg-feedback-core  — ядро (circle)
+        const COLOR_STR = ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
+          ['case',
+            ['==', ['var', 'c'], ''], '#9ca3af',
+            ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
+            ['concat', '#', ['var', 'c']]
+          ]
+        ]
+        const RATING_COLOR = ['to-color', COLOR_STR, '#9ca3af']
+        const SELECTED = ['boolean', ['feature-state', 'selected'], false]
+        const OLD = ['==', ['get', 'is_old'], 1]
+        const HAS_COMMENT = ['==', ['get', 'has_comment'], 1]
+
+        // Картинки колец генерируются на лету под каждый цвет рейтинга
+        // (id картинки: 'cg-ring-#31D0AA'). Одна картинка на цвет, не на точку.
+        if (!map.current.__cgRingHandler) {
+          map.current.__cgRingHandler = true
+          map.current.on('styleimagemissing', (e) => {
+            if (!e.id.startsWith(RING_PREFIX)) return
+            if (map.current.hasImage(e.id)) return
+            map.current.addImage(e.id, makeRingImage(e.id.slice(RING_PREFIX.length)), { pixelRatio: RING_PIXEL_RATIO })
+          })
+        }
+
+        // 1) Внешний круг:
+        //    с комментом — мягкое полупрозрачное пятно;
+        //    без коммента — невидимый (только зона клика), в выбранном состоянии — пятно
         map.current.addLayer({
           id: 'cg-feedback-layer',
           type: 'circle',
           source: 'cg-feedback',
           paint: {
-            'circle-radius': [
-              'case', ['boolean', ['feature-state', 'selected'], false], 10,
-              ['case', ['==', ['get', 'has_comment'], 1], 7, 4]
+            'circle-radius': ['case', SELECTED, 20, HAS_COMMENT, 14, RING_SIZE / 2],
+            'circle-color': RATING_COLOR,
+            'circle-opacity': ['case',
+              SELECTED, 0.35,
+              HAS_COMMENT, ['case', OLD, 0.1, 0.28],
+              0
             ],
-            'circle-color': [
-              'to-color',
-              ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-                ['case',
-                  ['==', ['var', 'c'], ''], '#9ca3af',
-                  ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-                  ['concat', '#', ['var', 'c']]
-                ]
-              ], '#9ca3af'
-            ],
-            'circle-opacity': [
-              'case', ['boolean', ['feature-state', 'selected'], false], 1,
-              ['case', ['==', ['get', 'is_old'], 1], 0.25,
-                ['case', ['==', ['get', 'has_comment'], 1], 0.70, 0.20]
-              ]
-            ],
-            'circle-stroke-color': [
-              'case', ['boolean', ['feature-state', 'selected'], false], '#ffffff',
-              ['to-color',
-                ['let', 'c', ['coalesce', ['get', 'rating_color'], ''],
-                  ['case',
-                    ['==', ['var', 'c'], ''], '#9ca3af',
-                    ['==', ['slice', ['var', 'c'], 0, 1], '#'], ['var', 'c'],
-                    ['concat', '#', ['var', 'c']]
-                  ]
-                ], '#9ca3af'
-              ]
-            ],
-            'circle-stroke-width': [
-              'case', ['boolean', ['feature-state', 'selected'], false], 3,
-              ['case', ['==', ['get', 'has_comment'], 1], 0, 2.5]
-            ],
-            'circle-stroke-opacity': [
-              'case', ['boolean', ['feature-state', 'selected'], false], 1,
-              ['case', ['==', ['get', 'is_old'], 1], 0.35, 0.6]
-            ],
-          }
+            // большой blur = край растворяется почти от самого центра
+            'circle-blur': ['case', HAS_COMMENT, 0.8, 0.6],
+          },
         })
+
+        // 2) Кольцо-градиент — только точки без коммента
+        //    radial-gradient: прозрачно в центре → цвет 35% на 50% → прозрачно на краю
+        map.current.addLayer({
+          id: 'cg-feedback-ring',
+          type: 'symbol',
+          source: 'cg-feedback',
+          filter: ['!=', ['get', 'has_comment'], 1],
+          layout: {
+            'icon-image': ['concat', RING_PREFIX, COLOR_STR],
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+          },
+          paint: {
+            'icon-opacity': ['case', SELECTED, 1, OLD, 0.4, 1],
+          },
+        })
+
+        // 3) Ядро — плотный центр с мягким краем, только у точек с комментом
+        //    (у точек без коммента центр кольца прозрачный — это и есть весь их вид)
+        map.current.addLayer({
+          id: 'cg-feedback-core',
+          type: 'circle',
+          source: 'cg-feedback',
+          filter: HAS_COMMENT,
+          paint: {
+            'circle-radius': ['case', SELECTED, 8, 6],
+            'circle-color': RATING_COLOR,
+            'circle-opacity': ['case', SELECTED, 1, OLD, 0.35, 0.95],
+            'circle-blur': ['case', SELECTED, 0.3, 0.5],
+          },
+        })
+
+        // на общей карте ниже 8 зума вместо точек — городские маркеры
+        if (source !== 'event') hidePointsBelowCityZoom(map.current, FEEDBACK_LAYERS)
 
         dataLoadedRef.current = true
 
@@ -488,9 +565,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
 
           hexModeRef.current = true
           setHexMode(true)
-          if (map.current.getLayer('cg-feedback-layer')) {
-            map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
-          }
+          setFeedbackVisibility(map.current, 'none')
           showHexLayer()
 
           map.current.once('idle', () => {
@@ -678,18 +753,14 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         setShowHexTooltip(true)
         setTimeout(() => setShowHexTooltip(false), 3000)
       }
-      if (map.current.getLayer('cg-feedback-layer')) {
-        map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'none')
-      }
+      setFeedbackVisibility(map.current, 'none')
       dismissSelectedPin()
       showHexLayer()
     } else {
       if (map.current.getLayer('cg-hex-selected-layer')) {
         map.current.setFilter('cg-hex-selected-layer', ['==', ['get', 'cell'], ''])
       }
-      if (map.current.getLayer('cg-feedback-layer')) {
-        map.current.setLayoutProperty('cg-feedback-layer', 'visibility', 'visible')
-      }
+      setFeedbackVisibility(map.current, 'visible')
       if (map.current.getLayer('cg-hex-layer')) {
         map.current.setLayoutProperty('cg-hex-layer', 'visibility', 'none')
       }

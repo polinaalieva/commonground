@@ -42,29 +42,27 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(17, 17, 17, 0.1);
-  background: rgba(255, 255, 255, 0.95);
-  color: #111;
-  cursor: pointer;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   padding: 0;
   flex-shrink: 0;
+  border-radius: 18px;
+  border: 0.5px solid rgba(17, 17, 17, 0.07);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 4px 40px 0 rgba(0, 0, 0, 0.12);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #111;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 
 .fcv-btn:hover:not(:disabled) {
   background: #fff;
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.13),
-    0 1px 4px rgba(0, 0, 0, 0.09);
+  box-shadow: 0 6px 40px 0 rgba(0, 0, 0, 0.16);
 }
 
 .fcv-btn:active:not(:disabled) {
   background: #f4f4f4;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: scale(0.96);
 }
 
 .fcv-btn:disabled {
@@ -76,18 +74,14 @@
   background: rgba(49, 208, 170, 0.2);
   border-color: rgba(49, 208, 170, 0.4);
   color: #31D0AA;
-  box-shadow:
-    0 4px 12px rgba(49, 208, 170, 0.15),
-    0 1px 3px rgba(49, 208, 170, 0.1);
+  box-shadow: 0 4px 40px 0 rgba(49, 208, 170, 0.2);
 }
 
 .fcv-btn--down.fcv-btn--active {
   background: rgba(237, 75, 158, 0.2);
   border-color: rgba(237, 75, 158, 0.4);
   color: #ED4B9E;
-  box-shadow:
-    0 4px 12px rgba(237, 75, 158, 0.15),
-    0 1px 3px rgba(237, 75, 158, 0.1);
+  box-shadow: 0 4px 40px 0 rgba(237, 75, 158, 0.2);
 }
 
 @media (max-width: 768px) {

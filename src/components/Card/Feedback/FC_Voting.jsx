@@ -1,8 +1,24 @@
 import { useEffect, useState } from 'react'
-import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import './FC_Voting.css'
 
 import { supabaseFetch } from '../../../config/supabase'
+
+// Плюс/минус как в Figma: 10px, линия 2px, скруглённые концы
+function PlusIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MinusIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M1 6h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 function getSessionId() {
   let id = localStorage.getItem('cg_session_id')
@@ -100,7 +116,7 @@ export function FC_Voting({ feedbackId, onVoted }) {
           aria-label="Vote up"
           disabled={loading}
         >
-          <ThumbsUp size={16} />
+          <PlusIcon />
         </button>
         <button
           className={`fcv-btn fcv-btn--down ${myVote === 'down' ? 'fcv-btn--active' : ''}`}
@@ -108,7 +124,7 @@ export function FC_Voting({ feedbackId, onVoted }) {
           aria-label="Vote down"
           disabled={loading}
         >
-          <ThumbsDown size={16} />
+          <MinusIcon />
         </button>
       </div>
       {!loading && myVote !== null && (

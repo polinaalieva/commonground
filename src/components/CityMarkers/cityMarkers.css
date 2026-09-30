@@ -1,0 +1,42 @@
+/* Городской маркер: кружок с градиентом и числом фидбеков */
+.cg-city-marker {
+  cursor: pointer;
+  padding: 8px; /* невидимая зона клика вокруг — чтобы в маленькую точку легко попасть пальцем */
+  transition: opacity 200ms ease;
+}
+
+.cg-city-marker__bubble {
+  --cg-city-size: 34px;
+  width: var(--cg-city-size);
+  height: var(--cg-city-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #83E3CC 0%, #A7BFDA 50%, #F493D6 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: calc(var(--cg-city-size) * 0.4);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  box-shadow: 0 2px 10px rgba(63, 70, 84, 0.18);
+  transition: transform 150ms ease, opacity 200ms ease;
+  user-select: none;
+}
+.cg-city-marker:hover .cg-city-marker__bubble {
+  transform: scale(1.08);
+}
+
+/* На зуме ≥ 8 кружок прячется (вместо него видны точки) */
+.cg-city-marker__bubble.is-hidden {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+/* Мало отзывов (< 3) — маленькая точка без цифры: «здесь уже что-то есть» */
+.cg-city-marker__bubble.is-small {
+  width: max(8px, calc(var(--cg-city-size) * 0.32));
+  height: max(8px, calc(var(--cg-city-size) * 0.32));
+  box-shadow: 0 1px 4px rgba(63, 70, 84, 0.18);
+}
