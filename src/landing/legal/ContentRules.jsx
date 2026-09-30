@@ -6,7 +6,7 @@ export default function ContentRulesPage() {
   return (
     <div className="cg-landing legal-page">
       <Header />
-      <LegalPage domain="commonground" slug="content-rules" />
+      <LegalPage domain="commonground" slug="rules" />
     </div>
   )
 }

@@ -74,6 +74,11 @@
   line-height: 1;
 }
 
+a.map-menu__home-btn {
+  display: block;
+  text-decoration: none;
+}
+
 .map-menu__home-btn:hover {
   opacity: 0.7;
 }
