@@ -1,8 +1,10 @@
-export const DEFAULT_CITY = 'london'
+export const DEFAULT_CITY = 'map'
 export const CITY_CONFIGS = {
   map: {
-    center: [12, 20],
+    center: [-40, 38],
     zoom: 1.5,
+    // Стартовая область «Америка + Европа»: масштаб подстраивается под ширину экрана
+    initialBounds: [[-125, 5], [45, 62]],
     country: null
   },
 

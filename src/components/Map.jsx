@@ -294,6 +294,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
       style: MAP_STYLE_CG,
       center: cityConfig.center,
       zoom: cityConfig.zoom,
+      ...(cityConfig.initialBounds && { bounds: cityConfig.initialBounds }),
       ...(source === 'event' && { bearing: cityConfig.bearing ?? 0, pitch: 0, pitchWithRotate: false }),
       ...(cityConfig.minZoom && { minZoom: cityConfig.minZoom }),
       ...(cityConfig.maxBounds && { maxBounds: cityConfig.maxBounds }),
@@ -919,7 +920,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
         bottomBarVisible={!selectedPin && !selectedHex && !selectedVenue && mode !== 'select'}
         source={source}
         eventConfig={source === 'event' ? cityConfig : undefined}
-        onExitEvent={() => navigate('/', { state: { fitBounds: cityConfig.bbox } })}
+        onExitEvent={() => navigate(location.pathname.startsWith('/ru') ? '/ru/map' : '/map', { state: { fitBounds: cityConfig.bbox } })}
         onSearch={() => { setSelectedVenue(null); setSearchOpen(v => !v) }}
         onInfoClick={openDemo}
         infoActive={demoOpen}

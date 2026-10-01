@@ -89,3 +89,6 @@
 .cg-landing .legal-content p { margin-top: 16px; }
 .cg-landing .legal-content ul, .cg-landing .legal-content ol { padding-left: 24px; margin: 16px 0; }
 .cg-landing .legal-content a { text-decoration: underline; }
+
+.cg-landing .legal-content .legal-index { list-style: none; padding-left: 0; margin: 32px 0 0; }
+.cg-landing .legal-content .legal-index li + li { margin-top: 12px; }

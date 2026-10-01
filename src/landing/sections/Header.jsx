@@ -11,7 +11,7 @@ export default function Header() {
 
   return (
     <header className="landing-header">
-      <Link className="landing-logo" to="/about">Common Ground</Link>
+      <Link className="landing-logo" to="/">Common Ground</Link>
       <nav className="landing-desktop-nav" aria-label="Main navigation">
         {navItems.map(item => (
           <ButtonText key={item.label} onClick={item.onClick}>

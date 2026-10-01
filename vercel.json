@@ -1,22 +1,19 @@
 {
   "redirects": [
-    { "source": "/", "destination": "/map", "permanent": false },
+    { "source": "/about", "destination": "/", "permanent": true },
+    { "source": "/ru/about", "destination": "/", "permanent": true },
+    { "source": "/event", "destination": "/map", "permanent": false },
+    { "source": "/ru/event", "destination": "/ru/map", "permanent": false },
     { "source": "/ru", "destination": "/ru/map", "permanent": false },
     { "source": "/qr", "destination": "/map", "permanent": false },
     { "source": "/event/uis27", "destination": "/event/uis-09-27", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/about", "destination": "/about.html" },
-    { "source": "/ru/about", "destination": "/about.html" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/app.html" }
   ],
   "headers": [
     {
-      "source": "/about",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
-    },
-    {
-      "source": "/ru/about",
+      "source": "/",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
     }
   ]

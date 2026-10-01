@@ -8,7 +8,7 @@ const ACTIVE_CITIES = ['london']
 // Пункты меню (временно, пока нет шторки с настройками аккаунта).
 // Открываются в новой вкладке, чтобы карта не терялась.
 const MENU_LINKS = [
-  { label: 'About', path: '/about', ru: false },
+  { label: 'About', path: '/', ru: false },
   { label: 'Terms of Use', path: '/legal/terms-of-use', ru: true },
   { label: 'Privacy Policy', path: '/legal/privacy-policy', ru: true },
 ]

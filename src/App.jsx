@@ -6,6 +6,7 @@ import Dev from './pages/Dev.jsx'
 import TermsOfUse from './landing/legal/TermsOfUse.jsx'
 import PrivacyPolicy from './landing/legal/PrivacyPolicy.jsx'
 import ContentRules from './landing/legal/ContentRules.jsx'
+import LegalIndex from './landing/legal/LegalIndex.jsx'
 
 function App() {
   return (
@@ -14,19 +15,24 @@ function App() {
       <Route path="/event/:eventId" element={<EventPage />} />
       <Route path="/ru/event/:eventId" element={<EventPage />} />
 
-      {/* Главная → мировая карта */}
-      <Route path="/" element={<City />} />
-      <Route path="/ru" element={<City />} />
+      <Route path="/event" element={<Navigate to="/map" replace />} />
+      <Route path="/ru/event" element={<Navigate to="/ru/map" replace />} />
+
+      {/* Главная → лендинг */}
+      <Route path="/" element={<Home />} />
+      <Route path="/ru" element={<Navigate to="/ru/map" replace />} />
+
+      {/* /about переехал на главную (в проде редиректит Vercel, здесь — для локальной разработки) */}
+      <Route path="/about" element={<Navigate to="/" replace />} />
+      <Route path="/ru/about" element={<Navigate to="/" replace />} />
 
       {/* /map → рендерим напрямую чтобы не стрипать query params (deep links) */}
       <Route path="/map" element={<City />} />
       <Route path="/ru/map" element={<City />} />
 
-      {/* Лендинг*/}
-      <Route path="/about" element={<Home />} />
-      <Route path="/ru/about" element={<Navigate to="/about" replace />} />
-
       {/* Legal */}
+      <Route path="/legal" element={<LegalIndex />} />
+      <Route path="/ru/legal" element={<LegalIndex />} />
       <Route path="/legal/terms-of-use" element={<TermsOfUse />} />
       <Route path="/ru/legal/terms-of-use" element={<TermsOfUse />} />
       <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
