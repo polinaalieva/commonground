@@ -839,7 +839,7 @@ function Map({ city, cityConfig, pageContent, variant, source, lang, eventId, ev
     if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(pos => {
       const { longitude: lng, latitude: lat } = pos.coords
-      updateUserLocation(lng, lat, true)
+      updateUserLocation(lng, lat, false)
       startGeoWatch()
     }, () => {}, { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 })
   }
